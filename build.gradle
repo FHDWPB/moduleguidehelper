@@ -13,6 +13,7 @@ configurations {
 
 dependencies {
     extraLibs 'com.google.code.gson:gson:2.12.1'
+    extraLibs 'org.apache.commons:commons-math3:3.6.1'
     extraLibs fileTree('libs') { include '*.jar' }
     testImplementation 'org.testng:testng:7.7.1'
     configurations.implementation.extendsFrom(configurations.extraLibs)
