@@ -18,12 +18,15 @@ public abstract class ModuleBookWriter {
         this.writeTitlePage(this.book, writer);
         this.writerIntro(this.book, writer);
         this.writeOverview(this.book, ModuleOverview.create(this.book, this.modules), writer);
+        this.writeModules(this.book, this.modules, writer);
         this.writeDocumentEnd(writer);
     }
 
     protected abstract void writeDocumentEnd(final BufferedWriter writer) throws IOException;
 
     protected abstract void writeDocumentStart(final BufferedWriter writer) throws IOException;
+
+    protected abstract void writeModules(ModuleBook book, ModuleMap modules, BufferedWriter writer) throws IOException;
 
     protected abstract void writeOverview(
         final ModuleBook book,

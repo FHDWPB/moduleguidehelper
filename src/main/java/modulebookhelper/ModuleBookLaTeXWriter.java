@@ -2,6 +2,7 @@ package modulebookhelper;
 
 import java.io.*;
 import java.util.*;
+import java.util.stream.*;
 
 public class ModuleBookLaTeXWriter extends ModuleBookWriter {
 
@@ -13,6 +14,108 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
             .replaceAll("\\\\textbackslash", "\\\\textbackslash{}")
             .replaceAll("([^\\\\])\"", "$1''")
             .replaceAll("^\"", "''");
+    }
+
+    private static void writeModule(
+        final MetaModule meta,
+        final Module module,
+        final int weightSum,
+        final BufferedWriter writer
+    ) throws IOException {
+        final String[][] table = new String[13][2];
+        table[0][0] = "Kürzel";
+        table[0][1] = meta.module();
+        table[1][0] = "Modulverantwortliche";
+        table[1][1] = module.responsible();
+        table[2][0] = "Dozenten";
+        table[2][1] = module.teachers().stream().collect(Collectors.joining(", "));
+        table[3][0] = "Lehrsprache";
+        table[3][1] = module.language();
+        table[4][0] = "Semester";
+        table[4][1] = String.valueOf(meta.semester());
+        table[5][0] = "ECTS-Punkte";
+        table[5][1] = String.valueOf(module.ects());
+        table[6][0] = "Kontaktstunden";
+        table[6][1] = String.valueOf(module.contacthours());
+        table[7][0] = "Selbststudium";
+        table[7][1] = String.valueOf(module.homehours());
+        table[8][0] = "Dauer";
+        table[8][1] = meta.duration() + " Semester";
+        table[9][0] = "Art";
+        table[9][1] = meta.type();
+        table[10][0] = "Häufigkeit";
+        table[10][1] = meta.frequency();
+        table[11][0] = "Gewichtung";
+        table[11][1] = String.format("%d/%d", meta.weight(), weightSum);
+        table[12][0] = "Prüfungsleistung";
+        table[12][1] = module.examination();
+        writer.write("\\section{");
+        writer.write(ModuleBookLaTeXWriter.escapeForLaTeX(module.title()));
+        writer.write("}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\subsection*{Allgemeine Angaben}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\begin{tabularx}{\\textwidth}{!{\\color{mtabgray}\\vrule}l!{\\color{mtabgray}\\vrule}X!{\\color{mtabgray}\\vrule}}");
+        Main.newLine(writer);
+        writer.write("\\arrayrulecolor{mtabgray}\\hline");
+        Main.newLine(writer);
+        for (int i = 0; i < table.length; i++) {
+            if (i % 2 == 0) {
+                writer.write("\\rowcolor{mtabback}");
+                Main.newLine(writer);
+            }
+            writer.write("\\textbf{");
+            writer.write(ModuleBookLaTeXWriter.escapeForLaTeX(table[i][0]));
+            writer.write("} & ");
+            writer.write(ModuleBookLaTeXWriter.escapeForLaTeX(table[i][1]));
+            writer.write("\\\\\\arrayrulecolor{mtabgray}\\hline");
+            Main.newLine(writer);
+        }
+        writer.write("\\end{tabularx}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\subsection*{Stichwörter}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\begin{itemize}");
+        Main.newLine(writer);
+        for (final String keyword : module.keywords()) {
+            writer.write("\\item ");
+            writer.write(keyword);
+            Main.newLine(writer);
+        }
+        writer.write("\\end{itemize}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\subsection*{Zugangsvoraussetzungen}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        //TODO
+        writer.write("\\subsection*{Verwendbarkeit}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        //TODO
+        writer.write("\\subsection*{Qualifikations- und Kompetenzziele}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        //TODO
+        writer.write("\\subsection*{Lehr- und Lernmethoden}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        //TODO
+        writer.write("\\subsection*{Inhalte}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        //TODO
+        writer.write("\\subsection*{Grundlegende Literaturhinweise}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        //TODO
+        writer.write("\\clearpage");
+        Main.newLine(writer);
+        Main.newLine(writer);
     }
 
     public ModuleBookLaTeXWriter(final ModuleBook book, final ModuleMap modules) {
@@ -52,6 +155,22 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         Main.newLine(writer);
         writer.write("\\usepackage{array}");
         Main.newLine(writer);
+        writer.write("\\usepackage{colortbl}");
+        Main.newLine(writer);
+        writer.write("\\usepackage{tabularx}");
+        Main.newLine(writer);
+        writer.write("\\usepackage{titlesec}");
+        Main.newLine(writer);
+        writer.write("\\usepackage{titletoc}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\titleformat{\\section}{\\normalfont\\Large\\bfseries}{}{0em}{}[{\\titlerule[1pt]}]");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write(
+            "\\titlecontents{section}[0em]{\\vskip 0.5ex}{\\contentsmargin{0pt}}{}{\\titlerule*[3pt]{.}\\contentspage}"
+        );
+        Main.newLine(writer);
         Main.newLine(writer);
         writer.write("\\renewcommand{\\familydefault}{\\sfdefault}");
         Main.newLine(writer);
@@ -62,9 +181,14 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         writer.write("\\setlength{\\parindent}{0pt}");
         Main.newLine(writer);
         Main.newLine(writer);
+        writer.write("\\colorlet{mtabgray}{black!50}");
+        Main.newLine(writer);
+        writer.write("\\colorlet{mtabback}{black!10}");
+        Main.newLine(writer);
+        Main.newLine(writer);
         writer.write("\\fancyhead{}");
         Main.newLine(writer);
-//        writer.write("\\renewcommand{\\headrulewidth}{0pt}");
+        writer.write("\\renewcommand{\\headrulewidth}{0pt}");
         Main.newLine(writer);
         writer.write("\\cfoot{}");
         Main.newLine(writer);
@@ -74,6 +198,24 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         writer.write("\\begin{document}");
         Main.newLine(writer);
         Main.newLine(writer);
+    }
+
+    @Override
+    protected void writeModules(
+        final ModuleBook book,
+        final ModuleMap modules,
+        final BufferedWriter writer
+    ) throws IOException {
+        writer.write("\\tableofcontents");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\clearpage");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        final int weightSum = book.modules().stream().mapToInt(MetaModule::weight).sum();
+        for (final MetaModule meta : book.modules()) {
+            ModuleBookLaTeXWriter.writeModule(meta, modules.get(meta.module()), weightSum, writer);
+        }
     }
 
     @Override
@@ -146,6 +288,9 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         writer.write("\\end{longtable}");
         Main.newLine(writer);
         writer.write("\\renewcommand{\\arraystretch}{1}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\clearpage");
         Main.newLine(writer);
         Main.newLine(writer);
     }
