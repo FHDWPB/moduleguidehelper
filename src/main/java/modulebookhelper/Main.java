@@ -8,9 +8,12 @@ public class Main {
 
     private static final Gson GSON = new Gson();
 
-    private static String lineSeparator = System.lineSeparator();
+    public static String lineSeparator = System.lineSeparator();
 
     public static void main(final String[] args) throws IOException {
+        if (args == null || args.length != 3) {
+            System.out.println("Call with book and modules JSON, followed by output file!");
+        }
         try (
             FileReader bookReader = new FileReader(args[0]);
             FileReader modulesReader = new FileReader(args[1]);

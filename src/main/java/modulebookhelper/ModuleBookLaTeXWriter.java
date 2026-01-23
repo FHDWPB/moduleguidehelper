@@ -16,12 +16,36 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
             .replaceAll("^\"", "''");
     }
 
+    private static void writeItemize(
+        final List<String> items,
+        final String noItems,
+        final BufferedWriter writer
+    ) throws IOException {
+        writer.write("\\begin{itemize}[itemsep=0pt]");
+        Main.newLine(writer);
+        if (items.isEmpty()) {
+            writer.write("\\item ");
+            writer.write(noItems);
+            Main.newLine(writer);
+        } else {
+            for (final String item : items) {
+                writer.write("\\item ");
+                writer.write(item);
+                Main.newLine(writer);
+            }
+        }
+        writer.write("\\end{itemize}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+    }
+    
     private static void writeModule(
         final MetaModule meta,
-        final Module module,
+        final ModuleMap modules,
         final int weightSum,
         final BufferedWriter writer
     ) throws IOException {
+        Module module = modules.get(meta.module());
         final String[][] table = new String[13][2];
         table[0][0] = "Kürzel";
         table[0][1] = meta.module();
@@ -79,32 +103,39 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         writer.write("\\subsection*{Stichwörter}");
         Main.newLine(writer);
         Main.newLine(writer);
-        writer.write("\\begin{itemize}");
-        Main.newLine(writer);
-        for (final String keyword : module.keywords()) {
-            writer.write("\\item ");
-            writer.write(keyword);
-            Main.newLine(writer);
-        }
-        writer.write("\\end{itemize}");
-        Main.newLine(writer);
-        Main.newLine(writer);
+        ModuleBookLaTeXWriter.writeItemize(module.keywords(), "Keine", writer);
         writer.write("\\subsection*{Zugangsvoraussetzungen}");
         Main.newLine(writer);
         Main.newLine(writer);
-        //TODO
+        ModuleBookLaTeXWriter.writeItemize(
+            ModuleBookLaTeXWriter.lookupModules(module.preconditions(), modules),
+            "Keine",
+            writer
+        );
         writer.write("\\subsection*{Verwendbarkeit}");
         Main.newLine(writer);
         Main.newLine(writer);
-        //TODO
+        ModuleBookLaTeXWriter.writeItemize(
+            ModuleBookLaTeXWriter.lookupModules(module.usability(), modules),
+            "Keine",
+            writer
+        );
         writer.write("\\subsection*{Qualifikations- und Kompetenzziele}");
         Main.newLine(writer);
         Main.newLine(writer);
-        //TODO
+        writer.write(module.competencies().stream().collect(Collectors.joining(Main.lineSeparator)));
+        Main.newLine(writer);
         writer.write("\\subsection*{Lehr- und Lernmethoden}");
         Main.newLine(writer);
         Main.newLine(writer);
-        //TODO
+        if (module.teachingmethods().isEmpty()) {
+            writer.write("Präsenzveranstaltungen, Eigenstudium, individuelles und kooperatives Lernen, ");
+            writer.write("problemorientiertes und integratives Lernen, forschendes Lernen, synchrones und ");
+            writer.write("asynchrones Lernen, Übungen, Fallstudien, Expertenvorträge.");
+        } else {
+            writer.write(module.teachingmethods().stream().collect(Collectors.joining(Main.lineSeparator)));
+        }
+        Main.newLine(writer);
         writer.write("\\subsection*{Inhalte}");
         Main.newLine(writer);
         Main.newLine(writer);
@@ -116,6 +147,10 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         writer.write("\\clearpage");
         Main.newLine(writer);
         Main.newLine(writer);
+    }
+
+    private static List<String> lookupModules(List<String> ids, ModuleMap modules) {
+        return ids.stream().map(id -> modules.containsKey(id) ? modules.get(id).title() : id).toList();
     }
 
     public ModuleBookLaTeXWriter(final ModuleBook book, final ModuleMap modules) {
@@ -162,6 +197,8 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         writer.write("\\usepackage{titlesec}");
         Main.newLine(writer);
         writer.write("\\usepackage{titletoc}");
+        Main.newLine(writer);
+        writer.write("\\usepackage{enumitem}");
         Main.newLine(writer);
         Main.newLine(writer);
         writer.write("\\titleformat{\\section}{\\normalfont\\Large\\bfseries}{}{0em}{}[{\\titlerule[1pt]}]");
@@ -214,7 +251,7 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         Main.newLine(writer);
         final int weightSum = book.modules().stream().mapToInt(MetaModule::weight).sum();
         for (final MetaModule meta : book.modules()) {
-            ModuleBookLaTeXWriter.writeModule(meta, modules.get(meta.module()), weightSum, writer);
+            ModuleBookLaTeXWriter.writeModule(meta, modules, weightSum, writer);
         }
     }
 
