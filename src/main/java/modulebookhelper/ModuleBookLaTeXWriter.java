@@ -82,9 +82,15 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
     private static List<String> lookupModules(final List<String> ids, final ModuleMap modules) {
         return ids
             .stream()
-            .map(id -> modules.containsKey(id) ? modules.get(id).title() : id)
-            .map(ModuleBookLaTeXWriter::escapeForLaTeX)
-            .toList();
+            .map(id ->
+                modules.containsKey(id) ?
+                    String.format(
+                        "\\hyperref[sec:%s]{%s}",
+                        id,
+                        ModuleBookLaTeXWriter.escapeForLaTeX(modules.get(id).title())
+                    ) :
+                        ModuleBookLaTeXWriter.escapeForLaTeX(id)
+            ).toList();
     }
 
     private static void writeAuthors(final List<String> authors, final BufferedWriter writer) throws IOException {
@@ -155,6 +161,8 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         table[12][1] = ModuleBookLaTeXWriter.formatExamination(module.examination());
         writer.write("\\section{");
         writer.write(ModuleBookLaTeXWriter.escapeForLaTeX(module.title()));
+        writer.write("}\\label{sec:");
+        writer.write(meta.module());
         writer.write("}");
         Main.newLine(writer);
         Main.newLine(writer);
@@ -259,6 +267,12 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
     }
 
     private static void writeSource(final Source source, final BufferedWriter writer) throws IOException {
+        if (source.type() == SourceType.HINT) {
+            writer.write(ModuleBookLaTeXWriter.escapeForLaTeX(source.title()));
+            writer.write("\\\\[1.5ex]");
+            Main.newLine(writer);
+            return;
+        }
         ModuleBookLaTeXWriter.writeAuthors(source.authors(), writer);
         if (source.year() != null) {
             writer.write(", ");
@@ -332,6 +346,8 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         writer.write("\\usepackage{titletoc}");
         Main.newLine(writer);
         writer.write("\\usepackage{enumitem}");
+        Main.newLine(writer);
+        writer.write("\\usepackage{hyperref}");
         Main.newLine(writer);
         Main.newLine(writer);
         writer.write("\\titleformat{\\section}{\\normalfont\\Large\\bfseries}{}{0em}{}[{\\titlerule[1pt]}]");
@@ -429,7 +445,7 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         Main.newLine(writer);
         Main.newLine(writer);
         final int weightSum = book.modules().stream().mapToInt(MetaModule::weight).sum();
-        for (final MetaModule meta : book.modules()) {
+        for (final MetaModule meta : book.modules().stream().sorted().toList()) {
             ModuleBookLaTeXWriter.writeModule(meta, modules, weightSum, writer);
         }
     }
@@ -483,11 +499,17 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
             writer.write(". Semester} &  &  &  &  & \\\\\\hline");
             Main.newLine(writer);
             for (final ModuleStats stats : modules) {
-                writer.write("\\begin{minipage}{6.7cm}\\strut{}");
+                writer.write("\\begin{minipage}{6.7cm}\\raggedright\\strut{}\\hyperref[sec:");
+                writer.write(stats.id());
+                writer.write("]{");
                 writer.write(ModuleBookLaTeXWriter.escapeForLaTeX(stats.title()));
-                writer.write("\\strut{}\\end{minipage}");
+                writer.write("}\\strut{}\\end{minipage}");
                 writer.write(" & ");
-                writer.write(String.valueOf(semester));
+                writer.write(String.valueOf(stats.semester()));
+                if (stats.duration() > 1) {
+                    writer.write("--");
+                    writer.write(String.valueOf(stats.semester() + stats.duration() - 1));
+                }
                 writer.write(" & ");
                 writer.write(String.valueOf(stats.contactHours()));
                 writer.write(" & ");

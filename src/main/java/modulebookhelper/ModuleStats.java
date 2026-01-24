@@ -2,7 +2,16 @@ package modulebookhelper;
 
 import java.util.*;
 
-public record ModuleStats(String title, int semester, int contactHours, int homeHours, int ects, String examination) {
+public record ModuleStats(
+    String id,
+    String title,
+    int semester,
+    int duration,
+    int contactHours,
+    int homeHours,
+    int ects,
+    String examination
+) {
 
     private static final TreeMap<Integer, String> ROMAN_NUMERALS;
 
@@ -25,8 +34,10 @@ public record ModuleStats(String title, int semester, int contactHours, int home
 
     public ModuleStats forSpecialization(final int number) {
         return new ModuleStats(
+            this.id(),
             String.format("Fach %s aus Spezialisierung", ModuleStats.toRomanNumeral(number)),
             this.semester(),
+            this.duration(),
             this.contactHours(),
             this.homeHours(),
             this.ects(),

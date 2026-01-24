@@ -22,7 +22,7 @@ public record ModuleOverview(
         int ectsSum = 0;
         int contactHoursSum = 0;
         int homeHoursSum = 0;
-        for (final MetaModule meta : book.modules()) {
+        for (final MetaModule meta : book.modules().stream().sorted().toList()) {
             final Module module = modules.get(meta.module());
             if (module == null) {
                 System.out.println(meta.module());
@@ -41,8 +41,10 @@ public record ModuleOverview(
             }
             final ModuleStats stats =
                 new ModuleStats(
+                    meta.module(),
                     module.title(),
                     meta.semester(),
+                    meta.duration(),
                     contactHours.intValue(),
                     homeHours.intValue(),
                     ects.intValue(),
