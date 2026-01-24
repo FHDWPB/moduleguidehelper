@@ -16,7 +16,7 @@ public abstract class ModuleBookWriter {
     public void write(final BufferedWriter writer) throws IOException {
         this.writeDocumentStart(writer);
         this.writeTitlePage(this.book, writer);
-        this.writerIntro(this.book, writer);
+        this.writeIntro(this.book, writer);
         this.writeOverview(this.book, ModuleOverview.create(this.book, this.modules), writer);
         this.writeModules(this.book, this.modules, writer);
         this.writeDocumentEnd(writer);
@@ -34,7 +34,7 @@ public abstract class ModuleBookWriter {
         final BufferedWriter writer
     ) throws IOException;
 
-    protected abstract void writerIntro(final ModuleBook book, final BufferedWriter writer) throws IOException;
+    protected abstract void writeIntro(final ModuleBook book, final BufferedWriter writer) throws IOException;
 
     protected abstract void writeTitlePage(final ModuleBook book, final BufferedWriter writer) throws IOException;
 

@@ -21,7 +21,7 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         final String noItems,
         final BufferedWriter writer
     ) throws IOException {
-        writer.write("\\begin{itemize}[itemsep=0pt]");
+        writer.write("\\begin{itemize}[itemsep=0pt,topsep=0pt]");
         Main.newLine(writer);
         if (items.isEmpty()) {
             writer.write("\\item ");
@@ -50,11 +50,12 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         table[0][0] = "Kürzel";
         table[0][1] = meta.module();
         table[1][0] = "Modulverantwortliche";
-        table[1][1] = module.responsible();
+        table[1][1] = ModuleBookLaTeXWriter.escapeForLaTeX(module.responsible());
         table[2][0] = "Dozenten";
-        table[2][1] = module.teachers().stream().collect(Collectors.joining(", "));
+        table[2][1] =
+            ModuleBookLaTeXWriter.escapeForLaTeX(module.teachers().stream().collect(Collectors.joining(", ")));
         table[3][0] = "Lehrsprache";
-        table[3][1] = module.language();
+        table[3][1] = ModuleBookLaTeXWriter.escapeForLaTeX(module.language());
         table[4][0] = "Semester";
         table[4][1] = String.valueOf(meta.semester());
         table[5][0] = "ECTS-Punkte";
@@ -66,13 +67,13 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         table[8][0] = "Dauer";
         table[8][1] = meta.duration() + " Semester";
         table[9][0] = "Art";
-        table[9][1] = meta.type();
+        table[9][1] = ModuleBookLaTeXWriter.escapeForLaTeX(meta.type());
         table[10][0] = "Häufigkeit";
-        table[10][1] = meta.frequency();
+        table[10][1] = ModuleBookLaTeXWriter.escapeForLaTeX(meta.frequency());
         table[11][0] = "Gewichtung";
         table[11][1] = String.format("%d/%d", meta.weight(), weightSum);
         table[12][0] = "Prüfungsleistung";
-        table[12][1] = module.examination();
+        table[12][1] = ModuleBookLaTeXWriter.formatExamination(module.examination());
         writer.write("\\section{");
         writer.write(ModuleBookLaTeXWriter.escapeForLaTeX(module.title()));
         writer.write("}");
@@ -91,19 +92,21 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
                 Main.newLine(writer);
             }
             writer.write("\\textbf{");
-            writer.write(ModuleBookLaTeXWriter.escapeForLaTeX(table[i][0]));
+            writer.write(table[i][0]);
             writer.write("} & ");
-            writer.write(ModuleBookLaTeXWriter.escapeForLaTeX(table[i][1]));
+            writer.write(table[i][1]);
             writer.write("\\\\\\arrayrulecolor{mtabgray}\\hline");
             Main.newLine(writer);
         }
         writer.write("\\end{tabularx}");
         Main.newLine(writer);
         Main.newLine(writer);
-        writer.write("\\subsection*{Stichwörter}");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        ModuleBookLaTeXWriter.writeItemize(module.keywords(), "Keine", writer);
+        if (module.keywords() != null && !module.keywords().isEmpty()) {
+            writer.write("\\subsection*{Stichwörter}");
+            Main.newLine(writer);
+            Main.newLine(writer);
+            ModuleBookLaTeXWriter.writeItemize(module.keywords(), "Keine", writer);
+        }
         writer.write("\\subsection*{Zugangsvoraussetzungen}");
         Main.newLine(writer);
         Main.newLine(writer);
@@ -123,7 +126,7 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         writer.write("\\subsection*{Qualifikations- und Kompetenzziele}");
         Main.newLine(writer);
         Main.newLine(writer);
-        writer.write(module.competencies().stream().collect(Collectors.joining(Main.lineSeparator)));
+        ModuleBookLaTeXWriter.writeText(module.competencies(), writer);
         Main.newLine(writer);
         writer.write("\\subsection*{Lehr- und Lernmethoden}");
         Main.newLine(writer);
@@ -132,21 +135,90 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
             writer.write("Präsenzveranstaltungen, Eigenstudium, individuelles und kooperatives Lernen, ");
             writer.write("problemorientiertes und integratives Lernen, forschendes Lernen, synchrones und ");
             writer.write("asynchrones Lernen, Übungen, Fallstudien, Expertenvorträge.");
+            Main.newLine(writer);
         } else {
-            writer.write(module.teachingmethods().stream().collect(Collectors.joining(Main.lineSeparator)));
+            ModuleBookLaTeXWriter.writeText(module.teachingmethods(), writer);
         }
         Main.newLine(writer);
+        if (module.special() != null && !module.special().isEmpty()) {
+            writer.write("\\subsection*{Besonderheiten}");
+            Main.newLine(writer);
+            Main.newLine(writer);
+            ModuleBookLaTeXWriter.writeText(module.special(), writer);
+            Main.newLine(writer);
+        }
         writer.write("\\subsection*{Inhalte}");
         Main.newLine(writer);
         Main.newLine(writer);
-        //TODO
-        writer.write("\\subsection*{Grundlegende Literaturhinweise}");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        //TODO
+        if (module.content().getFirst().chapter().startsWith("!")) {
+            writer.write(module.content().getFirst().chapter().substring(1));
+            Main.newLine(writer);
+            Main.newLine(writer);
+        } else {
+            ModuleBookLaTeXWriter.writeItemize(
+                module.content().stream().map(ModuleBookLaTeXWriter::chapterToItem).toList(),
+                "keine",
+                writer
+            );
+        }
+        if (module.literature() != null && ! module.literature().isEmpty()) {
+            writer.write("\\subsection*{Grundlegende Literaturhinweise}");
+            Main.newLine(writer);
+            Main.newLine(writer);
+            for (Source source : module.literature()) {
+                ModuleBookLaTeXWriter.writeSource(source, writer);
+            }
+            Main.newLine(writer);
+        }
         writer.write("\\clearpage");
         Main.newLine(writer);
         Main.newLine(writer);
+    }
+
+    private static String formatExamination(String examination) {
+        if (examination.contains("*")) {
+            int index = examination.indexOf('*');
+            StringBuilder result = new StringBuilder();
+            result.append(examination.substring(0, index));
+            result.append("\\textbf{");
+            result.append(examination.substring(index + 1, index + 2));
+            result.append("}");
+            result.append(examination.substring(index + 2));
+            return result.toString();
+        }
+        return examination;
+    }
+
+    private static void writeText(final List<String> sentences, final BufferedWriter writer) throws IOException {
+        writer.write(
+            sentences
+            .stream()
+            .map(ModuleBookLaTeXWriter::escapeForLaTeX)
+            .collect(Collectors.joining(Main.lineSeparator))
+        );
+        Main.newLine(writer);
+    }
+    
+    private static void writeSource(final Source source, final BufferedWriter writer) throws IOException {
+        ModuleBookLaTeXWriter.writeAuthors(source.authors(), writer);
+        if (source.year() != null) {
+            writer.write(", ");
+            writer.write(String.valueOf(source.year()));
+        }
+        writer.write(". \\textit{");
+        writer.write(ModuleBookLaTeXWriter.escapeForLaTeX(source.title()));
+        writer.write("}, ");
+        if (source.location() != null && !source.location().isBlank()) {
+            writer.write(ModuleBookLaTeXWriter.escapeForLaTeX(source.location()));
+            writer.write(": ");
+        }
+        writer.write(ModuleBookLaTeXWriter.escapeForLaTeX(source.publisher()));
+        writer.write(".\\\\[1.5ex]");
+        Main.newLine(writer);
+    }
+
+    private static void writeAuthors(final List<String> authors, final BufferedWriter writer) throws IOException {
+        writer.write(authors.stream().map(ModuleBookLaTeXWriter::formatAuthor).collect(Collectors.joining(", ")));
     }
 
     private static List<String> lookupModules(List<String> ids, ModuleMap modules) {
@@ -316,7 +388,7 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
                 writer.write(" & ");
                 writer.write(String.valueOf(stats.ects()));
                 writer.write(" & ");
-                writer.write(stats.examination());
+                writer.write(ModuleBookLaTeXWriter.formatExamination(stats.examination()));
                 writer.write("\\\\\\hline");
                 Main.newLine(writer);
             }
@@ -333,7 +405,7 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
     }
 
     @Override
-    protected void writerIntro(final ModuleBook book, final BufferedWriter writer) throws IOException {
+    protected void writeIntro(final ModuleBook book, final BufferedWriter writer) throws IOException {
         writer.write("\\pagestyle{fancy}");
         Main.newLine(writer);
         Main.newLine(writer);
@@ -433,6 +505,51 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         writer.write("\\clearpage");
         Main.newLine(writer);
         Main.newLine(writer);
+    }
+
+    private static String chapterToItem(Chapter chapter) {
+        if (chapter.sections() == null || chapter.sections().isEmpty()) {
+            return chapter.chapter();
+        }
+        StringWriter stringWriter = new StringWriter();
+        stringWriter.write(chapter.chapter());
+        try (BufferedWriter buffer = new BufferedWriter(stringWriter)) {
+            Main.newLine(buffer);
+            ModuleBookLaTeXWriter.writeItemize(chapter.sections(), "", buffer);
+            buffer.flush();
+            return stringWriter.toString();
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private static String formatAuthor(String author) {
+        final String familyName;
+        final List<Character> initials = new LinkedList<Character>();
+        if (author.contains("|")) {
+            int index = author.indexOf('|');
+            familyName = author.substring(index + 1);
+            for (String namePart : author.substring(0, index).split(" ")) {
+                if (!namePart.isBlank()) {
+                    initials.add(namePart.charAt(0));
+                }
+            }
+        } else {
+            String[] nameParts = author.split(" ");
+            familyName = nameParts[nameParts.length - 1];
+            for (int i = 0; i < nameParts.length - 1; i++) {
+                initials.add(nameParts[i].charAt(0));
+            }
+        }
+        StringBuilder result = new StringBuilder();
+        result.append(ModuleBookLaTeXWriter.escapeForLaTeX(familyName.toUpperCase()));
+        result.append(",");
+        for (Character c : initials) {
+            result.append(" ");
+            result.append(Character.toUpperCase(c));
+            result.append(".");
+        }
+        return result.toString();
     }
 
 }
