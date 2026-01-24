@@ -26,6 +26,8 @@ public abstract class ModuleBookWriter {
 
     protected abstract void writeDocumentStart(final BufferedWriter writer) throws IOException;
 
+    protected abstract void writeIntro(final ModuleBook book, final BufferedWriter writer) throws IOException;
+
     protected abstract void writeModules(ModuleBook book, ModuleMap modules, BufferedWriter writer) throws IOException;
 
     protected abstract void writeOverview(
@@ -33,8 +35,6 @@ public abstract class ModuleBookWriter {
         final ModuleOverview overview,
         final BufferedWriter writer
     ) throws IOException;
-
-    protected abstract void writeIntro(final ModuleBook book, final BufferedWriter writer) throws IOException;
 
     protected abstract void writeTitlePage(final ModuleBook book, final BufferedWriter writer) throws IOException;
 

@@ -6,9 +6,9 @@ import com.google.gson.*;
 
 public class Main {
 
-    private static final Gson GSON = new Gson();
-
     public static String lineSeparator = System.lineSeparator();
+
+    private static final Gson GSON = new Gson();
 
     public static void main(final String[] args) throws IOException {
         if (args != null && args.length == 2) {

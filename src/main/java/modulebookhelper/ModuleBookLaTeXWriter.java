@@ -6,6 +6,26 @@ import java.util.stream.*;
 
 public class ModuleBookLaTeXWriter extends ModuleBookWriter {
 
+    private static String chapterToItem(final Chapter chapter) {
+        if (chapter.sections() == null || chapter.sections().isEmpty()) {
+            return ModuleBookLaTeXWriter.escapeForLaTeX(chapter.chapter());
+        }
+        final StringWriter stringWriter = new StringWriter();
+        stringWriter.write(ModuleBookLaTeXWriter.escapeForLaTeX(chapter.chapter()));
+        try (BufferedWriter buffer = new BufferedWriter(stringWriter)) {
+            Main.newLine(buffer);
+            ModuleBookLaTeXWriter.writeItemize(
+                chapter.sections().stream().map(ModuleBookLaTeXWriter::escapeForLaTeX).toList(),
+                "",
+                buffer
+            );
+            buffer.flush();
+            return stringWriter.toString();
+        } catch (final IOException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
     private static String escapeForLaTeX(final String text) {
         return text.replaceAll("\\\\", "\\\\textbackslash")
             .replaceAll("([&\\$%\\{\\}_#])", "\\\\$1")
@@ -14,6 +34,61 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
             .replaceAll("\\\\textbackslash", "\\\\textbackslash{}")
             .replaceAll("([^\\\\])\"", "$1''")
             .replaceAll("^\"", "''");
+    }
+
+    private static String formatAuthor(final String author) {
+        final String familyName;
+        final List<Character> initials = new LinkedList<Character>();
+        if (author.contains("|")) {
+            final int index = author.indexOf('|');
+            familyName = author.substring(index + 1);
+            for (final String namePart : author.substring(0, index).split(" ")) {
+                if (!namePart.isBlank()) {
+                    initials.add(namePart.charAt(0));
+                }
+            }
+        } else {
+            final String[] nameParts = author.split(" ");
+            familyName = nameParts[nameParts.length - 1];
+            for (int i = 0; i < nameParts.length - 1; i++) {
+                initials.add(nameParts[i].charAt(0));
+            }
+        }
+        final StringBuilder result = new StringBuilder();
+        result.append(ModuleBookLaTeXWriter.escapeForLaTeX(familyName.toUpperCase()));
+        result.append(",");
+        for (final Character c : initials) {
+            result.append(" ");
+            result.append(Character.toUpperCase(c));
+            result.append(".");
+        }
+        return result.toString();
+    }
+
+    private static String formatExamination(final String examination) {
+        if (examination.contains("*")) {
+            final int index = examination.indexOf('*');
+            final StringBuilder result = new StringBuilder();
+            result.append(examination.substring(0, index));
+            result.append("\\textbf{");
+            result.append(examination.substring(index + 1, index + 2));
+            result.append("}");
+            result.append(examination.substring(index + 2));
+            return result.toString();
+        }
+        return examination;
+    }
+
+    private static List<String> lookupModules(final List<String> ids, final ModuleMap modules) {
+        return ids
+            .stream()
+            .map(id -> modules.containsKey(id) ? modules.get(id).title() : id)
+            .map(ModuleBookLaTeXWriter::escapeForLaTeX)
+            .toList();
+    }
+
+    private static void writeAuthors(final List<String> authors, final BufferedWriter writer) throws IOException {
+        writer.write(authors.stream().map(ModuleBookLaTeXWriter::formatAuthor).collect(Collectors.joining(", ")));
     }
 
     private static void writeItemize(
@@ -38,14 +113,14 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         Main.newLine(writer);
         Main.newLine(writer);
     }
-    
+
     private static void writeModule(
         final MetaModule meta,
         final ModuleMap modules,
         final int weightSum,
         final BufferedWriter writer
     ) throws IOException {
-        Module module = modules.get(meta.module());
+        final Module module = modules.get(meta.module());
         if (module == null) {
             System.out.println(meta.module());
             return;
@@ -173,7 +248,7 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
             writer.write("\\subsection*{Grundlegende Literaturhinweise}");
             Main.newLine(writer);
             Main.newLine(writer);
-            for (Source source : module.literature()) {
+            for (final Source source : module.literature()) {
                 ModuleBookLaTeXWriter.writeSource(source, writer);
             }
             Main.newLine(writer);
@@ -183,30 +258,6 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         Main.newLine(writer);
     }
 
-    private static String formatExamination(String examination) {
-        if (examination.contains("*")) {
-            int index = examination.indexOf('*');
-            StringBuilder result = new StringBuilder();
-            result.append(examination.substring(0, index));
-            result.append("\\textbf{");
-            result.append(examination.substring(index + 1, index + 2));
-            result.append("}");
-            result.append(examination.substring(index + 2));
-            return result.toString();
-        }
-        return examination;
-    }
-
-    private static void writeText(final List<String> sentences, final BufferedWriter writer) throws IOException {
-        writer.write(
-            sentences
-            .stream()
-            .map(ModuleBookLaTeXWriter::escapeForLaTeX)
-            .collect(Collectors.joining(Main.lineSeparator))
-        );
-        Main.newLine(writer);
-    }
-    
     private static void writeSource(final Source source, final BufferedWriter writer) throws IOException {
         ModuleBookLaTeXWriter.writeAuthors(source.authors(), writer);
         if (source.year() != null) {
@@ -225,16 +276,14 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         Main.newLine(writer);
     }
 
-    private static void writeAuthors(final List<String> authors, final BufferedWriter writer) throws IOException {
-        writer.write(authors.stream().map(ModuleBookLaTeXWriter::formatAuthor).collect(Collectors.joining(", ")));
-    }
-
-    private static List<String> lookupModules(List<String> ids, ModuleMap modules) {
-        return ids
+    private static void writeText(final List<String> sentences, final BufferedWriter writer) throws IOException {
+        writer.write(
+            sentences
             .stream()
-            .map(id -> modules.containsKey(id) ? modules.get(id).title() : id)
             .map(ModuleBookLaTeXWriter::escapeForLaTeX)
-            .toList();
+            .collect(Collectors.joining(Main.lineSeparator))
+        );
+        Main.newLine(writer);
     }
 
     public ModuleBookLaTeXWriter(final ModuleBook book, final ModuleMap modules) {
@@ -317,6 +366,52 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         Main.newLine(writer);
         Main.newLine(writer);
         writer.write("\\begin{document}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+    }
+
+    @Override
+    protected void writeIntro(final ModuleBook book, final BufferedWriter writer) throws IOException {
+        writer.write("\\pagestyle{fancy}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("Sehr geehrte Studierende,\\\\");
+        Main.newLine(writer);
+        writer.write("sehr geehrte Kooperationspartner,\\\\");
+        Main.newLine(writer);
+        writer.write("sehr geehrte Kolleginnen und Kollegen,\\\\[2ex]");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("Sie erhalten das Modulhandbuch für den ");
+        writer.write(ModuleBookLaTeXWriter.escapeForLaTeX(book.degree().substring(0, book.degree().indexOf(' '))));
+        writer.write("-Studiengang ");
+        writer.write(ModuleBookLaTeXWriter.escapeForLaTeX(book.subject()));
+        writer.write(" im Studienjahr ");
+        writer.write(book.year());
+        writer.write(".\\\\[2ex]");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("Dieses Modulhandbuch stellt zum einen für die Studierenden eine Information über ");
+        Main.newLine(writer);
+        writer.write("die Studieninhalte dar, zum Zweiten dient es den Partnerunternehmen als Hilfe zur inhaltlichen ");
+        Main.newLine(writer);
+        writer.write("Vorbereitung der Praxisphasen. Daneben ist diese Übersicht ein Leitfaden für die Dozentinnen ");
+        Main.newLine(writer);
+        writer.write("und Dozenten zur modulübergreifenden Abstimmung der Lehrinhalte.\\\\[2ex]");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("Mit freundlichen Grüßen");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\includegraphics{signature.png}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("Prof. Dr. Gregor Sandhaus\\\\");
+        Main.newLine(writer);
+        writer.write("Dekan des Fachbereichs Informatik");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\clearpage");
         Main.newLine(writer);
         Main.newLine(writer);
     }
@@ -417,52 +512,6 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
     }
 
     @Override
-    protected void writeIntro(final ModuleBook book, final BufferedWriter writer) throws IOException {
-        writer.write("\\pagestyle{fancy}");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        writer.write("Sehr geehrte Studierende,\\\\");
-        Main.newLine(writer);
-        writer.write("sehr geehrte Kooperationspartner,\\\\");
-        Main.newLine(writer);
-        writer.write("sehr geehrte Kolleginnen und Kollegen,\\\\[2ex]");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        writer.write("Sie erhalten das Modulhandbuch für den ");
-        writer.write(ModuleBookLaTeXWriter.escapeForLaTeX(book.degree().substring(0, book.degree().indexOf(' '))));
-        writer.write("-Studiengang ");
-        writer.write(ModuleBookLaTeXWriter.escapeForLaTeX(book.subject()));
-        writer.write(" im Studienjahr ");
-        writer.write(book.year());
-        writer.write(".\\\\[2ex]");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        writer.write("Dieses Modulhandbuch stellt zum einen für die Studierenden eine Information über ");
-        Main.newLine(writer);
-        writer.write("die Studieninhalte dar, zum Zweiten dient es den Partnerunternehmen als Hilfe zur inhaltlichen ");
-        Main.newLine(writer);
-        writer.write("Vorbereitung der Praxisphasen. Daneben ist diese Übersicht ein Leitfaden für die Dozentinnen ");
-        Main.newLine(writer);
-        writer.write("und Dozenten zur modulübergreifenden Abstimmung der Lehrinhalte.\\\\[2ex]");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        writer.write("Mit freundlichen Grüßen");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        writer.write("\\includegraphics{signature.png}");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        writer.write("Prof. Dr. Gregor Sandhaus\\\\");
-        Main.newLine(writer);
-        writer.write("Dekan des Fachbereichs Informatik");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        writer.write("\\clearpage");
-        Main.newLine(writer);
-        Main.newLine(writer);
-    }
-
-    @Override
     protected void writeTitlePage(final ModuleBook book, final BufferedWriter writer) throws IOException {
         writer.write("\\pagestyle{empty}");
         Main.newLine(writer);
@@ -517,55 +566,6 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         writer.write("\\clearpage");
         Main.newLine(writer);
         Main.newLine(writer);
-    }
-
-    private static String chapterToItem(Chapter chapter) {
-        if (chapter.sections() == null || chapter.sections().isEmpty()) {
-            return ModuleBookLaTeXWriter.escapeForLaTeX(chapter.chapter());
-        }
-        StringWriter stringWriter = new StringWriter();
-        stringWriter.write(ModuleBookLaTeXWriter.escapeForLaTeX(chapter.chapter()));
-        try (BufferedWriter buffer = new BufferedWriter(stringWriter)) {
-            Main.newLine(buffer);
-            ModuleBookLaTeXWriter.writeItemize(
-                chapter.sections().stream().map(ModuleBookLaTeXWriter::escapeForLaTeX).toList(),
-                "",
-                buffer
-            );
-            buffer.flush();
-            return stringWriter.toString();
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
-    private static String formatAuthor(String author) {
-        final String familyName;
-        final List<Character> initials = new LinkedList<Character>();
-        if (author.contains("|")) {
-            int index = author.indexOf('|');
-            familyName = author.substring(index + 1);
-            for (String namePart : author.substring(0, index).split(" ")) {
-                if (!namePart.isBlank()) {
-                    initials.add(namePart.charAt(0));
-                }
-            }
-        } else {
-            String[] nameParts = author.split(" ");
-            familyName = nameParts[nameParts.length - 1];
-            for (int i = 0; i < nameParts.length - 1; i++) {
-                initials.add(nameParts[i].charAt(0));
-            }
-        }
-        StringBuilder result = new StringBuilder();
-        result.append(ModuleBookLaTeXWriter.escapeForLaTeX(familyName.toUpperCase()));
-        result.append(",");
-        for (Character c : initials) {
-            result.append(" ");
-            result.append(Character.toUpperCase(c));
-            result.append(".");
-        }
-        return result.toString();
     }
 
 }
