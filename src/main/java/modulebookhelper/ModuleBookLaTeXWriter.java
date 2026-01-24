@@ -46,6 +46,10 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         final BufferedWriter writer
     ) throws IOException {
         Module module = modules.get(meta.module());
+        if (module == null) {
+            System.out.println(meta.module());
+            return;
+        }
         final String[][] table = new String[13][2];
         table[0][0] = "Kürzel";
         table[0][1] = meta.module();
@@ -105,7 +109,11 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
             writer.write("\\subsection*{Stichwörter}");
             Main.newLine(writer);
             Main.newLine(writer);
-            ModuleBookLaTeXWriter.writeItemize(module.keywords(), "Keine", writer);
+            ModuleBookLaTeXWriter.writeItemize(
+                module.keywords().stream().map(ModuleBookLaTeXWriter::escapeForLaTeX).toList(),
+                "Keine",
+                writer
+            );
         }
         writer.write("\\subsection*{Zugangsvoraussetzungen}");
         Main.newLine(writer);
@@ -222,7 +230,11 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
     }
 
     private static List<String> lookupModules(List<String> ids, ModuleMap modules) {
-        return ids.stream().map(id -> modules.containsKey(id) ? modules.get(id).title() : id).toList();
+        return ids
+            .stream()
+            .map(id -> modules.containsKey(id) ? modules.get(id).title() : id)
+            .map(ModuleBookLaTeXWriter::escapeForLaTeX)
+            .toList();
     }
 
     public ModuleBookLaTeXWriter(final ModuleBook book, final ModuleMap modules) {
@@ -509,13 +521,17 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
 
     private static String chapterToItem(Chapter chapter) {
         if (chapter.sections() == null || chapter.sections().isEmpty()) {
-            return chapter.chapter();
+            return ModuleBookLaTeXWriter.escapeForLaTeX(chapter.chapter());
         }
         StringWriter stringWriter = new StringWriter();
-        stringWriter.write(chapter.chapter());
+        stringWriter.write(ModuleBookLaTeXWriter.escapeForLaTeX(chapter.chapter()));
         try (BufferedWriter buffer = new BufferedWriter(stringWriter)) {
             Main.newLine(buffer);
-            ModuleBookLaTeXWriter.writeItemize(chapter.sections(), "", buffer);
+            ModuleBookLaTeXWriter.writeItemize(
+                chapter.sections().stream().map(ModuleBookLaTeXWriter::escapeForLaTeX).toList(),
+                "",
+                buffer
+            );
             buffer.flush();
             return stringWriter.toString();
         } catch (IOException e) {

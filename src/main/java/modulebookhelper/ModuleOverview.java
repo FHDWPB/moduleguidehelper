@@ -24,6 +24,10 @@ public record ModuleOverview(
         int homeHoursSum = 0;
         for (final MetaModule meta : book.modules()) {
             final Module module = modules.get(meta.module());
+            if (module == null) {
+                System.out.println(meta.module());
+                continue;
+            }
             final BigFraction contactHoursFactor = ModuleOverview.parseFactor(meta.contacthoursfactor());
             final BigFraction homeHoursFactor = ModuleOverview.parseFactor(meta.homehoursfactor());
             final BigFraction ectsFactor = ModuleOverview.parseFactor(meta.ectsfactor());
