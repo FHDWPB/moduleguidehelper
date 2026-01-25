@@ -79,18 +79,27 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         return examination;
     }
 
-    private static List<String> lookupModules(final List<String> ids, final ModuleMap modules) {
-        return ids
-            .stream()
-            .map(id ->
-                modules.containsKey(id) ?
-                    String.format(
-                        "\\hyperref[sec:%s]{%s}",
-                        id,
-                        ModuleBookLaTeXWriter.escapeForLaTeX(modules.get(id).title())
-                    ) :
-                        ModuleBookLaTeXWriter.escapeForLaTeX(id)
-            ).toList();
+    private static String lookupModule(
+        final String id,
+        final ModuleMap modules,
+        final List<String> linkable
+    ) {
+        if (modules.containsKey(id)) {
+            final String title = ModuleBookLaTeXWriter.escapeForLaTeX(modules.get(id).title());
+            if (linkable.contains(id)) {
+                return String.format("\\hyperref[sec:%s]{%s}", id, title);
+            }
+            return title;
+        }
+        return ModuleBookLaTeXWriter.escapeForLaTeX(id);
+    }
+
+    private static List<String> lookupModules(
+        final List<String> ids,
+        final ModuleMap modules,
+        final List<String> linkable
+    ) {
+        return ids.stream().map(id -> ModuleBookLaTeXWriter.lookupModule(id, modules, linkable)).toList();
     }
 
     private static void writeAuthors(final List<String> authors, final BufferedWriter writer) throws IOException {
@@ -124,6 +133,7 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         final MetaModule meta,
         final ModuleMap modules,
         final int weightSum,
+        final List<String> linkable,
         final BufferedWriter writer
     ) throws IOException {
         final Module module = modules.get(meta.module());
@@ -169,7 +179,8 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         writer.write("\\subsection*{Allgemeine Angaben}");
         Main.newLine(writer);
         Main.newLine(writer);
-        writer.write("\\begin{tabularx}{\\textwidth}{!{\\color{mtabgray}\\vrule}l!{\\color{mtabgray}\\vrule}X!{\\color{mtabgray}\\vrule}}");
+        writer.write("\\begin{tabularx}{\\textwidth}");
+        writer.write("{!{\\color{mtabgray}\\vrule}l!{\\color{mtabgray}\\vrule}X!{\\color{mtabgray}\\vrule}}");
         Main.newLine(writer);
         writer.write("\\arrayrulecolor{mtabgray}\\hline");
         Main.newLine(writer);
@@ -202,7 +213,7 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         Main.newLine(writer);
         Main.newLine(writer);
         ModuleBookLaTeXWriter.writeItemize(
-            ModuleBookLaTeXWriter.lookupModules(module.preconditions(), modules),
+            ModuleBookLaTeXWriter.lookupModules(module.preconditions(), modules, linkable),
             "Keine",
             writer
         );
@@ -210,7 +221,7 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         Main.newLine(writer);
         Main.newLine(writer);
         ModuleBookLaTeXWriter.writeItemize(
-            ModuleBookLaTeXWriter.lookupModules(module.usability(), modules),
+            ModuleBookLaTeXWriter.lookupModules(module.usability(), modules, linkable),
             "Keine",
             writer
         );
@@ -281,6 +292,51 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         writer.write(". \\textit{");
         writer.write(ModuleBookLaTeXWriter.escapeForLaTeX(source.title()));
         writer.write("}, ");
+        switch (source.type()) {
+        case BOOK:
+            if (source.edition() != null) {
+                writer.write(" ");
+                writer.write(String.valueOf(source.edition()));
+                writer.write(". Auflage. ");
+            }
+            break;
+        case ARTICLE:
+            final boolean hasJournal = source.journal() != null && !source.journal().isBlank();
+            if (hasJournal) {
+                writer.write(" ");
+                writer.write(source.journal());
+            }
+            final boolean hasVolume = source.volume() != null && !source.volume().isBlank();
+            if (hasVolume) {
+                if (hasJournal) {
+                    writer.write(",");
+                }
+                writer.write(" Ausgabe ");
+                writer.write(source.volume());
+            }
+            final boolean hasNumber = source.number() != null && !source.number().isBlank();
+            if (hasNumber) {
+                if (hasJournal || hasVolume) {
+                    writer.write(",");
+                }
+                writer.write(" Nummer ");
+                writer.write(source.number());
+            }
+            if (source.frompage() != null) {
+                writer.write(", S. ");
+                writer.write(String.valueOf(source.frompage()));
+                if (source.topage() != null) {
+                    writer.write("--");
+                    writer.write(String.valueOf(source.topage()));
+                }
+            }
+            if (hasJournal || hasVolume || hasNumber) {
+                writer.write(". ");
+            }
+            break;
+        default:
+            // DO NOTHING
+        }
         if (source.location() != null && !source.location().isBlank()) {
             writer.write(ModuleBookLaTeXWriter.escapeForLaTeX(source.location()));
             writer.write(": ");
@@ -445,8 +501,9 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         Main.newLine(writer);
         Main.newLine(writer);
         final int weightSum = book.modules().stream().mapToInt(MetaModule::weight).sum();
+        final List<String> linkable = book.modules().stream().map(MetaModule::module).toList();
         for (final MetaModule meta : book.modules().stream().sorted().toList()) {
-            ModuleBookLaTeXWriter.writeModule(meta, modules, weightSum, writer);
+            ModuleBookLaTeXWriter.writeModule(meta, modules, weightSum, linkable, writer);
         }
     }
 
@@ -523,6 +580,13 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
             }
             semester++;
         }
+        writer.write("\\begin{minipage}{6.7cm}\\textbf{Summe}\\end{minipage} &  & \\textbf{");
+        writer.write(String.valueOf(overview.contactHoursSum()));
+        writer.write("} & \\textbf{");
+        writer.write(String.valueOf(overview.homeHoursSum()));
+        writer.write("} & \\textbf{");
+        writer.write(String.valueOf(overview.ectsSum()));
+        writer.write("} & \\\\\\hline");
         writer.write("\\end{longtable}");
         Main.newLine(writer);
         writer.write("\\renewcommand{\\arraystretch}{1}");

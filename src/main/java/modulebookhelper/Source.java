@@ -8,10 +8,14 @@ public record Source(
     String title,
     SourceType type,
     Integer year,
+    String journal,
     String publisher,
     String location,
-    Integer volume,
-    Integer number
+    Integer edition,
+    String volume,
+    String number,
+    Integer frompage,
+    Integer topage
 ) {
 
     @Override
@@ -23,22 +27,42 @@ public record Source(
         result.append(": ");
         result.append(this.title());
         result.append(".");
-        if (this.volume() != null) {
-            result.append(" ");
-            switch (this.type()) {
-            case BOOK:
-                result.append(this.volume());
+        switch (this.type()) {
+        case BOOK:
+            if (this.edition() != null) {
+                result.append(" ");
+                result.append(this.edition());
                 result.append(". Auflage.");
-                break;
-            default:
-                result.append("Ausgabe ");
-                result.append(this.volume());
-                if (this.number() != null) {
-                    result.append(", Nummer ");
-                    result.append(this.number());
+            }
+            break;
+        case ARTICLE:
+            final boolean hasJournal = this.journal() != null && !this.journal().isBlank();
+            if (hasJournal) {
+                result.append(" ");
+                result.append(this.journal());
+            }
+            final boolean hasVolume = this.volume() != null && !this.volume().isBlank();
+            if (hasVolume) {
+                if (hasJournal) {
+                    result.append(",");
                 }
+                result.append(" Ausgabe ");
+                result.append(this.volume());
+            }
+            final boolean hasNumber = this.number() != null && !this.number().isBlank();
+            if (hasNumber) {
+                if (hasJournal || hasVolume) {
+                    result.append(",");
+                }
+                result.append(" Nummer ");
+                result.append(this.number());
+            }
+            if (hasJournal || hasVolume || hasNumber) {
                 result.append(".");
             }
+            break;
+        default:
+            // DO NOTHING
         }
         if (this.publisher() != null) {
             result.append(" ");
