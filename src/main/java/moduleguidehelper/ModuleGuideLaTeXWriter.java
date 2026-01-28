@@ -2,9 +2,12 @@ package moduleguidehelper;
 
 import java.io.*;
 import java.util.*;
+import java.util.regex.*;
 import java.util.stream.*;
 
 public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
+
+    private static final Pattern ESCAPE_PATTERN = Pattern.compile("\\$\\$[^\\$]+\\$\\$");
 
     private static String chapterToItem(final Chapter chapter) {
         if (chapter.sections() == null || chapter.sections().isEmpty()) {
@@ -17,6 +20,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             ModuleGuideLaTeXWriter.writeItemize(
                 chapter.sections().stream().map(ModuleGuideLaTeXWriter::escapeForLaTeX).toList(),
                 "",
+                "$\\circ$",
                 buffer
             );
             buffer.flush();
@@ -27,13 +31,36 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
     }
 
     private static String escapeForLaTeX(final String text) {
-        return text.replaceAll("\\\\", "\\\\textbackslash")
-            .replaceAll("([&\\$%\\{\\}_#])", "\\\\$1")
-            .replaceAll("~", "\\\\textasciitilde{}")
-            .replaceAll("\\^", "\\\\textasciicircum{}")
-            .replaceAll("\\\\textbackslash", "\\\\textbackslash{}")
-            .replaceAll("([^\\\\])\"", "$1''")
-            .replaceAll("^\"", "''");
+        final Matcher matcher = ModuleGuideLaTeXWriter.ESCAPE_PATTERN.matcher(text);
+        final List<Integer> indices = new LinkedList<Integer>();
+        while (matcher.find()) {
+            indices.add(matcher.start());
+            indices.add(matcher.end());
+        }
+        indices.add(text.length());
+        final StringBuilder result = new StringBuilder();
+        boolean escape = true;
+        int from = 0;
+        for (final Integer index : indices) {
+            if (escape) {
+                result.append(
+                    text
+                    .substring(from, index)
+                    .replaceAll("\\\\", "\\\\textbackslash")
+                    .replaceAll("([&\\$%\\{\\}_#])", "\\\\$1")
+                    .replaceAll("~", "\\\\textasciitilde{}")
+                    .replaceAll("\\^", "\\\\textasciicircum{}")
+                    .replaceAll("\\\\textbackslash", "\\\\textbackslash{}")
+                    .replaceAll("([^\\\\])\"", "$1''")
+                    .replaceAll("^\"", "''")
+                );
+            } else {
+                result.append(text.substring(from + 2, index - 2));
+            }
+            from = index;
+            escape = !escape;
+        }
+        return result.toString();
     }
 
     private static String formatAuthor(final String author) {
@@ -102,6 +129,18 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         return ids.stream().map(id -> ModuleGuideLaTeXWriter.lookupModule(id, modules, linkable)).toList();
     }
 
+    private static int[] toPagebreaks(final List<Integer> pagebreaks) {
+        if (pagebreaks == null) {
+            return new int[0];
+        }
+        final int[] result = new int[pagebreaks.size()];
+        int index = 0;
+        for (final Integer pagebreak : pagebreaks) {
+            result[index++] = pagebreak;
+        }
+        return result;
+    }
+
     private static void writeAuthors(final List<String> authors, final BufferedWriter writer) throws IOException {
         writer.write(authors.stream().map(ModuleGuideLaTeXWriter::formatAuthor).collect(Collectors.joining(", ")));
     }
@@ -111,7 +150,18 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         final String noItems,
         final BufferedWriter writer
     ) throws IOException {
-        writer.write("\\begin{itemize}[itemsep=0pt,topsep=0pt]");
+        ModuleGuideLaTeXWriter.writeItemize(items, noItems, "$\\bullet$", writer);
+    }
+
+    private static void writeItemize(
+        final List<String> items,
+        final String noItems,
+        final String label,
+        final BufferedWriter writer
+    ) throws IOException {
+        writer.write("\\begin{itemize}[itemsep=0pt,topsep=0pt,label={");
+        writer.write(label);
+        writer.write("}]");
         Main.newLine(writer);
         if (items.isEmpty()) {
             writer.write("\\item ");
@@ -134,6 +184,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         final ModuleMap modules,
         final int weightSum,
         final List<String> linkable,
+        final boolean addContentsLine,
         final BufferedWriter writer
     ) throws IOException {
         final Module module = modules.get(meta.module());
@@ -174,6 +225,11 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write("}\\label{sec:");
         writer.write(meta.module());
         writer.write("}");
+        if (addContentsLine) {
+            writer.write("\\addcontentsline{toc}{section}{\\textbf{Spezialisierung ");
+            writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(meta.specialization()));
+            writer.write("}}");
+        }
         Main.newLine(writer);
         Main.newLine(writer);
         writer.write("\\subsection*{Allgemeine Angaben}");
@@ -346,6 +402,29 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         Main.newLine(writer);
     }
 
+    private static void writeStats(final ModuleStats stats, final BufferedWriter writer) throws IOException {
+        writer.write("\\begin{minipage}{6.7cm}\\raggedright\\strut{}\\hyperref[sec:");
+        writer.write(stats.id());
+        writer.write("]{");
+        writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(stats.title()));
+        writer.write("}\\strut{}\\end{minipage} & ");
+        writer.write(String.valueOf(stats.semester()));
+        if (stats.duration() > 1) {
+            writer.write("--");
+            writer.write(String.valueOf(stats.semester() + stats.duration() - 1));
+        }
+        writer.write(" & ");
+        writer.write(String.valueOf(stats.contactHours()));
+        writer.write(" & ");
+        writer.write(String.valueOf(stats.homeHours()));
+        writer.write(" & ");
+        writer.write(String.valueOf(stats.ects()));
+        writer.write(" & ");
+        writer.write(ModuleGuideLaTeXWriter.formatExamination(stats.examination()));
+        writer.write("\\\\\\hline");
+        Main.newLine(writer);
+    }
+
     private static void writeText(final List<String> sentences, final BufferedWriter writer) throws IOException {
         writer.write(
             sentences
@@ -502,8 +581,22 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         Main.newLine(writer);
         final int weightSum = guide.modules().stream().mapToInt(MetaModule::weight).sum();
         final List<String> linkable = guide.modules().stream().map(MetaModule::module).toList();
+        String specialization = "";
         for (final MetaModule meta : guide.modules().stream().sorted().toList()) {
-            ModuleGuideLaTeXWriter.writeModule(meta, modules, weightSum, linkable, writer);
+            boolean addContentsLine = false;
+            if (meta.specialization() != null && !specialization.equals(meta.specialization())) {
+                specialization = meta.specialization();
+                writer.write("\\section*{Spezialisierung ");
+                writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(specialization));
+                writer.write("}");
+                Main.newLine(writer);
+                Main.newLine(writer);
+                writer.write("\\vspace*{2ex}");
+                Main.newLine(writer);
+                Main.newLine(writer);
+                addContentsLine = true;
+            }
+            ModuleGuideLaTeXWriter.writeModule(meta, modules, weightSum, linkable, addContentsLine, writer);
         }
     }
 
@@ -526,7 +619,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         Main.newLine(writer);
         writer.write("\\begin{longtable}{|l|*{3}{C{1.1cm}|}C{1.6cm}|C{2.7cm}|}");
         Main.newLine(writer);
-        writer.write("\\hline");
+        writer.write("\\hline\\endhead");
         Main.newLine(writer);
         writer.write("\\rule{0pt}{9mm}\\begin{minipage}{6.7cm}\\textbf{Modul}\\end{minipage} & ");
         writer.write("\\begin{minipage}{1cm}\\rotatebox{270}{\\begin{minipage}{1.8cm}\\begin{center}");
@@ -546,8 +639,16 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write("\\end{center}\\end{minipage}}\\\\[1mm]\\end{minipage}\\\\\\hline");
         Main.newLine(writer);
         int semester = 1;
+        int groupsOnPage = 0;
+        int pagebreakIndex = 0;
+        final int[] pagebreaks = ModuleGuideLaTeXWriter.toPagebreaks(guide.pagebreaks());
         for (final List<ModuleStats> modules : overview.semesters()) {
-            if (semester > 1) {
+            if (pagebreakIndex < pagebreaks.length && groupsOnPage >= pagebreaks[pagebreakIndex]) {
+                writer.write("\\pagebreak{}");
+                Main.newLine(writer);
+                groupsOnPage = 0;
+                pagebreakIndex++;
+            } else if (semester > 1) {
                 writer.write(" &  &  &  &  & \\\\\\hline");
                 Main.newLine(writer);
             }
@@ -556,30 +657,13 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             writer.write(". Semester} &  &  &  &  & \\\\\\hline");
             Main.newLine(writer);
             for (final ModuleStats stats : modules) {
-                writer.write("\\begin{minipage}{6.7cm}\\raggedright\\strut{}\\hyperref[sec:");
-                writer.write(stats.id());
-                writer.write("]{");
-                writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(stats.title()));
-                writer.write("}\\strut{}\\end{minipage}");
-                writer.write(" & ");
-                writer.write(String.valueOf(stats.semester()));
-                if (stats.duration() > 1) {
-                    writer.write("--");
-                    writer.write(String.valueOf(stats.semester() + stats.duration() - 1));
-                }
-                writer.write(" & ");
-                writer.write(String.valueOf(stats.contactHours()));
-                writer.write(" & ");
-                writer.write(String.valueOf(stats.homeHours()));
-                writer.write(" & ");
-                writer.write(String.valueOf(stats.ects()));
-                writer.write(" & ");
-                writer.write(ModuleGuideLaTeXWriter.formatExamination(stats.examination()));
-                writer.write("\\\\\\hline");
-                Main.newLine(writer);
+                ModuleGuideLaTeXWriter.writeStats(stats, writer);
             }
             semester++;
+            groupsOnPage++;
         }
+        writer.write(" &  &  &  &  & \\\\\\hline");
+        Main.newLine(writer);
         writer.write("\\begin{minipage}{6.7cm}\\textbf{Summe}\\end{minipage} &  & \\textbf{");
         writer.write(String.valueOf(overview.contactHoursSum()));
         writer.write("} & \\textbf{");
@@ -587,6 +671,45 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write("} & \\textbf{");
         writer.write(String.valueOf(overview.ectsSum()));
         writer.write("} & \\\\\\hline");
+        Main.newLine(writer);
+        if (!overview.specializations().isEmpty()) {
+            if (pagebreakIndex < pagebreaks.length && groupsOnPage >= pagebreaks[pagebreakIndex]) {
+                writer.write("\\pagebreak{}");
+                Main.newLine(writer);
+                groupsOnPage = 0;
+                pagebreakIndex++;
+            } else {
+                writer.write(" &  &  &  &  & \\\\\\hline");
+                Main.newLine(writer);
+            }
+            writer.write("\\begin{minipage}{6.7cm}\\raggedright\\strut{}\\textbf{Spezialisierungsmodule (alternativ)}");
+            writer.write("\\strut{}\\end{minipage} &  &  &  &  & \\\\\\hline");
+            Main.newLine(writer);
+            boolean first = true;
+            for (final Map.Entry<String, List<ModuleStats>> entry : overview.specializations().entrySet()) {
+                if (first) {
+                    first = false;
+                } else {
+                    if (pagebreakIndex < pagebreaks.length && groupsOnPage >= pagebreaks[pagebreakIndex]) {
+                        writer.write("\\pagebreak{}");
+                        Main.newLine(writer);
+                        groupsOnPage = 0;
+                        pagebreakIndex++;
+                    } else {
+                        writer.write(" &  &  &  &  & \\\\\\hline");
+                        Main.newLine(writer);
+                    }
+                }
+                writer.write("\\begin{minipage}{6.7cm}\\raggedright\\strut{}\\textbf{");
+                writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(entry.getKey()));
+                writer.write("}\\strut{}\\end{minipage} &  &  &  &  & \\\\\\hline");
+                Main.newLine(writer);
+                for (final ModuleStats stats : entry.getValue()) {
+                    ModuleGuideLaTeXWriter.writeStats(stats, writer);
+                }
+                groupsOnPage++;
+            }
+        }
         writer.write("\\end{longtable}");
         Main.newLine(writer);
         writer.write("\\renewcommand{\\arraystretch}{1}");

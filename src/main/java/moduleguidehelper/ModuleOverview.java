@@ -18,7 +18,7 @@ public record ModuleOverview(
         final List<List<ModuleStats>> semesters = new ArrayList<List<ModuleStats>>();
         final Map<Integer, List<ModuleStats>> semesterMap = new TreeMap<Integer, List<ModuleStats>>();
         final Map<Integer, ModuleStats> specializationModulesMap = new LinkedHashMap<Integer, ModuleStats>();
-        final Map<String, List<ModuleStats>> specializations = new LinkedHashMap<String, List<ModuleStats>>();
+        final Map<String, List<ModuleStats>> specializations = new TreeMap<String, List<ModuleStats>>();
         int ectsSum = 0;
         int contactHoursSum = 0;
         int homeHoursSum = 0;
@@ -51,9 +51,9 @@ public record ModuleOverview(
                     module.examination()
                 );
             if (meta.specialization() != null) {
-                final ModuleStats statsForSemester = stats.forSpecialization(meta.specializationNumber());
-                if (specializationModulesMap.containsKey(meta.specializationNumber())) {
-                    final ModuleStats check = specializationModulesMap.get(meta.specializationNumber());
+                final ModuleStats statsForSemester = stats.forSpecialization(meta.specializationnumber());
+                if (specializationModulesMap.containsKey(meta.specializationnumber())) {
+                    final ModuleStats check = specializationModulesMap.get(meta.specializationnumber());
                     if (
                         statsForSemester.contactHours() != check.contactHours()
                         || statsForSemester.homeHours() != check.homeHours()
@@ -62,7 +62,7 @@ public record ModuleOverview(
                         throw new IllegalArgumentException("Specialization stats do not match!");
                     }
                 } else {
-                    specializationModulesMap.put(meta.specializationNumber(), statsForSemester);
+                    specializationModulesMap.put(meta.specializationnumber(), statsForSemester);
                     contactHoursSum += contactHours.intValue();
                     homeHoursSum += homeHours.intValue();
                     ectsSum += ects.intValue();

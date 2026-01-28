@@ -7,6 +7,7 @@ public record ModuleGuide(
     String degree,
     String timemodel,
     String year,
+    List<Integer> pagebreaks,
     List<MetaModule> modules
 ) {
 

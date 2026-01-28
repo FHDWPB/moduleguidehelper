@@ -12,22 +12,22 @@ public record MetaModule(
     String homehoursfactor,
     String ectsfactor,
     String specialization,
-    Integer specializationNumber
+    Integer specializationnumber
 ) implements Comparable<MetaModule> {
 
     @Override
     public int compareTo(final MetaModule o) {
-        if (this.specializationNumber() != null) {
-            if (o.specializationNumber() != null) {
+        if (this.specializationnumber() != null) {
+            if (o.specializationnumber() != null) {
                 final int compare = this.specialization().compareTo(o.specialization());
                 if (compare != 0) {
                     return compare;
                 }
-                return this.specializationNumber().compareTo(o.specializationNumber());
+                return this.specializationnumber().compareTo(o.specializationnumber());
             }
             return 1;
         }
-        if (o.specializationNumber() != null) {
+        if (o.specializationnumber() != null) {
             return -1;
         }
         final int compare = this.semester() - o.semester();
