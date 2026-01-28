@@ -1,4 +1,4 @@
-package modulebookhelper;
+package moduleguidehelper;
 
 import java.math.*;
 import java.util.*;
@@ -14,7 +14,7 @@ public record ModuleOverview(
     int ectsSum
 ) {
 
-    public static ModuleOverview create(final ModuleBook book, final ModuleMap modules) {
+    public static ModuleOverview create(final ModuleGuide book, final ModuleMap modules) {
         final List<List<ModuleStats>> semesters = new ArrayList<List<ModuleStats>>();
         final Map<Integer, List<ModuleStats>> semesterMap = new TreeMap<Integer, List<ModuleStats>>();
         final Map<Integer, ModuleStats> specializationModulesMap = new LinkedHashMap<Integer, ModuleStats>();

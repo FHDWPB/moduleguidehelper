@@ -1,21 +1,21 @@
-package modulebookhelper;
+package moduleguidehelper;
 
 import java.io.*;
 import java.util.*;
 import java.util.stream.*;
 
-public class ModuleBookLaTeXWriter extends ModuleBookWriter {
+public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
 
     private static String chapterToItem(final Chapter chapter) {
         if (chapter.sections() == null || chapter.sections().isEmpty()) {
-            return ModuleBookLaTeXWriter.escapeForLaTeX(chapter.chapter());
+            return ModuleGuideLaTeXWriter.escapeForLaTeX(chapter.chapter());
         }
         final StringWriter stringWriter = new StringWriter();
-        stringWriter.write(ModuleBookLaTeXWriter.escapeForLaTeX(chapter.chapter()));
+        stringWriter.write(ModuleGuideLaTeXWriter.escapeForLaTeX(chapter.chapter()));
         try (BufferedWriter buffer = new BufferedWriter(stringWriter)) {
             Main.newLine(buffer);
-            ModuleBookLaTeXWriter.writeItemize(
-                chapter.sections().stream().map(ModuleBookLaTeXWriter::escapeForLaTeX).toList(),
+            ModuleGuideLaTeXWriter.writeItemize(
+                chapter.sections().stream().map(ModuleGuideLaTeXWriter::escapeForLaTeX).toList(),
                 "",
                 buffer
             );
@@ -55,7 +55,7 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
             }
         }
         final StringBuilder result = new StringBuilder();
-        result.append(ModuleBookLaTeXWriter.escapeForLaTeX(familyName.toUpperCase()));
+        result.append(ModuleGuideLaTeXWriter.escapeForLaTeX(familyName.toUpperCase()));
         result.append(",");
         for (final Character c : initials) {
             result.append(" ");
@@ -85,13 +85,13 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         final List<String> linkable
     ) {
         if (modules.containsKey(id)) {
-            final String title = ModuleBookLaTeXWriter.escapeForLaTeX(modules.get(id).title());
+            final String title = ModuleGuideLaTeXWriter.escapeForLaTeX(modules.get(id).title());
             if (linkable.contains(id)) {
                 return String.format("\\hyperref[sec:%s]{%s}", id, title);
             }
             return title;
         }
-        return ModuleBookLaTeXWriter.escapeForLaTeX(id);
+        return ModuleGuideLaTeXWriter.escapeForLaTeX(id);
     }
 
     private static List<String> lookupModules(
@@ -99,11 +99,11 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         final ModuleMap modules,
         final List<String> linkable
     ) {
-        return ids.stream().map(id -> ModuleBookLaTeXWriter.lookupModule(id, modules, linkable)).toList();
+        return ids.stream().map(id -> ModuleGuideLaTeXWriter.lookupModule(id, modules, linkable)).toList();
     }
 
     private static void writeAuthors(final List<String> authors, final BufferedWriter writer) throws IOException {
-        writer.write(authors.stream().map(ModuleBookLaTeXWriter::formatAuthor).collect(Collectors.joining(", ")));
+        writer.write(authors.stream().map(ModuleGuideLaTeXWriter::formatAuthor).collect(Collectors.joining(", ")));
     }
 
     private static void writeItemize(
@@ -145,12 +145,12 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         table[0][0] = "Kürzel";
         table[0][1] = meta.module();
         table[1][0] = "Modulverantwortliche";
-        table[1][1] = ModuleBookLaTeXWriter.escapeForLaTeX(module.responsible());
+        table[1][1] = ModuleGuideLaTeXWriter.escapeForLaTeX(module.responsible());
         table[2][0] = "Dozenten";
         table[2][1] =
-            ModuleBookLaTeXWriter.escapeForLaTeX(module.teachers().stream().collect(Collectors.joining(", ")));
+            ModuleGuideLaTeXWriter.escapeForLaTeX(module.teachers().stream().collect(Collectors.joining(", ")));
         table[3][0] = "Lehrsprache";
-        table[3][1] = ModuleBookLaTeXWriter.escapeForLaTeX(module.language());
+        table[3][1] = ModuleGuideLaTeXWriter.escapeForLaTeX(module.language());
         table[4][0] = "Semester";
         table[4][1] = String.valueOf(meta.semester());
         table[5][0] = "ECTS-Punkte";
@@ -162,15 +162,15 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         table[8][0] = "Dauer";
         table[8][1] = meta.duration() + " Semester";
         table[9][0] = "Art";
-        table[9][1] = ModuleBookLaTeXWriter.escapeForLaTeX(meta.type());
+        table[9][1] = ModuleGuideLaTeXWriter.escapeForLaTeX(meta.type());
         table[10][0] = "Häufigkeit";
-        table[10][1] = ModuleBookLaTeXWriter.escapeForLaTeX(meta.frequency());
+        table[10][1] = ModuleGuideLaTeXWriter.escapeForLaTeX(meta.frequency());
         table[11][0] = "Gewichtung";
         table[11][1] = String.format("%d/%d", meta.weight(), weightSum);
         table[12][0] = "Prüfungsleistung";
-        table[12][1] = ModuleBookLaTeXWriter.formatExamination(module.examination());
+        table[12][1] = ModuleGuideLaTeXWriter.formatExamination(module.examination());
         writer.write("\\section{");
-        writer.write(ModuleBookLaTeXWriter.escapeForLaTeX(module.title()));
+        writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(module.title()));
         writer.write("}\\label{sec:");
         writer.write(meta.module());
         writer.write("}");
@@ -203,8 +203,8 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
             writer.write("\\subsection*{Stichwörter}");
             Main.newLine(writer);
             Main.newLine(writer);
-            ModuleBookLaTeXWriter.writeItemize(
-                module.keywords().stream().map(ModuleBookLaTeXWriter::escapeForLaTeX).toList(),
+            ModuleGuideLaTeXWriter.writeItemize(
+                module.keywords().stream().map(ModuleGuideLaTeXWriter::escapeForLaTeX).toList(),
                 "Keine",
                 writer
             );
@@ -212,23 +212,23 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         writer.write("\\subsection*{Zugangsvoraussetzungen}");
         Main.newLine(writer);
         Main.newLine(writer);
-        ModuleBookLaTeXWriter.writeItemize(
-            ModuleBookLaTeXWriter.lookupModules(module.preconditions(), modules, linkable),
+        ModuleGuideLaTeXWriter.writeItemize(
+            ModuleGuideLaTeXWriter.lookupModules(module.preconditions(), modules, linkable),
             "Keine",
             writer
         );
         writer.write("\\subsection*{Verwendbarkeit}");
         Main.newLine(writer);
         Main.newLine(writer);
-        ModuleBookLaTeXWriter.writeItemize(
-            ModuleBookLaTeXWriter.lookupModules(module.usability(), modules, linkable),
+        ModuleGuideLaTeXWriter.writeItemize(
+            ModuleGuideLaTeXWriter.lookupModules(module.usability(), modules, linkable),
             "Keine",
             writer
         );
         writer.write("\\subsection*{Qualifikations- und Kompetenzziele}");
         Main.newLine(writer);
         Main.newLine(writer);
-        ModuleBookLaTeXWriter.writeText(module.competencies(), writer);
+        ModuleGuideLaTeXWriter.writeText(module.competencies(), writer);
         Main.newLine(writer);
         writer.write("\\subsection*{Lehr- und Lernmethoden}");
         Main.newLine(writer);
@@ -239,14 +239,14 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
             writer.write("asynchrones Lernen, Übungen, Fallstudien, Expertenvorträge.");
             Main.newLine(writer);
         } else {
-            ModuleBookLaTeXWriter.writeText(module.teachingmethods(), writer);
+            ModuleGuideLaTeXWriter.writeText(module.teachingmethods(), writer);
         }
         Main.newLine(writer);
         if (module.special() != null && !module.special().isEmpty()) {
             writer.write("\\subsection*{Besonderheiten}");
             Main.newLine(writer);
             Main.newLine(writer);
-            ModuleBookLaTeXWriter.writeText(module.special(), writer);
+            ModuleGuideLaTeXWriter.writeText(module.special(), writer);
             Main.newLine(writer);
         }
         writer.write("\\subsection*{Inhalte}");
@@ -257,8 +257,8 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
             Main.newLine(writer);
             Main.newLine(writer);
         } else {
-            ModuleBookLaTeXWriter.writeItemize(
-                module.content().stream().map(ModuleBookLaTeXWriter::chapterToItem).toList(),
+            ModuleGuideLaTeXWriter.writeItemize(
+                module.content().stream().map(ModuleGuideLaTeXWriter::chapterToItem).toList(),
                 "keine",
                 writer
             );
@@ -268,7 +268,7 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
             Main.newLine(writer);
             Main.newLine(writer);
             for (final Source source : module.literature()) {
-                ModuleBookLaTeXWriter.writeSource(source, writer);
+                ModuleGuideLaTeXWriter.writeSource(source, writer);
             }
             Main.newLine(writer);
         }
@@ -279,18 +279,18 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
 
     private static void writeSource(final Source source, final BufferedWriter writer) throws IOException {
         if (source.type() == SourceType.HINT) {
-            writer.write(ModuleBookLaTeXWriter.escapeForLaTeX(source.title()));
+            writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(source.title()));
             writer.write("\\\\[1.5ex]");
             Main.newLine(writer);
             return;
         }
-        ModuleBookLaTeXWriter.writeAuthors(source.authors(), writer);
+        ModuleGuideLaTeXWriter.writeAuthors(source.authors(), writer);
         if (source.year() != null) {
             writer.write(", ");
             writer.write(String.valueOf(source.year()));
         }
         writer.write(". \\textit{");
-        writer.write(ModuleBookLaTeXWriter.escapeForLaTeX(source.title()));
+        writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(source.title()));
         writer.write("}, ");
         switch (source.type()) {
         case BOOK:
@@ -338,10 +338,10 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
             // DO NOTHING
         }
         if (source.location() != null && !source.location().isBlank()) {
-            writer.write(ModuleBookLaTeXWriter.escapeForLaTeX(source.location()));
+            writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(source.location()));
             writer.write(": ");
         }
-        writer.write(ModuleBookLaTeXWriter.escapeForLaTeX(source.publisher()));
+        writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(source.publisher()));
         writer.write(".\\\\[1.5ex]");
         Main.newLine(writer);
     }
@@ -350,14 +350,14 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         writer.write(
             sentences
             .stream()
-            .map(ModuleBookLaTeXWriter::escapeForLaTeX)
+            .map(ModuleGuideLaTeXWriter::escapeForLaTeX)
             .collect(Collectors.joining(Main.lineSeparator))
         );
         Main.newLine(writer);
     }
 
-    public ModuleBookLaTeXWriter(final ModuleBook book, final ModuleMap modules) {
-        super(book, modules);
+    public ModuleGuideLaTeXWriter(final ModuleGuide guide, final ModuleMap modules) {
+        super(guide, modules);
     }
 
     @Override
@@ -443,7 +443,7 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
     }
 
     @Override
-    protected void writeIntro(final ModuleBook book, final BufferedWriter writer) throws IOException {
+    protected void writeIntro(final ModuleGuide guide, final BufferedWriter writer) throws IOException {
         writer.write("\\pagestyle{fancy}");
         Main.newLine(writer);
         Main.newLine(writer);
@@ -455,11 +455,11 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         Main.newLine(writer);
         Main.newLine(writer);
         writer.write("Sie erhalten das Modulhandbuch für den ");
-        writer.write(ModuleBookLaTeXWriter.escapeForLaTeX(book.degree().substring(0, book.degree().indexOf(' '))));
+        writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(guide.degree().substring(0, guide.degree().indexOf(' '))));
         writer.write("-Studiengang ");
-        writer.write(ModuleBookLaTeXWriter.escapeForLaTeX(book.subject()));
+        writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(guide.subject()));
         writer.write(" im Studienjahr ");
-        writer.write(book.year());
+        writer.write(guide.year());
         writer.write(".\\\\[2ex]");
         Main.newLine(writer);
         Main.newLine(writer);
@@ -490,7 +490,7 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
 
     @Override
     protected void writeModules(
-        final ModuleBook book,
+        final ModuleGuide guide,
         final ModuleMap modules,
         final BufferedWriter writer
     ) throws IOException {
@@ -500,25 +500,25 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         writer.write("\\clearpage");
         Main.newLine(writer);
         Main.newLine(writer);
-        final int weightSum = book.modules().stream().mapToInt(MetaModule::weight).sum();
-        final List<String> linkable = book.modules().stream().map(MetaModule::module).toList();
-        for (final MetaModule meta : book.modules().stream().sorted().toList()) {
-            ModuleBookLaTeXWriter.writeModule(meta, modules, weightSum, linkable, writer);
+        final int weightSum = guide.modules().stream().mapToInt(MetaModule::weight).sum();
+        final List<String> linkable = guide.modules().stream().map(MetaModule::module).toList();
+        for (final MetaModule meta : guide.modules().stream().sorted().toList()) {
+            ModuleGuideLaTeXWriter.writeModule(meta, modules, weightSum, linkable, writer);
         }
     }
 
     @Override
     protected void writeOverview(
-        final ModuleBook book,
+        final ModuleGuide guide,
         final ModuleOverview overview,
         final BufferedWriter writer
     ) throws IOException {
         writer.write("\\textbf{Modulübersicht}\\\\[1.5ex]");
         Main.newLine(writer);
         writer.write("\\textbf{");
-        writer.write(ModuleBookLaTeXWriter.escapeForLaTeX(book.subject()));
+        writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(guide.subject()));
         writer.write(" -- ");
-        writer.write(ModuleBookLaTeXWriter.escapeForLaTeX(book.degree()));
+        writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(guide.degree()));
         writer.write("}\\\\[2ex]");
         Main.newLine(writer);
         Main.newLine(writer);
@@ -559,7 +559,7 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
                 writer.write("\\begin{minipage}{6.7cm}\\raggedright\\strut{}\\hyperref[sec:");
                 writer.write(stats.id());
                 writer.write("]{");
-                writer.write(ModuleBookLaTeXWriter.escapeForLaTeX(stats.title()));
+                writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(stats.title()));
                 writer.write("}\\strut{}\\end{minipage}");
                 writer.write(" & ");
                 writer.write(String.valueOf(stats.semester()));
@@ -574,7 +574,7 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
                 writer.write(" & ");
                 writer.write(String.valueOf(stats.ects()));
                 writer.write(" & ");
-                writer.write(ModuleBookLaTeXWriter.formatExamination(stats.examination()));
+                writer.write(ModuleGuideLaTeXWriter.formatExamination(stats.examination()));
                 writer.write("\\\\\\hline");
                 Main.newLine(writer);
             }
@@ -598,7 +598,7 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
     }
 
     @Override
-    protected void writeTitlePage(final ModuleBook book, final BufferedWriter writer) throws IOException {
+    protected void writeTitlePage(final ModuleGuide guide, final BufferedWriter writer) throws IOException {
         writer.write("\\pagestyle{empty}");
         Main.newLine(writer);
         Main.newLine(writer);
@@ -622,7 +622,7 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         writer.write("\\textbf{Modulhandbuch}\\\\");
         Main.newLine(writer);
         writer.write("\\textbf{(");
-        writer.write(ModuleBookLaTeXWriter.escapeForLaTeX(book.timemodel()));
+        writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(guide.timemodel()));
         writer.write(")}\\\\");
         Main.newLine(writer);
         Main.newLine(writer);
@@ -630,11 +630,11 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         Main.newLine(writer);
         Main.newLine(writer);
         writer.write("\\textbf{");
-        writer.write(ModuleBookLaTeXWriter.escapeForLaTeX(book.subject()));
+        writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(guide.subject()));
         writer.write("}\\\\");
         Main.newLine(writer);
         writer.write("\\textbf{(");
-        writer.write(ModuleBookLaTeXWriter.escapeForLaTeX(book.degree()));
+        writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(guide.degree()));
         writer.write(")}\\\\");
         Main.newLine(writer);
         Main.newLine(writer);
@@ -642,7 +642,7 @@ public class ModuleBookLaTeXWriter extends ModuleBookWriter {
         Main.newLine(writer);
         Main.newLine(writer);
         writer.write("\\textbf{Studienjahr ");
-        writer.write(book.year());
+        writer.write(guide.year());
         writer.write("}");
         Main.newLine(writer);
         Main.newLine(writer);

@@ -1,4 +1,4 @@
-package modulebookhelper;
+package moduleguidehelper;
 
 import java.io.*;
 
@@ -62,9 +62,9 @@ public class Main {
             FileReader modulesReader = new FileReader(args[1]);
             BufferedWriter writer = new BufferedWriter(new FileWriter(args[2]))
         ) {
-            final ModuleBook book = Main.GSON.fromJson(bookReader, ModuleBook.class);
+            final ModuleGuide guide = Main.GSON.fromJson(bookReader, ModuleGuide.class);
             final ModuleMap modules = Main.GSON.fromJson(modulesReader, ModuleMap.class);
-            new ModuleBookLaTeXWriter(book, modules).write(writer);
+            new ModuleGuideLaTeXWriter(guide, modules).write(writer);
         }
     }
 

@@ -1,8 +1,8 @@
-package modulebookhelper;
+package moduleguidehelper;
 
 import java.util.*;
 
-public record ModuleBook(
+public record ModuleGuide(
     String subject,
     String degree,
     String timemodel,

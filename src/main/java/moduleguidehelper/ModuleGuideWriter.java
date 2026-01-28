@@ -1,14 +1,14 @@
-package modulebookhelper;
+package moduleguidehelper;
 
 import java.io.*;
 
-public abstract class ModuleBookWriter {
+public abstract class ModuleGuideWriter {
 
-    private final ModuleBook book;
+    private final ModuleGuide book;
 
     private final ModuleMap modules;
 
-    public ModuleBookWriter(final ModuleBook book, final ModuleMap modules) {
+    public ModuleGuideWriter(final ModuleGuide book, final ModuleMap modules) {
         this.book = book;
         this.modules = modules;
     }
@@ -26,16 +26,16 @@ public abstract class ModuleBookWriter {
 
     protected abstract void writeDocumentStart(final BufferedWriter writer) throws IOException;
 
-    protected abstract void writeIntro(final ModuleBook book, final BufferedWriter writer) throws IOException;
+    protected abstract void writeIntro(final ModuleGuide book, final BufferedWriter writer) throws IOException;
 
-    protected abstract void writeModules(ModuleBook book, ModuleMap modules, BufferedWriter writer) throws IOException;
+    protected abstract void writeModules(ModuleGuide book, ModuleMap modules, BufferedWriter writer) throws IOException;
 
     protected abstract void writeOverview(
-        final ModuleBook book,
+        final ModuleGuide book,
         final ModuleOverview overview,
         final BufferedWriter writer
     ) throws IOException;
 
-    protected abstract void writeTitlePage(final ModuleBook book, final BufferedWriter writer) throws IOException;
+    protected abstract void writeTitlePage(final ModuleGuide book, final BufferedWriter writer) throws IOException;
 
 }

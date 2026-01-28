@@ -20,7 +20,7 @@ dependencies {
 }
 
 application {
-    mainClass = 'modulebookhelper.Main'
+    mainClass = 'moduleguidehelper.Main'
 }
 
 java {
@@ -31,9 +31,9 @@ java {
 jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     manifest {
-        attributes 'Main-Class': 'modulebookhelper.Main'
+        attributes 'Main-Class': 'moduleguidehelper.Main'
     }
-    archiveBaseName = 'modulebookhelper'
+    archiveBaseName = 'moduleguidehelper'
     from { configurations.extraLibs.collect { it.isDirectory() ? it : zipTree(it) } }
 }
 

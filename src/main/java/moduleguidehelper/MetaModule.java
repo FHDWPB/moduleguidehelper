@@ -1,4 +1,4 @@
-package modulebookhelper;
+package moduleguidehelper;
 
 public record MetaModule(
     String module,
