@@ -15,6 +15,8 @@ public record ModuleStats(
 
     private static final TreeMap<Integer, String> ROMAN_NUMERALS;
 
+    public static final String SEE_SPECIALIZATION = "S. Spezialisierung";
+
     static {
         ROMAN_NUMERALS = new TreeMap<Integer, String>();
         ModuleStats.ROMAN_NUMERALS.put(1000, "M");
@@ -41,11 +43,11 @@ public record ModuleStats(
             this.contactHours(),
             this.homeHours(),
             this.ects(),
-            "S. Spezialisierung"
+            ModuleStats.SEE_SPECIALIZATION
         );
     }
 
-    private static String toRomanNumeral(final int number) {
+    public static String toRomanNumeral(final int number) {
         if (number < 1) {
             return "";
         }

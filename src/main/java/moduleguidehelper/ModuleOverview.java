@@ -11,7 +11,8 @@ public record ModuleOverview(
     Map<String, List<ModuleStats>> specializations,
     int contactHoursSum,
     int homeHoursSum,
-    int ectsSum
+    int ectsSum,
+    int weightSum
 ) {
 
     public static ModuleOverview create(final ModuleGuide book, final ModuleMap modules) {
@@ -22,6 +23,7 @@ public record ModuleOverview(
         int ectsSum = 0;
         int contactHoursSum = 0;
         int homeHoursSum = 0;
+        int weightSum = 0;
         for (final MetaModule meta : book.modules().stream().sorted().toList()) {
             final Module module = modules.get(meta.module());
             if (module == null) {
@@ -66,6 +68,7 @@ public record ModuleOverview(
                     contactHoursSum += contactHours.intValue();
                     homeHoursSum += homeHours.intValue();
                     ectsSum += ects.intValue();
+                    weightSum += meta.weight();
                     semesterMap.merge(meta.semester(), List.of(statsForSemester), ModuleOverview::concatLists);
                 }
                 specializations.merge(meta.specialization(), List.of(stats), ModuleOverview::concatLists);
@@ -73,13 +76,14 @@ public record ModuleOverview(
                 contactHoursSum += contactHours.intValue();
                 homeHoursSum += homeHours.intValue();
                 ectsSum += ects.intValue();
+                weightSum += meta.weight();
                 semesterMap.merge(meta.semester(), List.of(stats), ModuleOverview::concatLists);
             }
         }
         for (final Map.Entry<Integer, List<ModuleStats>> entry : semesterMap.entrySet()) {
             semesters.add(entry.getValue());
         }
-        return new ModuleOverview(semesters, specializations, contactHoursSum, homeHoursSum, ectsSum);
+        return new ModuleOverview(semesters, specializations, contactHoursSum, homeHoursSum, ectsSum, weightSum);
     }
 
     private static <E> List<E> concatLists(final List<E> list1, final List<E> list2) {

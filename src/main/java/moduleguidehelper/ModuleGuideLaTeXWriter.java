@@ -179,12 +179,40 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         Main.newLine(writer);
     }
 
+    private static void writeLongtableHeader(
+        final boolean withHeadings,
+        final BufferedWriter writer
+    ) throws IOException {
+        writer.write("\\begin{longtable}{|l|*{3}{C{1.1cm}|}C{1.6cm}|C{2.7cm}|}");
+        Main.newLine(writer);
+        writer.write("\\hline\\endhead");
+        Main.newLine(writer);
+        if (withHeadings) {
+            writer.write("\\rule{0pt}{9mm}\\begin{minipage}{6.7cm}\\textbf{\\textcolor{fhdwblue}{MODUL}}");
+            writer.write("\\end{minipage} & \\begin{minipage}{1cm}\\rotatebox{270}{\\begin{minipage}{1.9cm}");
+            writer.write("\\begin{center}\\textbf{\\textcolor{fhdwblue}{SEMES\\-TER}}");
+            writer.write("\\end{center}\\end{minipage}}\\\\[1mm]\\end{minipage} & ");
+            writer.write("\\begin{minipage}{1cm}\\rotatebox{270}{\\begin{minipage}{1.9cm}\\begin{center}");
+            writer.write("\\textbf{\\textcolor{fhdwblue}{KONTAKT\\-STUNDEN}}");
+            writer.write("\\end{center}\\end{minipage}}\\\\[1mm]\\end{minipage} & ");
+            writer.write("\\begin{minipage}{1cm}\\rotatebox{270}{\\begin{minipage}{1.9cm}\\begin{center}");
+            writer.write("\\textbf{\\textcolor{fhdwblue}{SELBST\\-STUDIUM}}");
+            writer.write("\\end{center}\\end{minipage}}\\\\[1mm]\\end{minipage} & ");
+            writer.write("\\begin{minipage}{1.5cm}\\rotatebox{270}{\\begin{minipage}{1.9cm}\\begin{center}");
+            writer.write("\\textbf{\\textcolor{fhdwblue}{CREDIT POINTS (ECTS)}}");
+            writer.write("\\end{center}\\end{minipage}}\\\\[1mm]\\end{minipage} & ");
+            writer.write("\\begin{minipage}{2.6cm}\\rotatebox{270}{\\begin{minipage}{1.9cm}\\begin{center}");
+            writer.write("\\textbf{\\textcolor{fhdwblue}{ART UND UMFANG DER PRÜFUNGSLEISTUNG}}");
+            writer.write("\\end{center}\\end{minipage}}\\\\[1mm]\\end{minipage}\\\\\\hline");
+            Main.newLine(writer);
+        }
+    }
+
     private static void writeModule(
         final MetaModule meta,
         final ModuleMap modules,
         final int weightSum,
         final List<String> linkable,
-        final boolean addContentsLine,
         final BufferedWriter writer
     ) throws IOException {
         final Module module = modules.get(meta.module());
@@ -192,44 +220,21 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             System.out.println(meta.module());
             return;
         }
-        final String[][] table = new String[13][2];
-        table[0][0] = "Kürzel";
-        table[0][1] = meta.module();
-        table[1][0] = "Modulverantwortliche";
-        table[1][1] = ModuleGuideLaTeXWriter.escapeForLaTeX(module.responsible());
-        table[2][0] = "Dozenten";
-        table[2][1] =
-            ModuleGuideLaTeXWriter.escapeForLaTeX(module.teachers().stream().collect(Collectors.joining(", ")));
-        table[3][0] = "Lehrsprache";
-        table[3][1] = ModuleGuideLaTeXWriter.escapeForLaTeX(module.language());
-        table[4][0] = "Semester";
-        table[4][1] = String.valueOf(meta.semester());
-        table[5][0] = "ECTS-Punkte";
-        table[5][1] = String.valueOf(module.ects());
-        table[6][0] = "Kontaktstunden";
-        table[6][1] = String.valueOf(module.contacthours());
-        table[7][0] = "Selbststudium";
-        table[7][1] = String.valueOf(module.homehours());
-        table[8][0] = "Dauer";
-        table[8][1] = meta.duration() + " Semester";
-        table[9][0] = "Art";
-        table[9][1] = ModuleGuideLaTeXWriter.escapeForLaTeX(meta.type());
-        table[10][0] = "Häufigkeit";
-        table[10][1] = ModuleGuideLaTeXWriter.escapeForLaTeX(meta.frequency());
-        table[11][0] = "Gewichtung";
-        table[11][1] = String.format("%d/%d", meta.weight(), weightSum);
-        table[12][0] = "Prüfungsleistung";
-        table[12][1] = ModuleGuideLaTeXWriter.formatExamination(module.examination());
+        final List<String[]> table = new LinkedList<String[]>();
+        table.add(new String[] {"Kürzel", meta.module()});
+        table.add(new String[] {"Lehrsprache", ModuleGuideLaTeXWriter.escapeForLaTeX(module.language())});
+        table.add(new String[] {"ECTS-Punkte", String.valueOf(module.ects())});
+        table.add(new String[] {"Kontaktstunden", String.valueOf(module.contacthours())});
+        table.add(new String[] {"Selbststudium", String.valueOf(module.homehours())});
+        table.add(new String[] {"Dauer", meta.duration() + " Semester"});
+        table.add(new String[] {"Häufigkeit", ModuleGuideLaTeXWriter.escapeForLaTeX(meta.frequency())});
+        table.add(new String[] {"Gewichtung", String.format("%d/%d", meta.weight(), weightSum)});
+        table.add(new String[] {"Prüfungsleistung", ModuleGuideLaTeXWriter.formatExamination(module.examination())});
         writer.write("\\section{");
         writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(module.title()));
         writer.write("}\\label{sec:");
         writer.write(meta.module());
         writer.write("}");
-        if (addContentsLine) {
-            writer.write("\\addcontentsline{toc}{section}{\\textbf{Spezialisierung ");
-            writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(meta.specialization()));
-            writer.write("}}");
-        }
         Main.newLine(writer);
         Main.newLine(writer);
         writer.write("\\subsection*{Allgemeine Angaben}");
@@ -240,15 +245,17 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         Main.newLine(writer);
         writer.write("\\arrayrulecolor{mtabgray}\\hline");
         Main.newLine(writer);
-        for (int i = 0; i < table.length; i++) {
-            if (i % 2 == 0) {
+        boolean odd = true;
+        for (final String[] line : table) {
+            if (odd) {
                 writer.write("\\rowcolor{mtabback}");
                 Main.newLine(writer);
             }
+            odd = !odd;
             writer.write("\\textbf{");
-            writer.write(table[i][0]);
+            writer.write(line[0]);
             writer.write("} & ");
-            writer.write(table[i][1]);
+            writer.write(line[1]);
             writer.write("\\\\\\arrayrulecolor{mtabgray}\\hline");
             Main.newLine(writer);
         }
@@ -331,6 +338,14 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write("\\clearpage");
         Main.newLine(writer);
         Main.newLine(writer);
+    }
+
+    private static void writePagebreakForLongtable(final BufferedWriter writer) throws IOException {
+        writer.write("\\end{longtable}");
+        Main.newLine(writer);
+        writer.write("\\pagebreak{}");
+        Main.newLine(writer);
+        ModuleGuideLaTeXWriter.writeLongtableHeader(false, writer);
     }
 
     private static void writeSource(final Source source, final BufferedWriter writer) throws IOException {
@@ -449,7 +464,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
 
     @Override
     protected void writeDocumentStart(final BufferedWriter writer) throws IOException {
-        writer.write("\\documentclass[12pt]{article}");
+        writer.write("\\documentclass[11pt]{book}");
         Main.newLine(writer);
         Main.newLine(writer);
         writer.write("\\usepackage[ngerman]{babel}");
@@ -482,15 +497,41 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         Main.newLine(writer);
         writer.write("\\usepackage{enumitem}");
         Main.newLine(writer);
+        writer.write("\\usepackage{background}");
+        Main.newLine(writer);
+        writer.write("\\usepackage{tikz}");
+        Main.newLine(writer);
+        writer.write("\\usetikzlibrary{calc,positioning}");
+        Main.newLine(writer);
         writer.write("\\usepackage{hyperref}");
         Main.newLine(writer);
         Main.newLine(writer);
-        writer.write("\\titleformat{\\section}{\\normalfont\\Large\\bfseries}{}{0em}{}[{\\titlerule[1pt]}]");
+        writer.write(
+            "\\titleformat{\\chapter}[hang]{\\normalfont\\Huge\\bfseries\\color{fhdwblue}}{}{0em}{}"
+        );
         Main.newLine(writer);
+        writer.write(
+            "\\titleformat{\\section}{\\normalfont\\LARGE\\color{fhdwblue}}{}{0em}{}"
+        );
+        Main.newLine(writer);
+        writer.write("\\titleformat*{\\subsection}{\\normalfont\\large\\bfseries\\color{orange}}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\titlespacing{\\chapter}{0pt}{*0}{*4}");
+        Main.newLine(writer);
+        writer.write("\\titlespacing{\\section}{0pt}{*0}{*4}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write(
+            "\\titlecontents{chapter}[0em]{\\vskip 0.5ex}{\\bfseries\\contentsmargin{0pt}}{}{\\titlerule*[3pt]{.}\\contentspage}"
+        );
         Main.newLine(writer);
         writer.write(
             "\\titlecontents{section}[0em]{\\vskip 0.5ex}{\\contentsmargin{0pt}}{}{\\titlerule*[3pt]{.}\\contentspage}"
         );
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\csname @openrightfalse\\endcsname");
         Main.newLine(writer);
         Main.newLine(writer);
         writer.write("\\renewcommand{\\familydefault}{\\sfdefault}");
@@ -502,18 +543,41 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write("\\setlength{\\parindent}{0pt}");
         Main.newLine(writer);
         Main.newLine(writer);
+        writer.write("\\urlstyle{same}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\definecolor{fhdwblue}{RGB}{9,84,134}");
+        Main.newLine(writer);
+        writer.write("\\colorlet{fhdwyellow}{yellow!90!orange}");
+        Main.newLine(writer);
+        writer.write("\\colorlet{fhdworange}{orange!80!red}");
+        Main.newLine(writer);
         writer.write("\\colorlet{mtabgray}{black!50}");
         Main.newLine(writer);
         writer.write("\\colorlet{mtabback}{black!10}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\backgroundsetup{");
+        Main.newLine(writer);
+        writer.write("scale=1,");
+        Main.newLine(writer);
+        writer.write("angle=0,");
+        Main.newLine(writer);
+        writer.write("opacity=1,");
+        Main.newLine(writer);
+        writer.write("contents={\\begin{tikzpicture}[overlay,remember picture]");
+        Main.newLine(writer);
+        writer.write("\\shade[top color=yellow, bottom color=orange] ");
+        writer.write("($(current page.north east)+(-1,0)$) rectangle (current page.south east);");
+        Main.newLine(writer);
+        writer.write("\\end{tikzpicture}}}");
         Main.newLine(writer);
         Main.newLine(writer);
         writer.write("\\fancyhead{}");
         Main.newLine(writer);
         writer.write("\\renewcommand{\\headrulewidth}{0pt}");
         Main.newLine(writer);
-        writer.write("\\cfoot{}");
-        Main.newLine(writer);
-        writer.write("\\rfoot{Seite \\thepage{} von \\pageref{LastPage}}");
+        writer.write("\\cfoot{\\thepage{}}");
         Main.newLine(writer);
         Main.newLine(writer);
         writer.write("\\begin{document}");
@@ -562,6 +626,12 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write("Dekan des Fachbereichs Informatik");
         Main.newLine(writer);
         Main.newLine(writer);
+        writer.write("\\vfill");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("{\\Huge \\textbf{\\textcolor{orange}{\\url{www.fhdw.de}}}}");
+        Main.newLine(writer);
+        Main.newLine(writer);
         writer.write("\\clearpage");
         Main.newLine(writer);
         Main.newLine(writer);
@@ -571,32 +641,31 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
     protected void writeModules(
         final ModuleGuide guide,
         final ModuleMap modules,
+        final int weightSum,
         final BufferedWriter writer
     ) throws IOException {
-        writer.write("\\tableofcontents");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        writer.write("\\clearpage");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        final int weightSum = guide.modules().stream().mapToInt(MetaModule::weight).sum();
         final List<String> linkable = guide.modules().stream().map(MetaModule::module).toList();
         String specialization = "";
+        int semester = 0;
         for (final MetaModule meta : guide.modules().stream().sorted().toList()) {
-            boolean addContentsLine = false;
             if (meta.specialization() != null && !specialization.equals(meta.specialization())) {
                 specialization = meta.specialization();
-                writer.write("\\section*{Spezialisierung ");
+                writer.write("\\chapter{Spezialisierung ");
                 writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(specialization));
                 writer.write("}");
                 Main.newLine(writer);
                 Main.newLine(writer);
-                writer.write("\\vspace*{2ex}");
+            } else if (
+                (meta.specialization() == null || meta.specialization().isBlank()) && meta.semester() != semester
+            ) {
+                semester = meta.semester();
+                writer.write("\\chapter{");
+                writer.write(String.valueOf(semester));
+                writer.write(". Semester}");
                 Main.newLine(writer);
                 Main.newLine(writer);
-                addContentsLine = true;
             }
-            ModuleGuideLaTeXWriter.writeModule(meta, modules, weightSum, linkable, addContentsLine, writer);
+            ModuleGuideLaTeXWriter.writeModule(meta, modules, weightSum, linkable, writer);
         }
     }
 
@@ -606,103 +675,219 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         final ModuleOverview overview,
         final BufferedWriter writer
     ) throws IOException {
-        writer.write("\\textbf{Modulübersicht}\\\\[1.5ex]");
+        writer.write("\\tableofcontents");
         Main.newLine(writer);
-        writer.write("\\textbf{");
-        writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(guide.subject()));
-        writer.write(" -- ");
+        Main.newLine(writer);
+        writer.write("\\clearpage");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\chapter{Prüfungsleistungen}\\label{chap:examinations}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("Zu Anlage 1 gehört die folgende Legende, welche Art und Umfang der Prüfungsleistungen näher ");
+        writer.write("erläutert:\\\\[3ex]");
+        Main.newLine(writer);
+        writer.write("\\begin{tikzpicture}");
+        Main.newLine(writer);
+        writer.write("\\node (ex) {\\textbf{\\textcolor{fhdwblue}{PRÜFUNG}}};");
+        Main.newLine(writer);
+        writer.write("\\node (per) [right=0.2 of ex.south east, anchor=south west] ");
+        writer.write("{\\textbf{\\textcolor{fhdwblue}{LEISTUNG}}};");
+        Main.newLine(writer);
+        writer.write("\\node (ex1) [below=of ex] {\\textbf{K}};");
+        Main.newLine(writer);
+        writer.write("\\node (per1) at (ex1 -| per.west) [anchor=west] ");
+        writer.write("{\\begin{minipage}{14cm}\\raggedright\\strut{}");
+        writer.write("Die Prüfung besteht ausschließlich aus einer Klausur; im Fall einer Klausur gibt die Zahl den ");
+        writer.write("Umfang der Klausur in Minuten an.");
+        writer.write("\\strut{}\\end{minipage}};");
+        Main.newLine(writer);
+        writer.write("\\node (ex2) [below=of ex1] {\\textbf{R}};");
+        Main.newLine(writer);
+        writer.write("\\node (per2) at (ex2 -| per.west) [anchor=west] ");
+        writer.write("{\\begin{minipage}{14cm}\\raggedright\\strut{}");
+        writer.write("Die Prüfung besteht ausschließlich aus einem Referat.");
+        writer.write("\\strut{}\\end{minipage}};");
+        Main.newLine(writer);
+        writer.write("\\node (ex3) [below=of ex2] {\\textbf{S}};");
+        Main.newLine(writer);
+        writer.write("\\node (per3) at (ex3 -| per.west) [anchor=west] ");
+        writer.write("{\\begin{minipage}{14cm}\\raggedright\\strut{}");
+        writer.write("Die Prüfung besteht ausschließlich aus einer Studienarbeit.");
+        writer.write("\\strut{}\\end{minipage}};");
+        Main.newLine(writer);
+        writer.write("\\node (ex4) [below=of ex3] {\\textbf{KR}};");
+        Main.newLine(writer);
+        writer.write("\\node (per4) at (ex4 -| per.west) [anchor=west] ");
+        writer.write("{\\begin{minipage}{14cm}\\raggedright\\strut{}");
+        writer.write("Die Prüfung ist \\textbf{entweder} ein Referat \\textbf{oder} eine Klausur; im Fall einer ");
+        writer.write("Klausur gibt die Zahl den Umfang der Klausur in Minuten an.");
+        writer.write("\\strut{}\\end{minipage}};");
+        Main.newLine(writer);
+        writer.write("\\node (ex5) [below=of ex4] {\\textbf{KS}};");
+        Main.newLine(writer);
+        writer.write("\\node (per5) at (ex5 -| per.west) [anchor=west] ");
+        writer.write("{\\begin{minipage}{14cm}\\raggedright\\strut{}");
+        writer.write("Die Prüfung ist \\textbf{entweder} eine Studienarbeit \\textbf{oder} eine Klausur; im Fall ");
+        writer.write("einer Klausur gibt die Zahl den Umfang der Klausur in Minuten an.");
+        writer.write("\\strut{}\\end{minipage}};");
+        Main.newLine(writer);
+        writer.write("\\node (ex6) [below=of ex5] {\\textbf{RS}};");
+        Main.newLine(writer);
+        writer.write("\\node (per6) at (ex6 -| per.west) [anchor=west] ");
+        writer.write("{\\begin{minipage}{14cm}\\raggedright\\strut{}");
+        writer.write("Die Prüfung besteht \\textbf{entweder} aus einem Referat \\textbf{oder} einer Studienarbeit.");
+        writer.write("\\strut{}\\end{minipage}};");
+        Main.newLine(writer);
+        writer.write("\\node (ex7) [below=of ex6] {\\textbf{KRS}};");
+        Main.newLine(writer);
+        writer.write("\\node (per7) at (ex7 -| per.west) [anchor=west] ");
+        writer.write("{\\begin{minipage}{14cm}\\raggedright\\strut{}");
+        writer.write("Die Prüfung besteht \\textbf{entweder} aus einer Klausur \\textbf{oder} einem Referat ");
+        writer.write("\\textbf{oder} einer Studienarbeit; im Fall einer Klausur gibt die Zahl den Umfang der Klausur ");
+        writer.write("in Minuten an.");
+        writer.write("\\strut{}\\end{minipage}};");
+        Main.newLine(writer);
+        writer.write("\\coordinate (topright) at ($(per2.east |- ex.north)+(0.1,0.5)$);");
+        Main.newLine(writer);
+        writer.write("\\coordinate (bottomleft) at ($(ex.west |- per7.south)+(-0.1,0.1)$);");
+        Main.newLine(writer);
+        writer.write("\\coordinate (middle) at ($(ex.east)!0.5!(per.west)$);");
+        Main.newLine(writer);
+        writer.write("\\coordinate (m1) at ($(ex.south)!0.5!(ex1.north)$);");
+        Main.newLine(writer);
+        writer.write("\\coordinate (m2) at ($(ex1.south)!0.5!(ex2.north)$);");
+        Main.newLine(writer);
+        writer.write("\\coordinate (m3) at ($(ex2.south)!0.5!(ex3.north)$);");
+        Main.newLine(writer);
+        writer.write("\\coordinate (m4) at ($(ex3.south)!0.5!(ex4.north)$);");
+        Main.newLine(writer);
+        writer.write("\\coordinate (m5) at ($(ex4.south)!0.5!(ex5.north)$);");
+        Main.newLine(writer);
+        writer.write("\\coordinate (m6) at ($(ex5.south)!0.5!(ex6.north)$);");
+        Main.newLine(writer);
+        writer.write("\\coordinate (m7) at ($(ex6.south)!0.5!(ex7.north)$);");
+        Main.newLine(writer);
+        writer.write("\\draw[fhdwblue,thick] (topright -| bottomleft)");
+        writer.write(" -- (topright)");
+        writer.write(" -- (topright |- bottomleft)");
+        writer.write(" -- (bottomleft)");
+        writer.write(" -- cycle;");
+        Main.newLine(writer);
+        writer.write("\\draw[fhdwblue,thick] (middle |- topright) -- (middle |- bottomleft);");
+        Main.newLine(writer);
+        writer.write("\\draw[fhdwblue,thick] (m1 -| bottomleft) -- (m1 -| topright);");
+        Main.newLine(writer);
+        writer.write("\\draw[fhdwblue,thick] (m2 -| bottomleft) -- (m2 -| topright);");
+        Main.newLine(writer);
+        writer.write("\\draw[fhdwblue,thick] (m3 -| bottomleft) -- (m3 -| topright);");
+        Main.newLine(writer);
+        writer.write("\\draw[fhdwblue,thick] (m4 -| bottomleft) -- (m4 -| topright);");
+        Main.newLine(writer);
+        writer.write("\\draw[fhdwblue,thick] (m5 -| bottomleft) -- (m5 -| topright);");
+        Main.newLine(writer);
+        writer.write("\\draw[fhdwblue,thick] (m6 -| bottomleft) -- (m6 -| topright);");
+        Main.newLine(writer);
+        writer.write("\\draw[fhdwblue,thick] (m7 -| bottomleft) -- (m7 -| topright);");
+        Main.newLine(writer);
+        writer.write("\\end{tikzpicture}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\vspace*{3ex}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("Ist bei mehreren Prüfungsformen eine davon hervorgehoben, so wird diese bevorzugt. ");
+        writer.write("Die weiteren Prüfungsformen stellen in diesem Fall dennoch mögliche Alternativen dar.");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\clearpage");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\chapter{Studienplan -- Lehrveranstaltungen}\\label{chap:studienplan}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\begin{tikzpicture}");
+        Main.newLine(writer);
+        writer.write("\\node[fhdwblue] (subject) {\\large\\textbf{");
+        writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(guide.subject().toUpperCase()));
+        writer.write("}};");
+        Main.newLine(writer);
+        writer.write("\\node[fhdwblue] (degree) [below=0.5 of subject.west, anchor=west] {\\large ");
         writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(guide.degree()));
-        writer.write("}\\\\[2ex]");
+        writer.write("};");
         Main.newLine(writer);
+        writer.write("\\node[fhdwblue] (time) [below=0.5 of degree.west, anchor=west] {\\large ");
+        writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(guide.timemodel()));
+        writer.write("studium};");
+        Main.newLine(writer);
+        writer.write("\\draw[fhdwblue,thick] ($(subject.west)+(-0.1,0.2)$) -- ($(time.west)+(-0.1,-0.2)$);");
+        Main.newLine(writer);
+        writer.write("\\end{tikzpicture}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\vspace*{3ex}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\arrayrulecolor{fhdwblue}");
         Main.newLine(writer);
         writer.write("\\renewcommand{\\arraystretch}{1.5}");
         Main.newLine(writer);
-        writer.write("\\begin{longtable}{|l|*{3}{C{1.1cm}|}C{1.6cm}|C{2.7cm}|}");
-        Main.newLine(writer);
-        writer.write("\\hline\\endhead");
-        Main.newLine(writer);
-        writer.write("\\rule{0pt}{9mm}\\begin{minipage}{6.7cm}\\textbf{Modul}\\end{minipage} & ");
-        writer.write("\\begin{minipage}{1cm}\\rotatebox{270}{\\begin{minipage}{1.8cm}\\begin{center}");
-        writer.write("\\textbf{Semes\\-ter}");
-        writer.write("\\end{center}\\end{minipage}}\\\\[1mm]\\end{minipage} & ");
-        writer.write("\\begin{minipage}{1cm}\\rotatebox{270}{\\begin{minipage}{1.8cm}\\begin{center}");
-        writer.write("\\textbf{Kontakt\\-stunden}");
-        writer.write("\\end{center}\\end{minipage}}\\\\[1mm]\\end{minipage} & ");
-        writer.write("\\begin{minipage}{1cm}\\rotatebox{270}{\\begin{minipage}{1.8cm}\\begin{center}");
-        writer.write("\\textbf{Selbst\\-studium}");
-        writer.write("\\end{center}\\end{minipage}}\\\\[1mm]\\end{minipage} & ");
-        writer.write("\\begin{minipage}{1.5cm}\\rotatebox{270}{\\begin{minipage}{1.8cm}\\begin{center}");
-        writer.write("\\textbf{Credit Points (ECTS)}");
-        writer.write("\\end{center}\\end{minipage}}\\\\[1mm]\\end{minipage} & ");
-        writer.write("\\begin{minipage}{2.6cm}\\rotatebox{270}{\\begin{minipage}{1.8cm}\\begin{center}");
-        writer.write("\\textbf{Art und Umfang der Prüfungsleistung}");
-        writer.write("\\end{center}\\end{minipage}}\\\\[1mm]\\end{minipage}\\\\\\hline");
-        Main.newLine(writer);
+        ModuleGuideLaTeXWriter.writeLongtableHeader(true, writer);
         int semester = 1;
         int groupsOnPage = 0;
         int pagebreakIndex = 0;
+        int numberOfSpecializationModules = 0;
         final int[] pagebreaks = ModuleGuideLaTeXWriter.toPagebreaks(guide.pagebreaks());
         for (final List<ModuleStats> modules : overview.semesters()) {
             if (pagebreakIndex < pagebreaks.length && groupsOnPage >= pagebreaks[pagebreakIndex]) {
-                writer.write("\\pagebreak{}");
-                Main.newLine(writer);
+                ModuleGuideLaTeXWriter.writePagebreakForLongtable(writer);
                 groupsOnPage = 0;
                 pagebreakIndex++;
-            } else if (semester > 1) {
-                writer.write(" &  &  &  &  & \\\\\\hline");
-                Main.newLine(writer);
             }
-            writer.write("\\textbf{");
+            writer.write("\\rowcolor{fhdwblue}\\multicolumn{6}{c}{\\textcolor{white}{");
             writer.write(String.valueOf(semester));
-            writer.write(". Semester} &  &  &  &  & \\\\\\hline");
+            writer.write(". Semester}}\\\\\\hline");
             Main.newLine(writer);
             for (final ModuleStats stats : modules) {
                 ModuleGuideLaTeXWriter.writeStats(stats, writer);
+                if (ModuleStats.SEE_SPECIALIZATION.equals(stats.examination())) {
+                    numberOfSpecializationModules++;
+                }
             }
             semester++;
             groupsOnPage++;
         }
-        writer.write(" &  &  &  &  & \\\\\\hline");
-        Main.newLine(writer);
-        writer.write("\\begin{minipage}{6.7cm}\\textbf{Summe}\\end{minipage} &  & \\textbf{");
+        writer.write("\\rowcolor{fhdwblue}\\begin{minipage}{6.7cm}\\textcolor{white}{Summe}\\end{minipage} &  & ");
+        writer.write("\\textcolor{white}{");
         writer.write(String.valueOf(overview.contactHoursSum()));
-        writer.write("} & \\textbf{");
+        writer.write("} & \\textcolor{white}{");
         writer.write(String.valueOf(overview.homeHoursSum()));
-        writer.write("} & \\textbf{");
+        writer.write("} & \\textcolor{white}{");
         writer.write(String.valueOf(overview.ectsSum()));
         writer.write("} & \\\\\\hline");
         Main.newLine(writer);
         if (!overview.specializations().isEmpty()) {
-            if (pagebreakIndex < pagebreaks.length && groupsOnPage >= pagebreaks[pagebreakIndex]) {
-                writer.write("\\pagebreak{}");
-                Main.newLine(writer);
-                groupsOnPage = 0;
-                pagebreakIndex++;
-            } else {
-                writer.write(" &  &  &  &  & \\\\\\hline");
-                Main.newLine(writer);
-            }
-            writer.write("\\begin{minipage}{6.7cm}\\raggedright\\strut{}\\textbf{Spezialisierungsmodule (alternativ)}");
-            writer.write("\\strut{}\\end{minipage} &  &  &  &  & \\\\\\hline");
+            writer.write("\\end{longtable}");
             Main.newLine(writer);
-            boolean first = true;
+            Main.newLine(writer);
+            writer.write("\\clearpage");
+            Main.newLine(writer);
+            Main.newLine(writer);
+            writer.write("\\chapter{Spezialisierungsbereiche mit jeweils den Modulen I bis ");
+            writer.write(ModuleStats.toRomanNumeral(numberOfSpecializationModules));
+            writer.write("}\\label{chap:specialareas}");
+            Main.newLine(writer);
+            Main.newLine(writer);
+            ModuleGuideLaTeXWriter.writeLongtableHeader(true, writer);
             for (final Map.Entry<String, List<ModuleStats>> entry : overview.specializations().entrySet()) {
-                if (first) {
-                    first = false;
-                } else {
-                    if (pagebreakIndex < pagebreaks.length && groupsOnPage >= pagebreaks[pagebreakIndex]) {
-                        writer.write("\\pagebreak{}");
-                        Main.newLine(writer);
-                        groupsOnPage = 0;
-                        pagebreakIndex++;
-                    } else {
-                        writer.write(" &  &  &  &  & \\\\\\hline");
-                        Main.newLine(writer);
-                    }
+                if (pagebreakIndex < pagebreaks.length && groupsOnPage >= pagebreaks[pagebreakIndex]) {
+                    ModuleGuideLaTeXWriter.writePagebreakForLongtable(writer);
+                    groupsOnPage = 0;
+                    pagebreakIndex++;
                 }
-                writer.write("\\begin{minipage}{6.7cm}\\raggedright\\strut{}\\textbf{");
+                writer.write("\\rowcolor{fhdwblue}\\multicolumn{6}{c}{\\textcolor{white}{");
                 writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(entry.getKey()));
-                writer.write("}\\strut{}\\end{minipage} &  &  &  &  & \\\\\\hline");
+                writer.write("}}\\\\\\hline");
                 Main.newLine(writer);
                 for (final ModuleStats stats : entry.getValue()) {
                     ModuleGuideLaTeXWriter.writeStats(stats, writer);
@@ -725,51 +910,43 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write("\\pagestyle{empty}");
         Main.newLine(writer);
         Main.newLine(writer);
-        writer.write("\\begin{center}");
-        Main.newLine(writer);
-        writer.write("\\Huge");
+        writer.write("\\NoBgThispage");
         Main.newLine(writer);
         Main.newLine(writer);
-        writer.write("\\textbf{Fachhochschule der Wirtschaft}\\\\");
+        writer.write("\\begin{tikzpicture}[overlay,remember picture]");
+        Main.newLine(writer);
+        writer.write("\\node at (current page.center) {\\includegraphics[height=\\paperheight]{frontpage.png}};");
+        Main.newLine(writer);
+        writer.write("\\end{tikzpicture}");
         Main.newLine(writer);
         Main.newLine(writer);
-        writer.write("\\vspace*{2cm}");
+        writer.write("\\vspace*{15cm}");
         Main.newLine(writer);
         Main.newLine(writer);
-        writer.write("\\includegraphics{fhdwlogo.png}");
+        writer.write("{\\color{white}");
         Main.newLine(writer);
-        Main.newLine(writer);
-        writer.write("\\vspace*{2cm}");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        writer.write("\\textbf{Modulhandbuch}\\\\");
-        Main.newLine(writer);
-        writer.write("\\textbf{(");
+        writer.write("\\Large Modulhandbuch ");
         writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(guide.timemodel()));
-        writer.write(")}\\\\");
+        writer.write("\\\\[1ex]");
         Main.newLine(writer);
-        Main.newLine(writer);
-        writer.write("\\vfill");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        writer.write("\\textbf{");
+        writer.write("\\Huge \\textbf{");
         writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(guide.subject()));
-        writer.write("}\\\\");
+        writer.write("}\\\\[0.5ex]");
         Main.newLine(writer);
-        writer.write("\\textbf{(");
+        writer.write("\\Huge \\textbf{");
         writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(guide.degree()));
-        writer.write(")}\\\\");
+        writer.write("}\\\\[0.5ex]");
         Main.newLine(writer);
-        Main.newLine(writer);
-        writer.write("\\vfill");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        writer.write("\\textbf{Studienjahr ");
+        writer.write("\\Large Studienjahr ");
         writer.write(guide.year());
+        Main.newLine(writer);
         writer.write("}");
         Main.newLine(writer);
         Main.newLine(writer);
-        writer.write("\\end{center}");
+        writer.write("\\vfill");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("{\\Huge \\textbf{\\textcolor{orange}{\\url{www.fhdw.de}}}}");
         Main.newLine(writer);
         Main.newLine(writer);
         writer.write("\\clearpage");

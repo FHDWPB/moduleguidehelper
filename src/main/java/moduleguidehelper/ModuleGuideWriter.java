@@ -17,8 +17,9 @@ public abstract class ModuleGuideWriter {
         this.writeDocumentStart(writer);
         this.writeTitlePage(this.book, writer);
         this.writeIntro(this.book, writer);
-        this.writeOverview(this.book, ModuleOverview.create(this.book, this.modules), writer);
-        this.writeModules(this.book, this.modules, writer);
+        final ModuleOverview overview = ModuleOverview.create(this.book, this.modules);
+        this.writeOverview(this.book, overview, writer);
+        this.writeModules(this.book, this.modules, overview.weightSum(), writer);
         this.writeDocumentEnd(writer);
     }
 
@@ -28,7 +29,12 @@ public abstract class ModuleGuideWriter {
 
     protected abstract void writeIntro(final ModuleGuide book, final BufferedWriter writer) throws IOException;
 
-    protected abstract void writeModules(ModuleGuide book, ModuleMap modules, BufferedWriter writer) throws IOException;
+    protected abstract void writeModules(
+        final ModuleGuide book,
+        final ModuleMap modules,
+        final int weightSum,
+        final BufferedWriter writer
+    ) throws IOException;
 
     protected abstract void writeOverview(
         final ModuleGuide book,
