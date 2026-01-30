@@ -9,6 +9,24 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
 
     private static final Pattern ESCAPE_PATTERN = Pattern.compile("\\$\\$[^\\$]+\\$\\$");
 
+    public static void writeModule(
+        final String id,
+        final Module module,
+        final BufferedWriter writer
+    ) throws IOException {
+        ModuleGuideLaTeXWriter.writeDocumentStartStatic(writer);
+        final ModuleMap modules = new ModuleMap();
+        modules.put(id, module);
+        ModuleGuideLaTeXWriter.writeModule(
+            new MetaModule(id, 1, 1, "Pflicht", "Jedes Jahr", 5, 1, "", "", "", "", null),
+            modules,
+            180,
+            List.of(),
+            writer
+        );
+        ModuleGuideLaTeXWriter.writeDocumentEndStatic(writer);
+    }
+
     private static String chapterToItem(final Chapter chapter) {
         if (chapter.sections() == null || chapter.sections().isEmpty()) {
             return ModuleGuideLaTeXWriter.escapeForLaTeX(chapter.chapter());
@@ -143,6 +161,135 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
 
     private static void writeAuthors(final List<String> authors, final BufferedWriter writer) throws IOException {
         writer.write(authors.stream().map(ModuleGuideLaTeXWriter::formatAuthor).collect(Collectors.joining(", ")));
+    }
+
+    private static void writeDocumentEndStatic(final BufferedWriter writer) throws IOException {
+        Main.newLine(writer);
+        writer.write("\\end{document}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+    }
+
+    private static void writeDocumentStartStatic(final BufferedWriter writer) throws IOException {
+        writer.write("\\documentclass[11pt]{book}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\usepackage[ngerman]{babel}");
+        Main.newLine(writer);
+        writer.write("\\usepackage[T1]{fontenc}");
+        Main.newLine(writer);
+        writer.write("\\usepackage[table]{xcolor}");
+        Main.newLine(writer);
+        writer.write("\\usepackage{graphicx}");
+        Main.newLine(writer);
+        writer.write("\\usepackage[a4paper,margin=2cm]{geometry}");
+        Main.newLine(writer);
+        writer.write("\\usepackage{uarial}");
+        Main.newLine(writer);
+        writer.write("\\usepackage{longtable}");
+        Main.newLine(writer);
+        writer.write("\\usepackage{lastpage}");
+        Main.newLine(writer);
+        writer.write("\\usepackage{fancyhdr}");
+        Main.newLine(writer);
+        writer.write("\\usepackage{array}");
+        Main.newLine(writer);
+        writer.write("\\usepackage{colortbl}");
+        Main.newLine(writer);
+        writer.write("\\usepackage{tabularx}");
+        Main.newLine(writer);
+        writer.write("\\usepackage{titlesec}");
+        Main.newLine(writer);
+        writer.write("\\usepackage{titletoc}");
+        Main.newLine(writer);
+        writer.write("\\usepackage{enumitem}");
+        Main.newLine(writer);
+        writer.write("\\usepackage{background}");
+        Main.newLine(writer);
+        writer.write("\\usepackage{tikz}");
+        Main.newLine(writer);
+        writer.write("\\usetikzlibrary{calc,positioning}");
+        Main.newLine(writer);
+        writer.write("\\usepackage{hyperref}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write(
+            "\\titleformat{\\chapter}[hang]{\\normalfont\\Huge\\bfseries\\color{fhdwblue}}{}{0em}{}"
+        );
+        Main.newLine(writer);
+        writer.write(
+            "\\titleformat{\\section}{\\normalfont\\LARGE\\color{fhdwblue}}{}{0em}{}"
+        );
+        Main.newLine(writer);
+        writer.write("\\titleformat*{\\subsection}{\\normalfont\\large\\bfseries\\color{orange}}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\titlespacing{\\chapter}{0pt}{*0}{*4}");
+        Main.newLine(writer);
+        writer.write("\\titlespacing{\\section}{0pt}{*0}{*4}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write(
+            "\\titlecontents{chapter}[0em]{\\vskip 0.5ex}{\\bfseries\\contentsmargin{0pt}}{}{\\titlerule*[3pt]{.}\\contentspage}"
+        );
+        Main.newLine(writer);
+        writer.write(
+            "\\titlecontents{section}[0em]{\\vskip 0.5ex}{\\contentsmargin{0pt}}{}{\\titlerule*[3pt]{.}\\contentspage}"
+        );
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\csname @openrightfalse\\endcsname");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\renewcommand{\\familydefault}{\\sfdefault}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\newcolumntype{C}[1]{>{\\centering\\let\\newline\\\\\\arraybackslash\\hspace{0pt}}m{#1}}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\setlength{\\parindent}{0pt}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\urlstyle{same}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\definecolor{fhdwblue}{RGB}{9,84,134}");
+        Main.newLine(writer);
+        writer.write("\\colorlet{fhdwyellow}{yellow!90!orange}");
+        Main.newLine(writer);
+        writer.write("\\colorlet{fhdworange}{orange!80!red}");
+        Main.newLine(writer);
+        writer.write("\\colorlet{mtabgray}{black!50}");
+        Main.newLine(writer);
+        writer.write("\\colorlet{mtabback}{black!10}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\backgroundsetup{");
+        Main.newLine(writer);
+        writer.write("scale=1,");
+        Main.newLine(writer);
+        writer.write("angle=0,");
+        Main.newLine(writer);
+        writer.write("opacity=1,");
+        Main.newLine(writer);
+        writer.write("contents={\\begin{tikzpicture}[overlay,remember picture]");
+        Main.newLine(writer);
+        writer.write("\\shade[top color=yellow, bottom color=orange] ");
+        writer.write("($(current page.north east)+(-1,0)$) rectangle (current page.south east);");
+        Main.newLine(writer);
+        writer.write("\\end{tikzpicture}}}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\fancyhead{}");
+        Main.newLine(writer);
+        writer.write("\\renewcommand{\\headrulewidth}{0pt}");
+        Main.newLine(writer);
+        writer.write("\\cfoot{\\thepage{}}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\begin{document}");
+        Main.newLine(writer);
+        Main.newLine(writer);
     }
 
     private static void writeItemize(
@@ -456,133 +603,12 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
 
     @Override
     protected void writeDocumentEnd(final BufferedWriter writer) throws IOException {
-        Main.newLine(writer);
-        writer.write("\\end{document}");
-        Main.newLine(writer);
-        Main.newLine(writer);
+        ModuleGuideLaTeXWriter.writeDocumentEndStatic(writer);
     }
 
     @Override
     protected void writeDocumentStart(final BufferedWriter writer) throws IOException {
-        writer.write("\\documentclass[11pt]{book}");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        writer.write("\\usepackage[ngerman]{babel}");
-        Main.newLine(writer);
-        writer.write("\\usepackage[T1]{fontenc}");
-        Main.newLine(writer);
-        writer.write("\\usepackage[table]{xcolor}");
-        Main.newLine(writer);
-        writer.write("\\usepackage{graphicx}");
-        Main.newLine(writer);
-        writer.write("\\usepackage[a4paper,margin=2cm]{geometry}");
-        Main.newLine(writer);
-        writer.write("\\usepackage{uarial}");
-        Main.newLine(writer);
-        writer.write("\\usepackage{longtable}");
-        Main.newLine(writer);
-        writer.write("\\usepackage{lastpage}");
-        Main.newLine(writer);
-        writer.write("\\usepackage{fancyhdr}");
-        Main.newLine(writer);
-        writer.write("\\usepackage{array}");
-        Main.newLine(writer);
-        writer.write("\\usepackage{colortbl}");
-        Main.newLine(writer);
-        writer.write("\\usepackage{tabularx}");
-        Main.newLine(writer);
-        writer.write("\\usepackage{titlesec}");
-        Main.newLine(writer);
-        writer.write("\\usepackage{titletoc}");
-        Main.newLine(writer);
-        writer.write("\\usepackage{enumitem}");
-        Main.newLine(writer);
-        writer.write("\\usepackage{background}");
-        Main.newLine(writer);
-        writer.write("\\usepackage{tikz}");
-        Main.newLine(writer);
-        writer.write("\\usetikzlibrary{calc,positioning}");
-        Main.newLine(writer);
-        writer.write("\\usepackage{hyperref}");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        writer.write(
-            "\\titleformat{\\chapter}[hang]{\\normalfont\\Huge\\bfseries\\color{fhdwblue}}{}{0em}{}"
-        );
-        Main.newLine(writer);
-        writer.write(
-            "\\titleformat{\\section}{\\normalfont\\LARGE\\color{fhdwblue}}{}{0em}{}"
-        );
-        Main.newLine(writer);
-        writer.write("\\titleformat*{\\subsection}{\\normalfont\\large\\bfseries\\color{orange}}");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        writer.write("\\titlespacing{\\chapter}{0pt}{*0}{*4}");
-        Main.newLine(writer);
-        writer.write("\\titlespacing{\\section}{0pt}{*0}{*4}");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        writer.write(
-            "\\titlecontents{chapter}[0em]{\\vskip 0.5ex}{\\bfseries\\contentsmargin{0pt}}{}{\\titlerule*[3pt]{.}\\contentspage}"
-        );
-        Main.newLine(writer);
-        writer.write(
-            "\\titlecontents{section}[0em]{\\vskip 0.5ex}{\\contentsmargin{0pt}}{}{\\titlerule*[3pt]{.}\\contentspage}"
-        );
-        Main.newLine(writer);
-        Main.newLine(writer);
-        writer.write("\\csname @openrightfalse\\endcsname");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        writer.write("\\renewcommand{\\familydefault}{\\sfdefault}");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        writer.write("\\newcolumntype{C}[1]{>{\\centering\\let\\newline\\\\\\arraybackslash\\hspace{0pt}}m{#1}}");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        writer.write("\\setlength{\\parindent}{0pt}");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        writer.write("\\urlstyle{same}");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        writer.write("\\definecolor{fhdwblue}{RGB}{9,84,134}");
-        Main.newLine(writer);
-        writer.write("\\colorlet{fhdwyellow}{yellow!90!orange}");
-        Main.newLine(writer);
-        writer.write("\\colorlet{fhdworange}{orange!80!red}");
-        Main.newLine(writer);
-        writer.write("\\colorlet{mtabgray}{black!50}");
-        Main.newLine(writer);
-        writer.write("\\colorlet{mtabback}{black!10}");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        writer.write("\\backgroundsetup{");
-        Main.newLine(writer);
-        writer.write("scale=1,");
-        Main.newLine(writer);
-        writer.write("angle=0,");
-        Main.newLine(writer);
-        writer.write("opacity=1,");
-        Main.newLine(writer);
-        writer.write("contents={\\begin{tikzpicture}[overlay,remember picture]");
-        Main.newLine(writer);
-        writer.write("\\shade[top color=yellow, bottom color=orange] ");
-        writer.write("($(current page.north east)+(-1,0)$) rectangle (current page.south east);");
-        Main.newLine(writer);
-        writer.write("\\end{tikzpicture}}}");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        writer.write("\\fancyhead{}");
-        Main.newLine(writer);
-        writer.write("\\renewcommand{\\headrulewidth}{0pt}");
-        Main.newLine(writer);
-        writer.write("\\cfoot{\\thepage{}}");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        writer.write("\\begin{document}");
-        Main.newLine(writer);
-        Main.newLine(writer);
+        ModuleGuideLaTeXWriter.writeDocumentStartStatic(writer);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package moduleguidehelper;
 
 import java.io.*;
+import java.util.*;
 
 import com.google.gson.*;
 
@@ -11,6 +12,20 @@ public class Main {
     private static final Gson GSON = new Gson();
 
     public static void main(final String[] args) throws IOException {
+        if (args != null && args.length == 1) {
+            try (FileReader modulesReader = new FileReader(args[0])) {
+                final ModuleMap modules = Main.GSON.fromJson(modulesReader, ModuleMap.class);
+                for (final Map.Entry<String, Module> entry : modules.entrySet()) {
+                    try (
+                        BufferedWriter writer =
+                            new BufferedWriter(new FileWriter(entry.getKey().toLowerCase() + ".tex"))
+                    ) {
+                        ModuleGuideLaTeXWriter.writeModule(entry.getKey(), entry.getValue(), writer);
+                    }
+                }
+            }
+            return;
+        }
         if (args != null && args.length == 2) {
             try (
                 BufferedReader reader = new BufferedReader(new FileReader(args[0]));
@@ -56,6 +71,7 @@ public class Main {
         }
         if (args == null || args.length != 3) {
             System.out.println("Call with book and modules JSON, followed by output file!");
+            return;
         }
         try (
             FileReader bookReader = new FileReader(args[0]);
