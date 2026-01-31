@@ -427,14 +427,6 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             "Keine",
             writer
         );
-        writer.write("\\subsection*{Verwendbarkeit}");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        ModuleGuideLaTeXWriter.writeItemize(
-            ModuleGuideLaTeXWriter.lookupModules(module.usability(), modules, linkable),
-            "Keine",
-            writer
-        );
         writer.write("\\subsection*{Qualifikations- und Kompetenzziele}");
         Main.newLine(writer);
         Main.newLine(writer);
@@ -446,7 +438,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         if (module.teachingmethods().isEmpty()) {
             writer.write("Präsenzveranstaltungen, Eigenstudium, individuelles und kooperatives Lernen, ");
             writer.write("problemorientiertes und integratives Lernen, forschendes Lernen, synchrones und ");
-            writer.write("asynchrones Lernen, Übungen, Fallstudien, Expertenvorträge.");
+            writer.write("asynchrones Lernen, Übungen, Fallstudien, Expertenvorträge, Projekte, Gruppenarbeit.");
             Main.newLine(writer);
         } else {
             ModuleGuideLaTeXWriter.writeText(module.teachingmethods(), writer);
@@ -509,35 +501,31 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         }
         writer.write(". \\textit{");
         writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(source.title()));
-        writer.write("}, ");
+        writer.write("}");
         switch (source.type()) {
         case BOOK:
             if (source.edition() != null) {
-                writer.write(" ");
+                writer.write(", ");
                 writer.write(String.valueOf(source.edition()));
                 writer.write(". Auflage. ");
+            } else {
+                writer.write(".");
             }
             break;
         case ARTICLE:
             final boolean hasJournal = source.journal() != null && !source.journal().isBlank();
             if (hasJournal) {
-                writer.write(" ");
+                writer.write(", ");
                 writer.write(source.journal());
             }
             final boolean hasVolume = source.volume() != null && !source.volume().isBlank();
             if (hasVolume) {
-                if (hasJournal) {
-                    writer.write(",");
-                }
-                writer.write(" Ausgabe ");
+                writer.write(", Ausgabe ");
                 writer.write(source.volume());
             }
             final boolean hasNumber = source.number() != null && !source.number().isBlank();
             if (hasNumber) {
-                if (hasJournal || hasVolume) {
-                    writer.write(",");
-                }
-                writer.write(" Nummer ");
+                writer.write(", Nummer ");
                 writer.write(source.number());
             }
             if (source.frompage() != null) {
@@ -549,18 +537,24 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
                 }
             }
             if (hasJournal || hasVolume || hasNumber) {
-                writer.write(". ");
+                writer.write(".");
             }
             break;
         default:
-            // DO NOTHING
+            writer.write(".");
         }
-        if (source.location() != null && !source.location().isBlank()) {
+        final boolean hasLocation = source.location() != null && !source.location().isBlank();
+        if (hasLocation) {
+            writer.write(" ");
             writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(source.location()));
-            writer.write(": ");
+            writer.write(":");
         }
-        writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(source.publisher()));
-        writer.write(".\\\\[1.5ex]");
+        if (source.publisher() != null && !source.publisher().isBlank()) {
+            writer.write(" ");
+            writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(source.publisher()));
+            writer.write(".");
+        }
+        writer.write("\\\\[1.5ex]");
         Main.newLine(writer);
     }
 

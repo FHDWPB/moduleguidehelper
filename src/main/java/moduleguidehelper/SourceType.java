@@ -2,6 +2,6 @@ package moduleguidehelper;
 
 public enum SourceType {
 
-    ARTICLE, BOOK, HINT, PROCEEDINGS
+    ARTICLE, BOOK, HINT, MISC, PROCEEDINGS
 
 }
