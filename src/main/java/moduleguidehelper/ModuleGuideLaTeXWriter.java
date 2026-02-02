@@ -9,6 +9,8 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
 
     private static final Pattern ESCAPE_PATTERN = Pattern.compile("\\$\\$[^\\$]+\\$\\$");
 
+    private static final String OVERVIEW_FIRST_COL_SIZE = "7.2cm";
+
     public static void writeModule(
         final String id,
         final Module module,
@@ -299,70 +301,54 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write("Zu Anlage 1 gehört die folgende Legende, welche Art und Umfang der Prüfungsleistungen näher ");
         writer.write("erläutert:\\\\[3ex]");
         Main.newLine(writer);
-        writer.write("\\begin{tikzpicture}");
+        writer.write("\\begin{tikzpicture}[node distance=2 and 1]");
         Main.newLine(writer);
         writer.write("\\node (ex) {\\textbf{\\textcolor{fhdwblue}{PRÜFUNG}}};");
         Main.newLine(writer);
         writer.write("\\node (per) [right=0.2 of ex.south east, anchor=south west] ");
         writer.write("{\\textbf{\\textcolor{fhdwblue}{LEISTUNG}}};");
         Main.newLine(writer);
-        writer.write("\\node (ex1) [below=of ex] {\\textbf{K}};");
+        writer.write("\\node (ex1) [below=of ex] {\\phantom{g}\\textbf{K}\\phantom{g}};");
         Main.newLine(writer);
         writer.write("\\node (per1) at (ex1 -| per.west) [anchor=west] ");
         writer.write("{\\begin{minipage}{14cm}\\raggedright\\strut{}");
-        writer.write("Die Prüfung besteht ausschließlich aus einer Klausur; im Fall einer Klausur gibt die Zahl den ");
-        writer.write("Umfang der Klausur in Minuten an.");
+        writer.write("Die Prüfung besteht aus einer 90-minütigen Klausur.");
         writer.write("\\strut{}\\end{minipage}};");
         Main.newLine(writer);
-        writer.write("\\node (ex2) [below=of ex1] {\\textbf{R}};");
+        writer.write("\\node (ex2) [below=of ex1] {\\phantom{g}\\textbf{R}\\phantom{g}};");
         Main.newLine(writer);
         writer.write("\\node (per2) at (ex2 -| per.west) [anchor=west] ");
         writer.write("{\\begin{minipage}{14cm}\\raggedright\\strut{}");
-        writer.write("Die Prüfung besteht ausschließlich aus einem Referat.");
+        writer.write("Die Prüfung besteht aus einem Referat.");
         writer.write("\\strut{}\\end{minipage}};");
         Main.newLine(writer);
-        writer.write("\\node (ex3) [below=of ex2] {\\textbf{S}};");
+        writer.write("\\node (ex3) [below=of ex2] {\\phantom{g}\\textbf{S}\\phantom{g}};");
         Main.newLine(writer);
         writer.write("\\node (per3) at (ex3 -| per.west) [anchor=west] ");
         writer.write("{\\begin{minipage}{14cm}\\raggedright\\strut{}");
-        writer.write("Die Prüfung besteht ausschließlich aus einer Studienarbeit.");
+        writer.write("Die Prüfung besteht aus einer Studienarbeit.");
         writer.write("\\strut{}\\end{minipage}};");
         Main.newLine(writer);
-        writer.write("\\node (ex4) [below=of ex3] {\\textbf{KR}};");
+        writer.write("\\node (ex4) [below=of ex3] {\\phantom{g}\\textbf{P}\\phantom{g}};");
         Main.newLine(writer);
         writer.write("\\node (per4) at (ex4 -| per.west) [anchor=west] ");
         writer.write("{\\begin{minipage}{14cm}\\raggedright\\strut{}");
-        writer.write("Die Prüfung ist \\textbf{entweder} ein Referat \\textbf{oder} eine Klausur; im Fall einer ");
-        writer.write("Klausur gibt die Zahl den Umfang der Klausur in Minuten an.");
+        writer.write("Die Prüfung ist eine praktische Prüfung.");
         writer.write("\\strut{}\\end{minipage}};");
         Main.newLine(writer);
-        writer.write("\\node (ex5) [below=of ex4] {\\textbf{KS}};");
+        writer.write("\\node (ex5) [below=of ex4] {\\phantom{g}\\textbf{X}\\phantom{g}};");
         Main.newLine(writer);
         writer.write("\\node (per5) at (ex5 -| per.west) [anchor=west] ");
         writer.write("{\\begin{minipage}{14cm}\\raggedright\\strut{}");
-        writer.write("Die Prüfung ist \\textbf{entweder} eine Studienarbeit \\textbf{oder} eine Klausur; im Fall ");
-        writer.write("einer Klausur gibt die Zahl den Umfang der Klausur in Minuten an.");
-        writer.write("\\strut{}\\end{minipage}};");
-        Main.newLine(writer);
-        writer.write("\\node (ex6) [below=of ex5] {\\textbf{RS}};");
-        Main.newLine(writer);
-        writer.write("\\node (per6) at (ex6 -| per.west) [anchor=west] ");
-        writer.write("{\\begin{minipage}{14cm}\\raggedright\\strut{}");
-        writer.write("Die Prüfung besteht \\textbf{entweder} aus einem Referat \\textbf{oder} einer Studienarbeit.");
-        writer.write("\\strut{}\\end{minipage}};");
-        Main.newLine(writer);
-        writer.write("\\node (ex7) [below=of ex6] {\\textbf{KRS}};");
-        Main.newLine(writer);
-        writer.write("\\node (per7) at (ex7 -| per.west) [anchor=west] ");
-        writer.write("{\\begin{minipage}{14cm}\\raggedright\\strut{}");
-        writer.write("Die Prüfung besteht \\textbf{entweder} aus einer Klausur \\textbf{oder} einem Referat ");
-        writer.write("\\textbf{oder} einer Studienarbeit; im Fall einer Klausur gibt die Zahl den Umfang der Klausur ");
-        writer.write("in Minuten an.");
+        writer.write("Die Prüfung ist eine kombinierte Prüfung aus \\textbf{entweder} einer Klausur und einem ");
+        writer.write("Referat \\textbf{oder} aus zwei Klausuren; der kombinierte Prüfungsumfang muss dabei dem einer ");
+        writer.write("Einzelprüfung als Klausur oder Referat entsprechen (bei zwei Klausuren addieren sich ");
+        writer.write("beispielsweise die Bearbeitungszeiten dieser beiden Klausuren zu 90 Minuten auf).");
         writer.write("\\strut{}\\end{minipage}};");
         Main.newLine(writer);
         writer.write("\\coordinate (topright) at ($(per2.east |- ex.north)+(0.1,0.5)$);");
         Main.newLine(writer);
-        writer.write("\\coordinate (bottomleft) at ($(ex.west |- per7.south)+(-0.1,0.1)$);");
+        writer.write("\\coordinate (bottomleft) at ($(ex.west |- per5.south)+(-0.1,0.1)$);");
         Main.newLine(writer);
         writer.write("\\coordinate (middle) at ($(ex.east)!0.5!(per.west)$);");
         Main.newLine(writer);
@@ -375,10 +361,6 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write("\\coordinate (m4) at ($(ex3.south)!0.5!(ex4.north)$);");
         Main.newLine(writer);
         writer.write("\\coordinate (m5) at ($(ex4.south)!0.5!(ex5.north)$);");
-        Main.newLine(writer);
-        writer.write("\\coordinate (m6) at ($(ex5.south)!0.5!(ex6.north)$);");
-        Main.newLine(writer);
-        writer.write("\\coordinate (m7) at ($(ex6.south)!0.5!(ex7.north)$);");
         Main.newLine(writer);
         writer.write("\\draw[fhdwblue,thick] (topright -| bottomleft)");
         writer.write(" -- (topright)");
@@ -398,18 +380,19 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         Main.newLine(writer);
         writer.write("\\draw[fhdwblue,thick] (m5 -| bottomleft) -- (m5 -| topright);");
         Main.newLine(writer);
-        writer.write("\\draw[fhdwblue,thick] (m6 -| bottomleft) -- (m6 -| topright);");
-        Main.newLine(writer);
-        writer.write("\\draw[fhdwblue,thick] (m7 -| bottomleft) -- (m7 -| topright);");
-        Main.newLine(writer);
         writer.write("\\end{tikzpicture}");
         Main.newLine(writer);
         Main.newLine(writer);
         writer.write("\\vspace*{3ex}");
         Main.newLine(writer);
         Main.newLine(writer);
-        writer.write("Ist bei mehreren Prüfungsformen eine davon hervorgehoben, so wird diese bevorzugt. ");
-        writer.write("Die weiteren Prüfungsformen stellen in diesem Fall dennoch mögliche Alternativen dar.");
+        writer.write("Sind mehrere Prüfungsformen angegeben, stellt dies eine Auswahl aus den angegeben Alternativen ");
+        writer.write("dar; nicht jedoch die Kombination dieser verschiedenen Prüfungsformen.");
+        Main.newLine(writer);
+        writer.write("Ist bei mehreren Prüfungsformen eine davon hervorgehoben, so wird diese bevorzugt.");
+        Main.newLine(writer);
+        writer.write("Die jeweils ausgewählte Prüfungsform wird zu Beginn der entsprechenden Veranstaltung ");
+        writer.write("bekanntgegeben.");
         Main.newLine(writer);
         Main.newLine(writer);
         writer.write("\\clearpage");
@@ -481,27 +464,29 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         final boolean withHeadings,
         final BufferedWriter writer
     ) throws IOException {
-        writer.write("\\begin{longtable}{|l|*{3}{C{1.1cm}|}C{1.6cm}|C{2.7cm}|}");
+        writer.write("\\begin{longtable}{|l|*{3}{C{1.1cm}|}C{1.6cm}|C{2.2cm}|}");
         Main.newLine(writer);
         writer.write("\\hline\\endhead");
         Main.newLine(writer);
         if (withHeadings) {
-            writer.write("\\rule{0pt}{9mm}\\begin{minipage}{6.7cm}\\textbf{\\textcolor{fhdwblue}{MODUL}}");
-            writer.write("\\end{minipage} & \\begin{minipage}{1cm}\\rotatebox{270}{\\begin{minipage}{1.9cm}");
-            writer.write("\\begin{center}\\textbf{\\textcolor{fhdwblue}{SEMES\\-TER}}");
-            writer.write("\\end{center}\\end{minipage}}\\\\[1mm]\\end{minipage} & ");
-            writer.write("\\begin{minipage}{1cm}\\rotatebox{270}{\\begin{minipage}{1.9cm}\\begin{center}");
-            writer.write("\\textbf{\\textcolor{fhdwblue}{KONTAKT\\-STUNDEN}}");
-            writer.write("\\end{center}\\end{minipage}}\\\\[1mm]\\end{minipage} & ");
-            writer.write("\\begin{minipage}{1cm}\\rotatebox{270}{\\begin{minipage}{1.9cm}\\begin{center}");
-            writer.write("\\textbf{\\textcolor{fhdwblue}{SELBST\\-STUDIUM}}");
-            writer.write("\\end{center}\\end{minipage}}\\\\[1mm]\\end{minipage} & ");
-            writer.write("\\begin{minipage}{1.5cm}\\rotatebox{270}{\\begin{minipage}{1.9cm}\\begin{center}");
-            writer.write("\\textbf{\\textcolor{fhdwblue}{CREDIT POINTS (ECTS)}}");
-            writer.write("\\end{center}\\end{minipage}}\\\\[1mm]\\end{minipage} & ");
-            writer.write("\\begin{minipage}{2.6cm}\\rotatebox{270}{\\begin{minipage}{1.9cm}\\begin{center}");
-            writer.write("\\textbf{\\textcolor{fhdwblue}{ART UND UMFANG DER PRÜFUNGSLEISTUNG}}");
-            writer.write("\\end{center}\\end{minipage}}\\\\[1mm]\\end{minipage}\\\\\\hline");
+            writer.write("\\rule{0pt}{9mm}\\begin{minipage}{");
+            writer.write(ModuleGuideLaTeXWriter.OVERVIEW_FIRST_COL_SIZE);
+            writer.write("}\\textbf{\\textcolor{fhdwblue}{MODUL}}\\end{minipage} & \\begin{minipage}{1cm}");
+            writer.write("\\begin{center}\\rotatebox{270}{\\begin{minipage}{2cm}");
+            writer.write("\\begin{center}\\textbf{\\textcolor{fhdwblue}{SEMES\\-TER}}\\end{center}");
+            writer.write("\\end{minipage}}\\\\[1mm]\\end{center}\\end{minipage} & \\begin{minipage}{1cm}");
+            writer.write("\\begin{center}\\rotatebox{270}{\\begin{minipage}{2cm}\\begin{center}");
+            writer.write("\\textbf{\\textcolor{fhdwblue}{KONTAKT\\-STUNDEN}}\\end{center}");
+            writer.write("\\end{minipage}}\\\\[1mm]\\end{center}\\end{minipage} & \\begin{minipage}{1cm}");
+            writer.write("\\begin{center}\\rotatebox{270}{\\begin{minipage}{2cm}\\begin{center}");
+            writer.write("\\textbf{\\textcolor{fhdwblue}{SELBST\\-STUDIUM}}\\end{center}");
+            writer.write("\\end{minipage}}\\\\[1mm]\\end{center}\\end{minipage} & \\begin{minipage}{1.5cm}");
+            writer.write("\\begin{center}\\rotatebox{270}{\\begin{minipage}{2cm}\\begin{center}");
+            writer.write("\\textbf{\\textcolor{fhdwblue}{CREDIT POINTS (ECTS)}}\\end{center}");
+            writer.write("\\end{minipage}}\\\\[1mm]\\end{center}\\end{minipage} & \\begin{minipage}{2.1cm}");
+            writer.write("\\begin{center}\\rotatebox{270}{\\begin{minipage}{2cm}\\begin{center}");
+            writer.write("\\textbf{\\textcolor{fhdwblue}{PRÜ\\-FUNGS\\-FORM}}");
+            writer.write("\\end{center}\\end{minipage}}\\\\[1mm]\\end{center}\\end{minipage}\\\\\\hline");
             Main.newLine(writer);
         }
     }
@@ -526,7 +511,6 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         table.add(new String[] {"Selbststudium", String.valueOf(module.homehours())});
         table.add(new String[] {"Dauer", meta.duration() + " Semester"});
         table.add(new String[] {"Häufigkeit", ModuleGuideLaTeXWriter.escapeForLaTeX(meta.frequency())});
-        table.add(new String[] {"Gewichtung", String.format("%d/%d", meta.weight(), weightSum)});
         table.add(new String[] {"Prüfungsleistung", ModuleGuideLaTeXWriter.formatExamination(module.examination())});
         writer.write("\\section{");
         writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(module.title()));
@@ -649,7 +633,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             if (source.edition() != null) {
                 writer.write(", ");
                 writer.write(String.valueOf(source.edition()));
-                writer.write(". Auflage. ");
+                writer.write(".~Auflage. ");
             } else {
                 writer.write(".");
             }
@@ -709,7 +693,9 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
     }
 
     private static void writeStats(final ModuleStats stats, final BufferedWriter writer) throws IOException {
-        writer.write("\\begin{minipage}{6.7cm}\\raggedright\\strut{}\\hyperref[sec:");
+        writer.write("\\begin{minipage}{");
+        writer.write(ModuleGuideLaTeXWriter.OVERVIEW_FIRST_COL_SIZE);
+        writer.write("}\\raggedright\\strut{}\\hyperref[sec:");
         writer.write(stats.id());
         writer.write("]{");
         writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(stats.title()));
@@ -906,7 +892,9 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             semester++;
             groupsOnPage++;
         }
-        writer.write("\\rowcolor{fhdwblue}\\begin{minipage}{6.7cm}\\textcolor{white}{Summe}\\end{minipage} &  & ");
+        writer.write("\\rowcolor{fhdwblue}\\begin{minipage}{");
+        writer.write(ModuleGuideLaTeXWriter.OVERVIEW_FIRST_COL_SIZE);
+        writer.write("}\\textcolor{white}{Summe}\\end{minipage} &  & ");
         writer.write("\\textcolor{white}{");
         writer.write(String.valueOf(overview.contactHoursSum()));
         writer.write("} & \\textcolor{white}{");
