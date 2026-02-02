@@ -292,6 +292,131 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         Main.newLine(writer);
     }
 
+    private static void writeExaminationTypes(final BufferedWriter writer) throws IOException {
+        writer.write("\\chapter{Prüfungsleistungen}\\label{chap:examinations}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("Zu Anlage 1 gehört die folgende Legende, welche Art und Umfang der Prüfungsleistungen näher ");
+        writer.write("erläutert:\\\\[3ex]");
+        Main.newLine(writer);
+        writer.write("\\begin{tikzpicture}");
+        Main.newLine(writer);
+        writer.write("\\node (ex) {\\textbf{\\textcolor{fhdwblue}{PRÜFUNG}}};");
+        Main.newLine(writer);
+        writer.write("\\node (per) [right=0.2 of ex.south east, anchor=south west] ");
+        writer.write("{\\textbf{\\textcolor{fhdwblue}{LEISTUNG}}};");
+        Main.newLine(writer);
+        writer.write("\\node (ex1) [below=of ex] {\\textbf{K}};");
+        Main.newLine(writer);
+        writer.write("\\node (per1) at (ex1 -| per.west) [anchor=west] ");
+        writer.write("{\\begin{minipage}{14cm}\\raggedright\\strut{}");
+        writer.write("Die Prüfung besteht ausschließlich aus einer Klausur; im Fall einer Klausur gibt die Zahl den ");
+        writer.write("Umfang der Klausur in Minuten an.");
+        writer.write("\\strut{}\\end{minipage}};");
+        Main.newLine(writer);
+        writer.write("\\node (ex2) [below=of ex1] {\\textbf{R}};");
+        Main.newLine(writer);
+        writer.write("\\node (per2) at (ex2 -| per.west) [anchor=west] ");
+        writer.write("{\\begin{minipage}{14cm}\\raggedright\\strut{}");
+        writer.write("Die Prüfung besteht ausschließlich aus einem Referat.");
+        writer.write("\\strut{}\\end{minipage}};");
+        Main.newLine(writer);
+        writer.write("\\node (ex3) [below=of ex2] {\\textbf{S}};");
+        Main.newLine(writer);
+        writer.write("\\node (per3) at (ex3 -| per.west) [anchor=west] ");
+        writer.write("{\\begin{minipage}{14cm}\\raggedright\\strut{}");
+        writer.write("Die Prüfung besteht ausschließlich aus einer Studienarbeit.");
+        writer.write("\\strut{}\\end{minipage}};");
+        Main.newLine(writer);
+        writer.write("\\node (ex4) [below=of ex3] {\\textbf{KR}};");
+        Main.newLine(writer);
+        writer.write("\\node (per4) at (ex4 -| per.west) [anchor=west] ");
+        writer.write("{\\begin{minipage}{14cm}\\raggedright\\strut{}");
+        writer.write("Die Prüfung ist \\textbf{entweder} ein Referat \\textbf{oder} eine Klausur; im Fall einer ");
+        writer.write("Klausur gibt die Zahl den Umfang der Klausur in Minuten an.");
+        writer.write("\\strut{}\\end{minipage}};");
+        Main.newLine(writer);
+        writer.write("\\node (ex5) [below=of ex4] {\\textbf{KS}};");
+        Main.newLine(writer);
+        writer.write("\\node (per5) at (ex5 -| per.west) [anchor=west] ");
+        writer.write("{\\begin{minipage}{14cm}\\raggedright\\strut{}");
+        writer.write("Die Prüfung ist \\textbf{entweder} eine Studienarbeit \\textbf{oder} eine Klausur; im Fall ");
+        writer.write("einer Klausur gibt die Zahl den Umfang der Klausur in Minuten an.");
+        writer.write("\\strut{}\\end{minipage}};");
+        Main.newLine(writer);
+        writer.write("\\node (ex6) [below=of ex5] {\\textbf{RS}};");
+        Main.newLine(writer);
+        writer.write("\\node (per6) at (ex6 -| per.west) [anchor=west] ");
+        writer.write("{\\begin{minipage}{14cm}\\raggedright\\strut{}");
+        writer.write("Die Prüfung besteht \\textbf{entweder} aus einem Referat \\textbf{oder} einer Studienarbeit.");
+        writer.write("\\strut{}\\end{minipage}};");
+        Main.newLine(writer);
+        writer.write("\\node (ex7) [below=of ex6] {\\textbf{KRS}};");
+        Main.newLine(writer);
+        writer.write("\\node (per7) at (ex7 -| per.west) [anchor=west] ");
+        writer.write("{\\begin{minipage}{14cm}\\raggedright\\strut{}");
+        writer.write("Die Prüfung besteht \\textbf{entweder} aus einer Klausur \\textbf{oder} einem Referat ");
+        writer.write("\\textbf{oder} einer Studienarbeit; im Fall einer Klausur gibt die Zahl den Umfang der Klausur ");
+        writer.write("in Minuten an.");
+        writer.write("\\strut{}\\end{minipage}};");
+        Main.newLine(writer);
+        writer.write("\\coordinate (topright) at ($(per2.east |- ex.north)+(0.1,0.5)$);");
+        Main.newLine(writer);
+        writer.write("\\coordinate (bottomleft) at ($(ex.west |- per7.south)+(-0.1,0.1)$);");
+        Main.newLine(writer);
+        writer.write("\\coordinate (middle) at ($(ex.east)!0.5!(per.west)$);");
+        Main.newLine(writer);
+        writer.write("\\coordinate (m1) at ($(ex.south)!0.5!(ex1.north)$);");
+        Main.newLine(writer);
+        writer.write("\\coordinate (m2) at ($(ex1.south)!0.5!(ex2.north)$);");
+        Main.newLine(writer);
+        writer.write("\\coordinate (m3) at ($(ex2.south)!0.5!(ex3.north)$);");
+        Main.newLine(writer);
+        writer.write("\\coordinate (m4) at ($(ex3.south)!0.5!(ex4.north)$);");
+        Main.newLine(writer);
+        writer.write("\\coordinate (m5) at ($(ex4.south)!0.5!(ex5.north)$);");
+        Main.newLine(writer);
+        writer.write("\\coordinate (m6) at ($(ex5.south)!0.5!(ex6.north)$);");
+        Main.newLine(writer);
+        writer.write("\\coordinate (m7) at ($(ex6.south)!0.5!(ex7.north)$);");
+        Main.newLine(writer);
+        writer.write("\\draw[fhdwblue,thick] (topright -| bottomleft)");
+        writer.write(" -- (topright)");
+        writer.write(" -- (topright |- bottomleft)");
+        writer.write(" -- (bottomleft)");
+        writer.write(" -- cycle;");
+        Main.newLine(writer);
+        writer.write("\\draw[fhdwblue,thick] (middle |- topright) -- (middle |- bottomleft);");
+        Main.newLine(writer);
+        writer.write("\\draw[fhdwblue,thick] (m1 -| bottomleft) -- (m1 -| topright);");
+        Main.newLine(writer);
+        writer.write("\\draw[fhdwblue,thick] (m2 -| bottomleft) -- (m2 -| topright);");
+        Main.newLine(writer);
+        writer.write("\\draw[fhdwblue,thick] (m3 -| bottomleft) -- (m3 -| topright);");
+        Main.newLine(writer);
+        writer.write("\\draw[fhdwblue,thick] (m4 -| bottomleft) -- (m4 -| topright);");
+        Main.newLine(writer);
+        writer.write("\\draw[fhdwblue,thick] (m5 -| bottomleft) -- (m5 -| topright);");
+        Main.newLine(writer);
+        writer.write("\\draw[fhdwblue,thick] (m6 -| bottomleft) -- (m6 -| topright);");
+        Main.newLine(writer);
+        writer.write("\\draw[fhdwblue,thick] (m7 -| bottomleft) -- (m7 -| topright);");
+        Main.newLine(writer);
+        writer.write("\\end{tikzpicture}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\vspace*{3ex}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("Ist bei mehreren Prüfungsformen eine davon hervorgehoben, so wird diese bevorzugt. ");
+        writer.write("Die weiteren Prüfungsformen stellen in diesem Fall dennoch mögliche Alternativen dar.");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\clearpage");
+        Main.newLine(writer);
+        Main.newLine(writer);
+    }
+
     private static void writeItemize(
         final List<String> items,
         final String noItems,
@@ -324,6 +449,32 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write("\\end{itemize}");
         Main.newLine(writer);
         Main.newLine(writer);
+    }
+
+    private static void writeLiterature(
+        final String title,
+        final List<Source> literature,
+        final BufferedWriter writer
+    ) throws IOException {
+        if (literature != null && !literature.isEmpty()) {
+            writer.write("\\subsection*{");
+            writer.write(title);
+            writer.write("}");
+            Main.newLine(writer);
+            Main.newLine(writer);
+            boolean first = true;
+            for (final Source source : literature) {
+                if (first) {
+                    first = false;
+                } else {
+                    writer.write("\\\\[1.5ex]");
+                    Main.newLine(writer);
+                }
+                ModuleGuideLaTeXWriter.writeSource(source, writer);
+            }
+            Main.newLine(writer);
+            Main.newLine(writer);
+        }
     }
 
     private static void writeLongtableHeader(
@@ -465,15 +616,8 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
                 writer
             );
         }
-        if (module.literature() != null && ! module.literature().isEmpty()) {
-            writer.write("\\subsection*{Grundlegende Literaturhinweise}");
-            Main.newLine(writer);
-            Main.newLine(writer);
-            for (final Source source : module.literature()) {
-                ModuleGuideLaTeXWriter.writeSource(source, writer);
-            }
-            Main.newLine(writer);
-        }
+        ModuleGuideLaTeXWriter.writeLiterature("Grundlegende Literaturhinweise", module.requiredliterature(), writer);
+        ModuleGuideLaTeXWriter.writeLiterature("Ergänzende Literaturhinweise", module.optionalliterature(), writer);
         writer.write("\\clearpage");
         Main.newLine(writer);
         Main.newLine(writer);
@@ -490,8 +634,6 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
     private static void writeSource(final Source source, final BufferedWriter writer) throws IOException {
         if (source.type() == SourceType.HINT) {
             writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(source.title()));
-            writer.write("\\\\[1.5ex]");
-            Main.newLine(writer);
             return;
         }
         ModuleGuideLaTeXWriter.writeAuthors(source.authors(), writer);
@@ -554,8 +696,16 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(source.publisher()));
             writer.write(".");
         }
-        writer.write("\\\\[1.5ex]");
-        Main.newLine(writer);
+        if (source.isbn() != null && !source.isbn().isBlank()) {
+            writer.write(" ISBN: ");
+            writer.write(source.isbn());
+            writer.write(".");
+        }
+        if (source.doi() != null && !source.doi().isBlank()) {
+            writer.write(" DOI: ");
+            writer.write(source.doi());
+            writer.write(".");
+        }
     }
 
     private static void writeStats(final ModuleStats stats, final BufferedWriter writer) throws IOException {
@@ -701,128 +851,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write("\\clearpage");
         Main.newLine(writer);
         Main.newLine(writer);
-        writer.write("\\chapter{Prüfungsleistungen}\\label{chap:examinations}");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        writer.write("Zu Anlage 1 gehört die folgende Legende, welche Art und Umfang der Prüfungsleistungen näher ");
-        writer.write("erläutert:\\\\[3ex]");
-        Main.newLine(writer);
-        writer.write("\\begin{tikzpicture}");
-        Main.newLine(writer);
-        writer.write("\\node (ex) {\\textbf{\\textcolor{fhdwblue}{PRÜFUNG}}};");
-        Main.newLine(writer);
-        writer.write("\\node (per) [right=0.2 of ex.south east, anchor=south west] ");
-        writer.write("{\\textbf{\\textcolor{fhdwblue}{LEISTUNG}}};");
-        Main.newLine(writer);
-        writer.write("\\node (ex1) [below=of ex] {\\textbf{K}};");
-        Main.newLine(writer);
-        writer.write("\\node (per1) at (ex1 -| per.west) [anchor=west] ");
-        writer.write("{\\begin{minipage}{14cm}\\raggedright\\strut{}");
-        writer.write("Die Prüfung besteht ausschließlich aus einer Klausur; im Fall einer Klausur gibt die Zahl den ");
-        writer.write("Umfang der Klausur in Minuten an.");
-        writer.write("\\strut{}\\end{minipage}};");
-        Main.newLine(writer);
-        writer.write("\\node (ex2) [below=of ex1] {\\textbf{R}};");
-        Main.newLine(writer);
-        writer.write("\\node (per2) at (ex2 -| per.west) [anchor=west] ");
-        writer.write("{\\begin{minipage}{14cm}\\raggedright\\strut{}");
-        writer.write("Die Prüfung besteht ausschließlich aus einem Referat.");
-        writer.write("\\strut{}\\end{minipage}};");
-        Main.newLine(writer);
-        writer.write("\\node (ex3) [below=of ex2] {\\textbf{S}};");
-        Main.newLine(writer);
-        writer.write("\\node (per3) at (ex3 -| per.west) [anchor=west] ");
-        writer.write("{\\begin{minipage}{14cm}\\raggedright\\strut{}");
-        writer.write("Die Prüfung besteht ausschließlich aus einer Studienarbeit.");
-        writer.write("\\strut{}\\end{minipage}};");
-        Main.newLine(writer);
-        writer.write("\\node (ex4) [below=of ex3] {\\textbf{KR}};");
-        Main.newLine(writer);
-        writer.write("\\node (per4) at (ex4 -| per.west) [anchor=west] ");
-        writer.write("{\\begin{minipage}{14cm}\\raggedright\\strut{}");
-        writer.write("Die Prüfung ist \\textbf{entweder} ein Referat \\textbf{oder} eine Klausur; im Fall einer ");
-        writer.write("Klausur gibt die Zahl den Umfang der Klausur in Minuten an.");
-        writer.write("\\strut{}\\end{minipage}};");
-        Main.newLine(writer);
-        writer.write("\\node (ex5) [below=of ex4] {\\textbf{KS}};");
-        Main.newLine(writer);
-        writer.write("\\node (per5) at (ex5 -| per.west) [anchor=west] ");
-        writer.write("{\\begin{minipage}{14cm}\\raggedright\\strut{}");
-        writer.write("Die Prüfung ist \\textbf{entweder} eine Studienarbeit \\textbf{oder} eine Klausur; im Fall ");
-        writer.write("einer Klausur gibt die Zahl den Umfang der Klausur in Minuten an.");
-        writer.write("\\strut{}\\end{minipage}};");
-        Main.newLine(writer);
-        writer.write("\\node (ex6) [below=of ex5] {\\textbf{RS}};");
-        Main.newLine(writer);
-        writer.write("\\node (per6) at (ex6 -| per.west) [anchor=west] ");
-        writer.write("{\\begin{minipage}{14cm}\\raggedright\\strut{}");
-        writer.write("Die Prüfung besteht \\textbf{entweder} aus einem Referat \\textbf{oder} einer Studienarbeit.");
-        writer.write("\\strut{}\\end{minipage}};");
-        Main.newLine(writer);
-        writer.write("\\node (ex7) [below=of ex6] {\\textbf{KRS}};");
-        Main.newLine(writer);
-        writer.write("\\node (per7) at (ex7 -| per.west) [anchor=west] ");
-        writer.write("{\\begin{minipage}{14cm}\\raggedright\\strut{}");
-        writer.write("Die Prüfung besteht \\textbf{entweder} aus einer Klausur \\textbf{oder} einem Referat ");
-        writer.write("\\textbf{oder} einer Studienarbeit; im Fall einer Klausur gibt die Zahl den Umfang der Klausur ");
-        writer.write("in Minuten an.");
-        writer.write("\\strut{}\\end{minipage}};");
-        Main.newLine(writer);
-        writer.write("\\coordinate (topright) at ($(per2.east |- ex.north)+(0.1,0.5)$);");
-        Main.newLine(writer);
-        writer.write("\\coordinate (bottomleft) at ($(ex.west |- per7.south)+(-0.1,0.1)$);");
-        Main.newLine(writer);
-        writer.write("\\coordinate (middle) at ($(ex.east)!0.5!(per.west)$);");
-        Main.newLine(writer);
-        writer.write("\\coordinate (m1) at ($(ex.south)!0.5!(ex1.north)$);");
-        Main.newLine(writer);
-        writer.write("\\coordinate (m2) at ($(ex1.south)!0.5!(ex2.north)$);");
-        Main.newLine(writer);
-        writer.write("\\coordinate (m3) at ($(ex2.south)!0.5!(ex3.north)$);");
-        Main.newLine(writer);
-        writer.write("\\coordinate (m4) at ($(ex3.south)!0.5!(ex4.north)$);");
-        Main.newLine(writer);
-        writer.write("\\coordinate (m5) at ($(ex4.south)!0.5!(ex5.north)$);");
-        Main.newLine(writer);
-        writer.write("\\coordinate (m6) at ($(ex5.south)!0.5!(ex6.north)$);");
-        Main.newLine(writer);
-        writer.write("\\coordinate (m7) at ($(ex6.south)!0.5!(ex7.north)$);");
-        Main.newLine(writer);
-        writer.write("\\draw[fhdwblue,thick] (topright -| bottomleft)");
-        writer.write(" -- (topright)");
-        writer.write(" -- (topright |- bottomleft)");
-        writer.write(" -- (bottomleft)");
-        writer.write(" -- cycle;");
-        Main.newLine(writer);
-        writer.write("\\draw[fhdwblue,thick] (middle |- topright) -- (middle |- bottomleft);");
-        Main.newLine(writer);
-        writer.write("\\draw[fhdwblue,thick] (m1 -| bottomleft) -- (m1 -| topright);");
-        Main.newLine(writer);
-        writer.write("\\draw[fhdwblue,thick] (m2 -| bottomleft) -- (m2 -| topright);");
-        Main.newLine(writer);
-        writer.write("\\draw[fhdwblue,thick] (m3 -| bottomleft) -- (m3 -| topright);");
-        Main.newLine(writer);
-        writer.write("\\draw[fhdwblue,thick] (m4 -| bottomleft) -- (m4 -| topright);");
-        Main.newLine(writer);
-        writer.write("\\draw[fhdwblue,thick] (m5 -| bottomleft) -- (m5 -| topright);");
-        Main.newLine(writer);
-        writer.write("\\draw[fhdwblue,thick] (m6 -| bottomleft) -- (m6 -| topright);");
-        Main.newLine(writer);
-        writer.write("\\draw[fhdwblue,thick] (m7 -| bottomleft) -- (m7 -| topright);");
-        Main.newLine(writer);
-        writer.write("\\end{tikzpicture}");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        writer.write("\\vspace*{3ex}");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        writer.write("Ist bei mehreren Prüfungsformen eine davon hervorgehoben, so wird diese bevorzugt. ");
-        writer.write("Die weiteren Prüfungsformen stellen in diesem Fall dennoch mögliche Alternativen dar.");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        writer.write("\\clearpage");
-        Main.newLine(writer);
-        Main.newLine(writer);
+        ModuleGuideLaTeXWriter.writeExaminationTypes(writer);
         writer.write("\\chapter{Studienplan -- Lehrveranstaltungen}\\label{chap:studienplan}");
         Main.newLine(writer);
         Main.newLine(writer);

@@ -18,5 +18,6 @@ public record Module(
     List<String> teachingmethods,
     List<String> special,
     List<Chapter> content,
-    List<Source> literature
+    List<Source> requiredliterature,
+    List<Source> optionalliterature
 ) {}

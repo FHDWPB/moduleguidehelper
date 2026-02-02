@@ -15,7 +15,9 @@ public record Source(
     String volume,
     String number,
     Integer frompage,
-    Integer topage
+    Integer topage,
+    String isbn,
+    String doi
 ) {
 
     @Override
