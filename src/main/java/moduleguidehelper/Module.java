@@ -13,6 +13,7 @@ public record Module(
     String examination,
     List<String> keywords,
     List<String> preconditions,
+    List<String> recommendations,
     List<String> usability,
     List<String> competencies,
     List<String> teachingmethods,

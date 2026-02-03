@@ -17,6 +17,9 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         final BufferedWriter writer
     ) throws IOException {
         ModuleGuideLaTeXWriter.writeDocumentStartStatic(writer);
+        writer.write("\\pagestyle{fancy}");
+        Main.newLine(writer);
+        Main.newLine(writer);
         final ModuleMap modules = new ModuleMap();
         modules.put(id, module);
         ModuleGuideLaTeXWriter.writeModule(
@@ -562,6 +565,14 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             "Keine",
             writer
         );
+        writer.write("\\subsection*{Zugangsempfehlungen}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        ModuleGuideLaTeXWriter.writeItemize(
+            ModuleGuideLaTeXWriter.lookupModules(module.recommendations(), modules, linkable),
+            "Keine",
+            writer
+        );
         writer.write("\\subsection*{Qualifikations- und Kompetenzziele}");
         Main.newLine(writer);
         Main.newLine(writer);
@@ -620,6 +631,8 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(source.title()));
             return;
         }
+        writer.write("\\begin{minipage}{\\textwidth}");
+        Main.newLine(writer);
         ModuleGuideLaTeXWriter.writeAuthors(source.authors(), writer);
         if (source.year() != null) {
             writer.write(", ");
@@ -690,6 +703,8 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             writer.write(source.doi());
             writer.write(".");
         }
+        Main.newLine(writer);
+        writer.write("\\end{minipage}");
     }
 
     private static void writeStats(final ModuleStats stats, final BufferedWriter writer) throws IOException {
