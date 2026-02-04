@@ -4,8 +4,6 @@ import java.util.*;
 
 public record Module(
     String title,
-    String responsible,
-    List<String> teachers,
     String language,
     int ects,
     int contacthours,
@@ -14,10 +12,10 @@ public record Module(
     List<String> keywords,
     List<String> preconditions,
     List<String> recommendations,
-    List<String> usability,
+    String competenciespreface,
     List<String> competencies,
     List<String> teachingmethods,
-    List<String> special,
+    String teachingpostface,
     List<Chapter> content,
     List<Source> requiredliterature,
     List<Source> optionalliterature

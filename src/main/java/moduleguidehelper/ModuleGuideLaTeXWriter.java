@@ -7,6 +7,11 @@ import java.util.stream.*;
 
 public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
 
+    private static final String DEFAULT_TEACHING =
+        "Präsenzveranstaltungen, Eigenstudium, individuelles und kooperatives Lernen, "
+        + "problemorientiertes und integratives Lernen, forschendes Lernen, synchrones und "
+        + "asynchrones Lernen, Übungen, Fallstudien, Expertenvorträge, Projekte, Gruppenarbeit";
+
     private static final Pattern ESCAPE_PATTERN = Pattern.compile("\\$\\$[^\\$]+\\$\\$");
 
     private static final String OVERVIEW_FIRST_COL_SIZE = "7.2cm";
@@ -23,7 +28,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         final ModuleMap modules = new ModuleMap();
         modules.put(id, module);
         ModuleGuideLaTeXWriter.writeModule(
-            new MetaModule(id, 1, 1, "Pflicht", "Jedes Jahr", 5, 1, "", "", "", "", null),
+            new MetaModule(id, 1, 1, "Pflicht", "jedes Jahr", 5, 1, "", "", "", "", null),
             modules,
             180,
             List.of(),
@@ -166,6 +171,16 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
 
     private static void writeAuthors(final List<String> authors, final BufferedWriter writer) throws IOException {
         writer.write(authors.stream().map(ModuleGuideLaTeXWriter::formatAuthor).collect(Collectors.joining(", ")));
+    }
+
+    private static void writeCommaSeparated(final List<String> items, final BufferedWriter writer) throws IOException {
+        writer.write(
+            items
+            .stream()
+            .map(ModuleGuideLaTeXWriter::escapeForLaTeX)
+            .collect(Collectors.joining(", "))
+        );
+        Main.newLine(writer);
     }
 
     private static void writeDocumentEndStatic(final BufferedWriter writer) throws IOException {
@@ -576,27 +591,32 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write("\\subsection*{Qualifikations- und Kompetenzziele}");
         Main.newLine(writer);
         Main.newLine(writer);
-        ModuleGuideLaTeXWriter.writeText(module.competencies(), writer);
+        if (module.competenciespreface() != null && !module.competenciespreface().isBlank()) {
+            writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(module.competenciespreface()));
+            Main.newLine(writer);
+        }
+        writer.write("Nach erfolgreichem Abschluss dieses Moduls sind die Studierenden in der Lage\\\\");
+        Main.newLine(writer);
+        ModuleGuideLaTeXWriter.writeItemize(module.competencies(), "", writer);
         Main.newLine(writer);
         writer.write("\\subsection*{Lehr- und Lernmethoden}");
         Main.newLine(writer);
         Main.newLine(writer);
-        if (module.teachingmethods().isEmpty()) {
-            writer.write("Präsenzveranstaltungen, Eigenstudium, individuelles und kooperatives Lernen, ");
-            writer.write("problemorientiertes und integratives Lernen, forschendes Lernen, synchrones und ");
-            writer.write("asynchrones Lernen, Übungen, Fallstudien, Expertenvorträge, Projekte, Gruppenarbeit.");
+        ModuleGuideLaTeXWriter.writeCommaSeparated(
+            module
+            .teachingmethods()
+            .stream()
+            .map(text -> "DEFAULT".equals(text) ? ModuleGuideLaTeXWriter.DEFAULT_TEACHING : text)
+            .toList(),
+            writer
+        );
+        if (module.teachingpostface() != null && !module.teachingpostface().isBlank()) {
+            writer.write("\\\\");
             Main.newLine(writer);
-        } else {
-            ModuleGuideLaTeXWriter.writeText(module.teachingmethods(), writer);
+            writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(module.teachingpostface()));
         }
         Main.newLine(writer);
-        if (module.special() != null && !module.special().isEmpty()) {
-            writer.write("\\subsection*{Besonderheiten}");
-            Main.newLine(writer);
-            Main.newLine(writer);
-            ModuleGuideLaTeXWriter.writeText(module.special(), writer);
-            Main.newLine(writer);
-        }
+        Main.newLine(writer);
         writer.write("\\subsection*{Inhalte}");
         Main.newLine(writer);
         Main.newLine(writer);
@@ -729,16 +749,6 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write(" & ");
         writer.write(ModuleGuideLaTeXWriter.formatExamination(stats.examination()));
         writer.write("\\\\\\hline");
-        Main.newLine(writer);
-    }
-
-    private static void writeText(final List<String> sentences, final BufferedWriter writer) throws IOException {
-        writer.write(
-            sentences
-            .stream()
-            .map(ModuleGuideLaTeXWriter::escapeForLaTeX)
-            .collect(Collectors.joining(Main.lineSeparator))
-        );
         Main.newLine(writer);
     }
 
