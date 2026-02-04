@@ -60,6 +60,9 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
     }
 
     private static String escapeForLaTeX(final String text) {
+        if (text == null) {
+            return "";
+        }
         final Matcher matcher = ModuleGuideLaTeXWriter.ESCAPE_PATTERN.matcher(text);
         final List<Integer> indices = new LinkedList<Integer>();
         while (matcher.find()) {
@@ -122,6 +125,9 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
     }
 
     private static String formatExamination(final String examination) {
+        if (examination == null) {
+            return "";
+        }
         if (examination.contains("*")) {
             final int index = examination.indexOf('*');
             final StringBuilder result = new StringBuilder();
@@ -155,6 +161,9 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         final ModuleMap modules,
         final List<String> linkable
     ) {
+        if (ids == null) {
+            return List.of();
+        }
         return ids.stream().map(id -> ModuleGuideLaTeXWriter.lookupModule(id, modules, linkable)).toList();
     }
 
@@ -439,7 +448,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write(label);
         writer.write("}]");
         Main.newLine(writer);
-        if (items.isEmpty()) {
+        if (items == null || items.isEmpty()) {
             writer.write("\\item ");
             writer.write(noItems);
             Main.newLine(writer);
@@ -612,14 +621,16 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write("\\subsection*{Lehr- und Lernmethoden}");
         Main.newLine(writer);
         Main.newLine(writer);
-        ModuleGuideLaTeXWriter.writeCommaSeparated(
-            module
-            .teachingmethods()
-            .stream()
-            .map(text -> "DEFAULT".equals(text) ? ModuleGuideLaTeXWriter.DEFAULT_TEACHING : text)
-            .toList(),
-            writer
-        );
+        if (module.teachingmethods() != null) {
+            ModuleGuideLaTeXWriter.writeCommaSeparated(
+                module
+                .teachingmethods()
+                .stream()
+                .map(text -> "DEFAULT".equals(text) ? ModuleGuideLaTeXWriter.DEFAULT_TEACHING : text)
+                .toList(),
+                writer
+            );
+        }
         if (module.teachingpostface() != null && !module.teachingpostface().isBlank()) {
             writer.write("\\\\");
             Main.newLine(writer);
@@ -630,20 +641,22 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write("\\subsection*{Inhalte}");
         Main.newLine(writer);
         Main.newLine(writer);
-        if (module.content().getFirst().chapter().startsWith("!")) {
-            writer.write(module.content().getFirst().chapter().substring(1));
-            Main.newLine(writer);
-            Main.newLine(writer);
-        } else {
-            ModuleGuideLaTeXWriter.writeItemize(
-                module.content().stream().map(ModuleGuideLaTeXWriter::chapterToItem).toList(),
-                "keine",
-                false,
-                writer
-            );
+        if (module.content() != null) {
+            if (module.content().getFirst().chapter().startsWith("!")) {
+                writer.write(module.content().getFirst().chapter().substring(1));
+                Main.newLine(writer);
+                Main.newLine(writer);
+            } else {
+                ModuleGuideLaTeXWriter.writeItemize(
+                    module.content().stream().map(ModuleGuideLaTeXWriter::chapterToItem).toList(),
+                    "keine",
+                    false,
+                    writer
+                );
+            }
         }
         ModuleGuideLaTeXWriter.writeLiterature("Grundlegende Literaturhinweise", module.requiredliterature(), writer);
-        ModuleGuideLaTeXWriter.writeLiterature("Ergänzende Literaturhinweise", module.optionalliterature(), writer);
+        ModuleGuideLaTeXWriter.writeLiterature("Ergänzende Literaturempfehlungen", module.optionalliterature(), writer);
         writer.write("\\clearpage");
         Main.newLine(writer);
         Main.newLine(writer);
