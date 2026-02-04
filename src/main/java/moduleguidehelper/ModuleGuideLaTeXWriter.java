@@ -46,9 +46,10 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         try (BufferedWriter buffer = new BufferedWriter(stringWriter)) {
             Main.newLine(buffer);
             ModuleGuideLaTeXWriter.writeItemize(
-                chapter.sections().stream().map(ModuleGuideLaTeXWriter::escapeForLaTeX).toList(),
+                chapter.sections(),
                 "",
                 "$\\circ$",
+                true,
                 buffer
             );
             buffer.flush();
@@ -421,15 +422,17 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
     private static void writeItemize(
         final List<String> items,
         final String noItems,
+        final boolean escape,
         final BufferedWriter writer
     ) throws IOException {
-        ModuleGuideLaTeXWriter.writeItemize(items, noItems, "$\\bullet$", writer);
+        ModuleGuideLaTeXWriter.writeItemize(items, noItems, "$\\bullet$", escape, writer);
     }
 
     private static void writeItemize(
         final List<String> items,
         final String noItems,
         final String label,
+        final boolean escape,
         final BufferedWriter writer
     ) throws IOException {
         writer.write("\\begin{itemize}[itemsep=0pt,topsep=0pt,label={");
@@ -443,7 +446,11 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         } else {
             for (final String item : items) {
                 writer.write("\\item ");
-                writer.write(item);
+                if (escape) {
+                    writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(item));
+                } else {
+                    writer.write(item);
+                }
                 Main.newLine(writer);
             }
         }
@@ -567,8 +574,9 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             Main.newLine(writer);
             Main.newLine(writer);
             ModuleGuideLaTeXWriter.writeItemize(
-                module.keywords().stream().map(ModuleGuideLaTeXWriter::escapeForLaTeX).toList(),
+                module.keywords(),
                 "Keine",
+                true,
                 writer
             );
         }
@@ -578,6 +586,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         ModuleGuideLaTeXWriter.writeItemize(
             ModuleGuideLaTeXWriter.lookupModules(module.preconditions(), modules, linkable),
             "Keine",
+            false,
             writer
         );
         writer.write("\\subsection*{Zugangsempfehlungen}");
@@ -586,6 +595,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         ModuleGuideLaTeXWriter.writeItemize(
             ModuleGuideLaTeXWriter.lookupModules(module.recommendations(), modules, linkable),
             "Keine",
+            false,
             writer
         );
         writer.write("\\subsection*{Qualifikations- und Kompetenzziele}");
@@ -597,7 +607,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         }
         writer.write("Nach erfolgreichem Abschluss dieses Moduls sind die Studierenden in der Lage\\\\");
         Main.newLine(writer);
-        ModuleGuideLaTeXWriter.writeItemize(module.competencies(), "", writer);
+        ModuleGuideLaTeXWriter.writeItemize(module.competencies(), "", true, writer);
         Main.newLine(writer);
         writer.write("\\subsection*{Lehr- und Lernmethoden}");
         Main.newLine(writer);
@@ -628,6 +638,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             ModuleGuideLaTeXWriter.writeItemize(
                 module.content().stream().map(ModuleGuideLaTeXWriter::chapterToItem).toList(),
                 "keine",
+                false,
                 writer
             );
         }
