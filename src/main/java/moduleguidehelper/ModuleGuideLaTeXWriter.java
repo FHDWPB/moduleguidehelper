@@ -687,7 +687,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write("}");
         switch (source.type()) {
         case BOOK:
-            if (source.edition() != null) {
+            if (source.edition() != null && source.edition() > 0) {
                 writer.write(", ");
                 writer.write(String.valueOf(source.edition()));
                 writer.write(".~Auflage. ");
@@ -823,12 +823,21 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write("Mit freundlichen Grüßen");
         Main.newLine(writer);
         Main.newLine(writer);
-        writer.write("\\includegraphics{signature.png}");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        writer.write("Prof. Dr. Gregor Sandhaus\\\\");
-        Main.newLine(writer);
-        writer.write("Dekan des Fachbereichs Informatik");
+        switch (guide.signature()) {
+        case GREGOR:
+            writer.write("\\includegraphics{signature.png}");
+            Main.newLine(writer);
+            Main.newLine(writer);
+            writer.write("Prof. Dr. Gregor Sandhaus\\\\");
+            Main.newLine(writer);
+            writer.write("Dekan des Fachbereichs Informatik");
+            break;
+        case ANGELIKA:
+            writer.write("Prof. Dr. ANGELIKA RÖCHTER\\\\");
+            Main.newLine(writer);
+            writer.write("Dekanin Betriebswirtschaft");
+            break;
+        }
         Main.newLine(writer);
         Main.newLine(writer);
         writer.write("\\vfill");

@@ -8,6 +8,7 @@ public record ModuleGuide(
     String timemodel,
     String year,
     List<Integer> pagebreaks,
+    Signature signature,
     List<MetaModule> modules
 ) {
 

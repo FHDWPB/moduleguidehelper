@@ -15,10 +15,17 @@ public class Main {
         if (args != null && args.length == 1) {
             try (FileReader modulesReader = new FileReader(args[0])) {
                 final ModuleMap modules = Main.GSON.fromJson(modulesReader, ModuleMap.class);
+                final String singeModules = "singlemodules";
+                final File singleModulesDirectory = new File(singeModules);
+                if (!singleModulesDirectory.exists()) {
+                    singleModulesDirectory.mkdir();
+                }
                 for (final Map.Entry<String, Module> entry : modules.entrySet()) {
                     try (
                         BufferedWriter writer =
-                            new BufferedWriter(new FileWriter(entry.getKey().toLowerCase() + ".tex"))
+                            new BufferedWriter(
+                                new FileWriter(singeModules + "/" + entry.getKey().toLowerCase() + ".tex")
+                            )
                     ) {
                         ModuleGuideLaTeXWriter.writeModule(entry.getKey(), entry.getValue(), writer);
                     }
