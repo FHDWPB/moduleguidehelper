@@ -671,6 +671,9 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
     }
 
     private static void writeSource(final Source source, final BufferedWriter writer) throws IOException {
+        if (source == null) {
+            return;
+        }
         if (source.type() == SourceType.HINT) {
             writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(source.title()));
             return;

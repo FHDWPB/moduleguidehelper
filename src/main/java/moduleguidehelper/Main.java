@@ -21,6 +21,9 @@ public class Main {
                     singleModulesDirectory.mkdir();
                 }
                 for (final Map.Entry<String, Module> entry : modules.entrySet()) {
+                    if (entry.getKey().isBlank()) {
+                        continue;
+                    }
                     try (
                         BufferedWriter writer =
                             new BufferedWriter(
