@@ -37,7 +37,7 @@ public record ModuleStats(
     public ModuleStats forSpecialization(final int number) {
         return new ModuleStats(
             this.id(),
-            String.format("Fach %s aus Spezialisierung", ModuleStats.toRomanNumeral(number)),
+            String.format("Modul %s aus Spezialisierung", ModuleStats.toRomanNumeral(number)),
             this.semester(),
             this.duration(),
             this.contactHours(),

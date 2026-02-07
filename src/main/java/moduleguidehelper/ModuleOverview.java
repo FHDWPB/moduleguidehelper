@@ -15,6 +15,75 @@ public record ModuleOverview(
     int weightSum
 ) {
 
+    private static final Comparator<MetaModule> OVERVIEW_COMPARATOR = new Comparator<MetaModule>() {
+
+        @Override
+        public int compare(MetaModule meta1, MetaModule meta2) {
+            final int compare = meta1.semester() - meta2.semester();
+            if (compare != 0) {
+                return compare;
+            }
+            if (meta1.sempos() != null) {
+                if (meta2.sempos() != null) {
+                    final int poscompare = meta1.sempos().compareTo(meta2.sempos());
+                    if (poscompare != 0) {
+                        return poscompare;
+                    }
+                    if (meta1.specializationnumber() != null) {
+                        if (meta2.specializationnumber() != null) {
+                            if ("Wahlpflicht".equals(meta1.specialization())) {
+                                if ("Wahlpflicht".equals(meta2.specialization())) {
+                                    return meta1.specializationnumber().compareTo(meta2.specializationnumber());
+                                }
+                                return 1;
+                            }
+                            if ("Wahlpflicht".equals(meta2.specialization())) {
+                                return -1;
+                            }
+                            final int speccompare = meta1.specialization().compareTo(meta2.specialization());
+                            if (speccompare != 0) {
+                                return speccompare;
+                            }
+                            return meta1.specializationnumber().compareTo(meta2.specializationnumber());
+                        }
+                        return 1;
+                    }
+                    if (meta2.specializationnumber() != null) {
+                        return -1;
+                    }
+                }
+                return -1;
+            }
+            if (meta2.sempos() != null) {
+                return 1;
+            }
+            if (meta1.specializationnumber() != null) {
+                if (meta2.specializationnumber() != null) {
+                    if ("Wahlpflicht".equals(meta1.specialization())) {
+                        if ("Wahlpflicht".equals(meta2.specialization())) {
+                            return meta1.specializationnumber().compareTo(meta2.specializationnumber());
+                        }
+                        return 1;
+                    }
+                    if ("Wahlpflicht".equals(meta2.specialization())) {
+                        return -1;
+                    }
+                    final int speccompare = meta1.specialization().compareTo(meta2.specialization());
+                    if (speccompare != 0) {
+                        return speccompare;
+                    }
+                    return meta1.specializationnumber().compareTo(meta2.specializationnumber());
+                }
+                return 1;
+            }
+            if (meta2.specializationnumber() != null) {
+                return -1;
+            }
+            return 0;
+        }
+
+    };
+    
     public static ModuleOverview create(final ModuleGuide book, final ModuleMap modules) {
         final List<List<ModuleStats>> semesters = new ArrayList<List<ModuleStats>>();
         final Map<Integer, List<ModuleStats>> semesterMap = new TreeMap<Integer, List<ModuleStats>>();
@@ -24,7 +93,7 @@ public record ModuleOverview(
         int contactHoursSum = 0;
         int homeHoursSum = 0;
         int weightSum = 0;
-        for (final MetaModule meta : book.modules().stream().sorted().toList()) {
+        for (final MetaModule meta : book.modules().stream().sorted(OVERVIEW_COMPARATOR).toList()) {
             final Module module = modules.get(meta.module());
             if (module == null) {
                 System.out.println(meta.module());

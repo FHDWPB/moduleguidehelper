@@ -976,9 +976,16 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             writer.write("}\\label{chap:specialareas}");
             Main.newLine(writer);
             Main.newLine(writer);
+            pagebreakIndex = 0;
+            groupsOnPage = 0;
+            final int[] pagebreaksSpecialization =
+                ModuleGuideLaTeXWriter.toPagebreaks(guide.pagebreaksspecialization());
             ModuleGuideLaTeXWriter.writeLongtableHeader(true, writer);
             for (final Map.Entry<String, List<ModuleStats>> entry : overview.specializations().entrySet()) {
-                if (pagebreakIndex < pagebreaks.length && groupsOnPage >= pagebreaks[pagebreakIndex]) {
+                if (
+                    pagebreakIndex < pagebreaksSpecialization.length
+                    && groupsOnPage >= pagebreaksSpecialization[pagebreakIndex]
+                ) {
                     ModuleGuideLaTeXWriter.writePagebreakForLongtable(writer);
                     groupsOnPage = 0;
                     pagebreakIndex++;
