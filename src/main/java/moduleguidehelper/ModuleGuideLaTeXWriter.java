@@ -204,6 +204,13 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write("\\documentclass[11pt]{book}");
         Main.newLine(writer);
         Main.newLine(writer);
+        writer.write("\\pdfinfoomitdate 1");
+        Main.newLine(writer);
+        writer.write("\\pdftrailerid{}");
+        Main.newLine(writer);
+        writer.write("\\pdfsuppressptexinfo=-1");
+        Main.newLine(writer);
+        Main.newLine(writer);
         writer.write("\\usepackage[ngerman]{babel}");
         Main.newLine(writer);
         writer.write("\\usepackage[T1]{fontenc}");

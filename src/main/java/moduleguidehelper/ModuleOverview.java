@@ -18,7 +18,7 @@ public record ModuleOverview(
     private static final Comparator<MetaModule> OVERVIEW_COMPARATOR = new Comparator<MetaModule>() {
 
         @Override
-        public int compare(MetaModule meta1, MetaModule meta2) {
+        public int compare(final MetaModule meta1, final MetaModule meta2) {
             final int compare = meta1.semester() - meta2.semester();
             if (compare != 0) {
                 return compare;
@@ -83,7 +83,7 @@ public record ModuleOverview(
         }
 
     };
-    
+
     public static ModuleOverview create(final ModuleGuide book, final ModuleMap modules) {
         final List<List<ModuleStats>> semesters = new ArrayList<List<ModuleStats>>();
         final Map<Integer, List<ModuleStats>> semesterMap = new TreeMap<Integer, List<ModuleStats>>();
@@ -93,7 +93,7 @@ public record ModuleOverview(
         int contactHoursSum = 0;
         int homeHoursSum = 0;
         int weightSum = 0;
-        for (final MetaModule meta : book.modules().stream().sorted(OVERVIEW_COMPARATOR).toList()) {
+        for (final MetaModule meta : book.modules().stream().sorted(ModuleOverview.OVERVIEW_COMPARATOR).toList()) {
             final Module module = modules.get(meta.module());
             if (module == null) {
                 System.out.println(meta.module());
