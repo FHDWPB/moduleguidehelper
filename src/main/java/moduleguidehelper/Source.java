@@ -6,6 +6,7 @@ import java.util.stream.*;
 public record Source(
     List<String> authors,
     String title,
+    String subtitle,
     SourceType type,
     Integer year,
     String journal,

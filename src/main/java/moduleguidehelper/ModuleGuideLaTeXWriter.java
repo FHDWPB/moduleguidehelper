@@ -687,6 +687,10 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         }
         writer.write(". \\textit{");
         writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(source.title()));
+        if (source.subtitle() != null && !source.subtitle().isBlank()) {
+            writer.write(": ");
+            writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(source.subtitle()));
+        }
         writer.write("}");
         switch (source.type()) {
         case BOOK:
