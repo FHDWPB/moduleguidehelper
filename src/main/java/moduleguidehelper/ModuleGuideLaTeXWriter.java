@@ -761,6 +761,11 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             writer.write(source.doi());
             writer.write(".");
         }
+        if (source.url() != null && !source.url().isBlank()) {
+            writer.write(" URL: \\url{");
+            writer.write(source.url());
+            writer.write("}.");
+        }
         Main.newLine(writer);
         writer.write("\\end{minipage}");
     }

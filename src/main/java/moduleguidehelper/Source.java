@@ -18,7 +18,8 @@ public record Source(
     Integer frompage,
     Integer topage,
     String isbn,
-    String doi
+    String doi,
+    String url
 ) {
 
     @Override
