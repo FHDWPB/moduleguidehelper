@@ -546,6 +546,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         }
         final List<String[]> table = new LinkedList<String[]>();
         table.add(new String[] {"Kürzel", meta.module()});
+        table.add(new String[] {"Modulverantwortung", module.responsible()});
         table.add(new String[] {"Lehrsprache", ModuleGuideLaTeXWriter.escapeForLaTeX(module.language())});
         table.add(new String[] {"ECTS-Punkte", String.valueOf(module.ects())});
         table.add(new String[] {"Kontaktstunden", String.valueOf(module.contacthours())});

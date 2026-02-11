@@ -4,6 +4,7 @@ import java.util.*;
 
 public record Module(
     String title,
+    String responsible,
     String language,
     int ects,
     int contacthours,
