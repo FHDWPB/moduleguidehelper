@@ -7,31 +7,29 @@ import com.google.gson.*;
 
 public class Main {
 
-    public static String lineSeparator = System.lineSeparator();
+    public static final Gson GSON = new Gson();
 
-    private static final Gson GSON = new Gson();
+    public static String lineSeparator = System.lineSeparator();
 
     public static void main(final String[] args) throws IOException {
         if (args != null && args.length == 1) {
-            try (FileReader modulesReader = new FileReader(args[0])) {
-                final ModuleMap modules = Main.GSON.fromJson(modulesReader, ModuleMap.class);
-                final String singeModules = "singlemodules";
-                final File singleModulesDirectory = new File(singeModules);
-                if (!singleModulesDirectory.exists()) {
-                    singleModulesDirectory.mkdir();
+            final String singeModules = "singlepdfs";
+            final File singleModulesDirectory = new File(singeModules);
+            if (!singleModulesDirectory.exists()) {
+                singleModulesDirectory.mkdir();
+            }
+            final File modules = new File(args[0]);
+            for (final File json : modules.listFiles()) {
+                if ("schema.json".equals(json.getName())) {
+                    continue;
                 }
-                for (final Map.Entry<String, Module> entry : modules.entrySet()) {
-                    if (entry.getKey().isBlank()) {
-                        continue;
-                    }
-                    try (
-                        BufferedWriter writer =
-                            new BufferedWriter(
-                                new FileWriter(singeModules + "/" + entry.getKey().toLowerCase() + ".tex")
-                            )
-                    ) {
-                        ModuleGuideLaTeXWriter.writeModule(entry.getKey(), entry.getValue(), 180, writer);
-                    }
+                final String id = json.getName().substring(0, json.getName().length() - 5);
+                final RawModule module;
+                try (FileReader moduleReader = new FileReader(json)) {
+                    module = Main.GSON.fromJson(moduleReader, RawModule.class);
+                }
+                try (BufferedWriter writer = new BufferedWriter(new FileWriter(singeModules + "/" + id + ".tex"))) {
+                    ModuleGuideLaTeXWriter.writeModule(id.toUpperCase(), module, 180, args[0], writer);
                 }
             }
             return;
@@ -80,22 +78,47 @@ public class Main {
             return;
         }
         if (args == null || args.length != 3) {
-            System.out.println("Call with book and modules JSON, followed by output file!");
+            System.out.println("Call with guide JSON, modules folder, and output file!");
             return;
         }
+        final ModuleGuide guide = Main.parseModuleGuide(args[0], args[1]);
         try (
-            FileReader bookReader = new FileReader(args[0]);
-            FileReader modulesReader = new FileReader(args[1]);
             BufferedWriter writer = new BufferedWriter(new FileWriter(args[2]))
         ) {
-            final ModuleGuide guide = Main.GSON.fromJson(bookReader, ModuleGuide.class);
-            final ModuleMap modules = Main.GSON.fromJson(modulesReader, ModuleMap.class);
-            new ModuleGuideLaTeXWriter(guide, modules).write(writer);
+            new ModuleGuideLaTeXWriter(guide).write(args[1], writer);
         }
     }
 
     public static void newLine(final BufferedWriter writer) throws IOException {
         writer.write(Main.lineSeparator);
+    }
+
+    private static ModuleGuide parseModuleGuide(final String guide, final String modulesFolder) throws IOException {
+        final MetaModuleGuide metaGuide;
+        try (FileReader guideReader = new FileReader(guide)) {
+            metaGuide = Main.GSON.fromJson(guideReader, MetaModuleGuide.class);
+        }
+        final List<Module> modules = new ArrayList<Module>();
+        for (final MetaModule meta : metaGuide.modules()) {
+            final File moduleJson = new File(modulesFolder + "/" + meta.module().toLowerCase() + ".json");
+            if (!moduleJson.exists()) {
+                System.out.println(meta.module());
+                continue;
+            }
+            try (FileReader moduleReader = new FileReader(moduleJson)) {
+                modules.add(new Module(meta, Main.GSON.fromJson(moduleReader, RawModule.class)));
+            }
+        }
+        return new ModuleGuide(
+            metaGuide.subject(),
+            metaGuide.degree(),
+            metaGuide.timemodel(),
+            metaGuide.year(),
+            metaGuide.pagebreaks(),
+            metaGuide.pagebreaksspecialization(),
+            metaGuide.signature(),
+            modules
+        );
     }
 
 }

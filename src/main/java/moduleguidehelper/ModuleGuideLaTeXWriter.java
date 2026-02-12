@@ -18,8 +18,9 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
 
     public static void writeModule(
         final String id,
-        final Module module,
+        final RawModule module,
         final int weightSum,
+        final String modulesFolder,
         final BufferedWriter writer
     ) throws IOException {
         ModuleGuideLaTeXWriter.writeDocumentStartStatic(writer);
@@ -29,10 +30,13 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         final ModuleMap modules = new ModuleMap();
         modules.put(id, module);
         ModuleGuideLaTeXWriter.writeModule(
-            new MetaModule(id, 1, 1, "Pflicht", "jedes Jahr", 5, 1, "", "", "", "", null),
-            modules,
+            new Module(
+                new MetaModule(id, 1, 1, "Pflicht", "jedes Jahr", 5, 1, "", "", "", "", null),
+                module
+            ),
             weightSum,
             List.of(),
+            modulesFolder,
             writer
         );
         ModuleGuideLaTeXWriter.writeDocumentEndStatic(writer);
@@ -144,11 +148,18 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
 
     private static String lookupModule(
         final String id,
-        final ModuleMap modules,
+        final String modulesFolder,
         final List<String> linkable
     ) {
-        if (modules.containsKey(id)) {
-            final String title = ModuleGuideLaTeXWriter.escapeForLaTeX(modules.get(id).title());
+        final File json = new File(modulesFolder + "/" + id.toLowerCase() + ".json");
+        if (json.exists()) {
+            final RawModule raw;
+            try (FileReader reader = new FileReader(json)) {
+                raw = Main.GSON.fromJson(reader, RawModule.class);
+            } catch (final IOException e) {
+                return ModuleGuideLaTeXWriter.escapeForLaTeX(id);
+            }
+            final String title = ModuleGuideLaTeXWriter.escapeForLaTeX(raw.title());
             if (linkable.contains(id)) {
                 return String.format("\\hyperref[sec:%s]{%s}", id, title);
             }
@@ -159,13 +170,13 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
 
     private static List<String> lookupModules(
         final List<String> ids,
-        final ModuleMap modules,
+        final String modulesFolder,
         final List<String> linkable
     ) {
         if (ids == null) {
             return List.of();
         }
-        return ids.stream().map(id -> ModuleGuideLaTeXWriter.lookupModule(id, modules, linkable)).toList();
+        return ids.stream().map(id -> ModuleGuideLaTeXWriter.lookupModule(id, modulesFolder, linkable)).toList();
     }
 
     private static int[] toPagebreaks(final List<Integer> pagebreaks) {
@@ -534,13 +545,14 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
     }
 
     private static void writeModule(
-        final MetaModule meta,
-        final ModuleMap modules,
+        final Module mod,
         final int weightSum,
         final List<String> linkable,
+        final String modulesFolder,
         final BufferedWriter writer
     ) throws IOException {
-        final Module module = modules.get(meta.module());
+        final RawModule module = mod.module();
+        final MetaModule meta = mod.meta();
         if (module == null) {
             System.out.println(meta.module());
             return;
@@ -602,7 +614,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         Main.newLine(writer);
         Main.newLine(writer);
         ModuleGuideLaTeXWriter.writeItemize(
-            ModuleGuideLaTeXWriter.lookupModules(module.preconditions(), modules, linkable),
+            ModuleGuideLaTeXWriter.lookupModules(module.preconditions(), modulesFolder, linkable),
             "Keine",
             false,
             writer
@@ -611,7 +623,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         Main.newLine(writer);
         Main.newLine(writer);
         ModuleGuideLaTeXWriter.writeItemize(
-            ModuleGuideLaTeXWriter.lookupModules(module.recommendations(), modules, linkable),
+            ModuleGuideLaTeXWriter.lookupModules(module.recommendations(), modulesFolder, linkable),
             "Keine",
             false,
             writer
@@ -797,8 +809,8 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         Main.newLine(writer);
     }
 
-    public ModuleGuideLaTeXWriter(final ModuleGuide guide, final ModuleMap modules) {
-        super(guide, modules);
+    public ModuleGuideLaTeXWriter(final ModuleGuide guide) {
+        super(guide);
     }
 
     @Override
@@ -875,32 +887,33 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
     @Override
     protected void writeModules(
         final ModuleGuide guide,
-        final ModuleMap modules,
         final int weightSum,
+        final String modulesFolder,
         final BufferedWriter writer
     ) throws IOException {
-        final List<String> linkable = guide.modules().stream().map(MetaModule::module).toList();
+        final List<String> linkable = guide.modules().stream().map(module -> module.meta().module()).toList();
         String specialization = "";
         int semester = 0;
-        for (final MetaModule meta : guide.modules().stream().sorted().toList()) {
-            if (meta.specialization() != null && !specialization.equals(meta.specialization())) {
-                specialization = meta.specialization();
+        for (final Module module : guide.modules().stream().sorted().toList()) {
+            if (module.meta().specialization() != null && !specialization.equals(module.meta().specialization())) {
+                specialization = module.meta().specialization();
                 writer.write("\\chapter{Spezialisierung ");
                 writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(specialization));
                 writer.write("}");
                 Main.newLine(writer);
                 Main.newLine(writer);
             } else if (
-                (meta.specialization() == null || meta.specialization().isBlank()) && meta.semester() != semester
+                (module.meta().specialization() == null || module.meta().specialization().isBlank())
+                && module.meta().semester() != semester
             ) {
-                semester = meta.semester();
+                semester = module.meta().semester();
                 writer.write("\\chapter{");
                 writer.write(String.valueOf(semester));
                 writer.write(". Semester}");
                 Main.newLine(writer);
                 Main.newLine(writer);
             }
-            ModuleGuideLaTeXWriter.writeModule(meta, modules, weightSum, linkable, writer);
+            ModuleGuideLaTeXWriter.writeModule(module, weightSum, linkable, modulesFolder, writer);
         }
     }
 

@@ -15,10 +15,12 @@ public record ModuleOverview(
     int weightSum
 ) {
 
-    private static final Comparator<MetaModule> OVERVIEW_COMPARATOR = new Comparator<MetaModule>() {
+    private static final Comparator<Module> OVERVIEW_COMPARATOR = new Comparator<Module>() {
 
         @Override
-        public int compare(final MetaModule meta1, final MetaModule meta2) {
+        public int compare(final Module module1, final Module module2) {
+            final MetaModule meta1 = module1.meta();
+            final MetaModule meta2 = module2.meta();
             final int compare = meta1.semester() - meta2.semester();
             if (compare != 0) {
                 return compare;
@@ -84,7 +86,7 @@ public record ModuleOverview(
 
     };
 
-    public static ModuleOverview create(final ModuleGuide book, final ModuleMap modules) {
+    public static ModuleOverview create(final ModuleGuide guide) {
         final List<List<ModuleStats>> semesters = new ArrayList<List<ModuleStats>>();
         final Map<Integer, List<ModuleStats>> semesterMap = new TreeMap<Integer, List<ModuleStats>>();
         final Map<Integer, ModuleStats> specializationModulesMap = new LinkedHashMap<Integer, ModuleStats>();
@@ -93,18 +95,15 @@ public record ModuleOverview(
         int contactHoursSum = 0;
         int homeHoursSum = 0;
         int weightSum = 0;
-        for (final MetaModule meta : book.modules().stream().sorted(ModuleOverview.OVERVIEW_COMPARATOR).toList()) {
-            final Module module = modules.get(meta.module());
-            if (module == null) {
-                System.out.println(meta.module());
-                continue;
-            }
+        for (final Module module : guide.modules().stream().sorted(ModuleOverview.OVERVIEW_COMPARATOR).toList()) {
+            final RawModule rawModule = module.module();
+            final MetaModule meta = module.meta();
             final BigFraction contactHoursFactor = ModuleOverview.parseFactor(meta.contacthoursfactor());
             final BigFraction homeHoursFactor = ModuleOverview.parseFactor(meta.homehoursfactor());
             final BigFraction ectsFactor = ModuleOverview.parseFactor(meta.ectsfactor());
-            final BigFraction contactHours = contactHoursFactor.multiply(module.contacthours());
-            final BigFraction homeHours = homeHoursFactor.multiply(module.homehours());
-            final BigFraction ects = ectsFactor.multiply(module.ects());
+            final BigFraction contactHours = contactHoursFactor.multiply(rawModule.contacthours());
+            final BigFraction homeHours = homeHoursFactor.multiply(rawModule.homehours());
+            final BigFraction ects = ectsFactor.multiply(rawModule.ects());
             if (
                 !ModuleOverview.isInt(contactHours) || !ModuleOverview.isInt(homeHours) || !ModuleOverview.isInt(ects)
             ) {
@@ -113,13 +112,13 @@ public record ModuleOverview(
             final ModuleStats stats =
                 new ModuleStats(
                     meta.module(),
-                    module.title(),
+                    rawModule.title(),
                     meta.semester(),
                     meta.duration(),
                     contactHours.intValue(),
                     homeHours.intValue(),
                     ects.intValue(),
-                    module.examination()
+                    rawModule.examination()
                 );
             if (meta.specialization() != null) {
                 final ModuleStats statsForSemester = stats.forSpecialization(meta.specializationnumber());

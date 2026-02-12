@@ -2,7 +2,7 @@ package moduleguidehelper;
 
 import java.util.*;
 
-public record ModuleGuide(
+public record MetaModuleGuide(
     String subject,
     String degree,
     String timemodel,
@@ -10,7 +10,7 @@ public record ModuleGuide(
     List<Integer> pagebreaks,
     List<Integer> pagebreaksspecialization,
     Signature signature,
-    List<Module> modules
+    List<MetaModule> modules
 ) {
 
 }

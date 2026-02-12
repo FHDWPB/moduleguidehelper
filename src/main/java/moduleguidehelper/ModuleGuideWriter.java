@@ -4,22 +4,19 @@ import java.io.*;
 
 public abstract class ModuleGuideWriter {
 
-    private final ModuleGuide book;
+    private final ModuleGuide guide;
 
-    private final ModuleMap modules;
-
-    public ModuleGuideWriter(final ModuleGuide book, final ModuleMap modules) {
-        this.book = book;
-        this.modules = modules;
+    public ModuleGuideWriter(final ModuleGuide guide) {
+        this.guide = guide;
     }
 
-    public void write(final BufferedWriter writer) throws IOException {
+    public void write(final String modulesFolder, final BufferedWriter writer) throws IOException {
         this.writeDocumentStart(writer);
-        this.writeTitlePage(this.book, writer);
-        this.writeIntro(this.book, writer);
-        final ModuleOverview overview = ModuleOverview.create(this.book, this.modules);
-        this.writeOverview(this.book, overview, writer);
-        this.writeModules(this.book, this.modules, overview.weightSum(), writer);
+        this.writeTitlePage(this.guide, writer);
+        this.writeIntro(this.guide, writer);
+        final ModuleOverview overview = ModuleOverview.create(this.guide);
+        this.writeOverview(this.guide, overview, writer);
+        this.writeModules(this.guide, overview.weightSum(), modulesFolder, writer);
         this.writeDocumentEnd(writer);
     }
 
@@ -27,21 +24,21 @@ public abstract class ModuleGuideWriter {
 
     protected abstract void writeDocumentStart(final BufferedWriter writer) throws IOException;
 
-    protected abstract void writeIntro(final ModuleGuide book, final BufferedWriter writer) throws IOException;
+    protected abstract void writeIntro(final ModuleGuide guide, final BufferedWriter writer) throws IOException;
 
     protected abstract void writeModules(
-        final ModuleGuide book,
-        final ModuleMap modules,
+        final ModuleGuide guide,
         final int weightSum,
+        final String modulesFolder,
         final BufferedWriter writer
     ) throws IOException;
 
     protected abstract void writeOverview(
-        final ModuleGuide book,
+        final ModuleGuide guide,
         final ModuleOverview overview,
         final BufferedWriter writer
     ) throws IOException;
 
-    protected abstract void writeTitlePage(final ModuleGuide book, final BufferedWriter writer) throws IOException;
+    protected abstract void writeTitlePage(final ModuleGuide guide, final BufferedWriter writer) throws IOException;
 
 }
