@@ -152,6 +152,11 @@ public record ModuleOverview(
         for (final Map.Entry<Integer, List<ModuleStats>> entry : semesterMap.entrySet()) {
             semesters.add(entry.getValue());
         }
+        if (weightSum != ectsSum) {
+            System.out.println(
+                String.format("WARNING: Sum of weights and ECTS does not match (%d vs. %d)!", weightSum, ectsSum)
+            );
+        }
         return new ModuleOverview(semesters, specializations, contactHoursSum, homeHoursSum, ectsSum, weightSum);
     }
 

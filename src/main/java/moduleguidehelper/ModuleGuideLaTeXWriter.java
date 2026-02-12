@@ -19,6 +19,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
     public static void writeModule(
         final String id,
         final Module module,
+        final int weightSum,
         final BufferedWriter writer
     ) throws IOException {
         ModuleGuideLaTeXWriter.writeDocumentStartStatic(writer);
@@ -30,7 +31,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         ModuleGuideLaTeXWriter.writeModule(
             new MetaModule(id, 1, 1, "Pflicht", "jedes Jahr", 5, 1, "", "", "", "", null),
             modules,
-            180,
+            weightSum,
             List.of(),
             writer
         );

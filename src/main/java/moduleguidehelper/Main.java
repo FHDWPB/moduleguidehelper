@@ -30,7 +30,7 @@ public class Main {
                                 new FileWriter(singeModules + "/" + entry.getKey().toLowerCase() + ".tex")
                             )
                     ) {
-                        ModuleGuideLaTeXWriter.writeModule(entry.getKey(), entry.getValue(), writer);
+                        ModuleGuideLaTeXWriter.writeModule(entry.getKey(), entry.getValue(), 180, writer);
                     }
                 }
             }
