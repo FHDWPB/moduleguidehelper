@@ -13,4 +13,8 @@ public record ModuleGuide(
     List<Module> modules
 ) {
 
+    public String title() {
+        return String.format("%s (%s, %s, %s)", this.subject(), this.degree(), this.timemodel(), this.year());
+    }
+
 }

@@ -133,15 +133,22 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         if (examination == null) {
             return "";
         }
-        if (examination.contains("*")) {
-            final int index = examination.indexOf('*');
-            final StringBuilder result = new StringBuilder();
-            result.append(examination.substring(0, index));
-            result.append("\\textbf{");
-            result.append(examination.substring(index + 1, index + 2));
-            result.append("}");
-            result.append(examination.substring(index + 2));
-            return result.toString();
+        final ExaminationTypes types = ExaminationType.parse(examination);
+        if (types != null) {
+            if (types.types().size() == 1) {
+                return String.format(
+                    "\\textbf{%s}",
+                    types.types().iterator().next().toString()
+                );
+            }
+            return types
+                .types()
+                .stream()
+                .map(
+                    type -> types.preferred().contains(type) ?
+                        String.format("\\textbf{%s}", type.toString()) :
+                            type.toString()
+                ).collect(Collectors.joining());
         }
         return examination;
     }
@@ -558,7 +565,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             return;
         }
         final List<String[]> table = new LinkedList<String[]>();
-        table.add(new String[] {"Kürzel", meta.module()});
+        table.add(new String[] {"Kürzel", ModuleGuideLaTeXWriter.escapeForLaTeX(meta.module())});
         table.add(new String[] {"Modulverantwortung", module.responsible()});
         table.add(new String[] {"Lehrsprache", ModuleGuideLaTeXWriter.escapeForLaTeX(module.language())});
         table.add(new String[] {"ECTS-Punkte", String.valueOf(module.ects())});

@@ -153,7 +153,12 @@ public record ModuleOverview(
         }
         if (weightSum != ectsSum) {
             System.out.println(
-                String.format("WARNING: Sum of weights and ECTS does not match (%d vs. %d)!", weightSum, ectsSum)
+                String.format(
+                    "WARNING: Sum of weights and ECTS does not match (%d vs. %d in %s)!",
+                    weightSum,
+                    ectsSum,
+                    guide.title()
+                )
             );
         }
         return new ModuleOverview(semesters, specializations, contactHoursSum, homeHoursSum, ectsSum, weightSum);
