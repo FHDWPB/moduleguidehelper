@@ -4,12 +4,13 @@ import java.io.*;
 import java.util.*;
 
 import com.google.gson.*;
+import com.google.gson.stream.*;
 
 public class Main {
 
     public static final Gson GSON = new Gson();
 
-    public static String lineSeparator = System.lineSeparator();
+    public static String lineSeparator = "\n";
 
     public static void main(final String[] args) throws IOException {
         if (args != null && args.length == 1) {
@@ -27,6 +28,9 @@ public class Main {
                 final RawModule module;
                 try (FileReader moduleReader = new FileReader(json)) {
                     module = Main.GSON.fromJson(moduleReader, RawModule.class);
+                } catch (final MalformedJsonException | JsonSyntaxException e) {
+                    System.out.println(json.getAbsolutePath());
+                    throw e;
                 }
                 try (BufferedWriter writer = new BufferedWriter(new FileWriter(singeModules + "/" + id + ".tex"))) {
                     ModuleGuideLaTeXWriter.writeModule(id.toUpperCase(), module, 180, args[0], writer);

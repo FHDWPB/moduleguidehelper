@@ -5,6 +5,8 @@ import java.util.*;
 import java.util.regex.*;
 import java.util.stream.*;
 
+import com.google.gson.*;
+
 public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
 
     private static final String DEFAULT_TEACHING =
@@ -163,7 +165,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             final RawModule raw;
             try (FileReader reader = new FileReader(json)) {
                 raw = Main.GSON.fromJson(reader, RawModule.class);
-            } catch (final IOException e) {
+            } catch (final IOException | JsonSyntaxException e) {
                 return ModuleGuideLaTeXWriter.escapeForLaTeX(id);
             }
             final String title = ModuleGuideLaTeXWriter.escapeForLaTeX(raw.title());
