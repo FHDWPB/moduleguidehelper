@@ -33,13 +33,13 @@ public record ModuleOverview(
                     }
                     if (meta1.specializationnumber() != null) {
                         if (meta2.specializationnumber() != null) {
-                            if ("Wahlpflicht".equals(meta1.specialization())) {
-                                if ("Wahlpflicht".equals(meta2.specialization())) {
+                            if (Main.ELECTIVE.equals(meta1.specialization())) {
+                                if (Main.ELECTIVE.equals(meta2.specialization())) {
                                     return meta1.specializationnumber().compareTo(meta2.specializationnumber());
                                 }
                                 return 1;
                             }
-                            if ("Wahlpflicht".equals(meta2.specialization())) {
+                            if (Main.ELECTIVE.equals(meta2.specialization())) {
                                 return -1;
                             }
                             final int speccompare = meta1.specialization().compareTo(meta2.specialization());
@@ -61,13 +61,13 @@ public record ModuleOverview(
             }
             if (meta1.specializationnumber() != null) {
                 if (meta2.specializationnumber() != null) {
-                    if ("Wahlpflicht".equals(meta1.specialization())) {
-                        if ("Wahlpflicht".equals(meta2.specialization())) {
+                    if (Main.ELECTIVE.equals(meta1.specialization())) {
+                        if (Main.ELECTIVE.equals(meta2.specialization())) {
                             return meta1.specializationnumber().compareTo(meta2.specializationnumber());
                         }
                         return 1;
                     }
-                    if ("Wahlpflicht".equals(meta2.specialization())) {
+                    if (Main.ELECTIVE.equals(meta2.specialization())) {
                         return -1;
                     }
                     final int speccompare = meta1.specialization().compareTo(meta2.specialization());
@@ -90,6 +90,7 @@ public record ModuleOverview(
         final List<List<ModuleStats>> semesters = new ArrayList<List<ModuleStats>>();
         final Map<Integer, List<ModuleStats>> semesterMap = new TreeMap<Integer, List<ModuleStats>>();
         final Map<Integer, ModuleStats> specializationModulesMap = new LinkedHashMap<Integer, ModuleStats>();
+        final Map<Integer, ModuleStats> electiveModulesMap = new LinkedHashMap<Integer, ModuleStats>();
         final Map<String, List<ModuleStats>> specializations = new TreeMap<String, List<ModuleStats>>();
         int ectsSum = 0;
         int contactHoursSum = 0;
@@ -121,23 +122,44 @@ public record ModuleOverview(
                     rawModule.examination()
                 );
             if (meta.specialization() != null) {
-                final ModuleStats statsForSemester = stats.forSpecialization(meta.specializationnumber());
-                if (specializationModulesMap.containsKey(meta.specializationnumber())) {
-                    final ModuleStats check = specializationModulesMap.get(meta.specializationnumber());
-                    if (
-                        statsForSemester.contactHours() != check.contactHours()
-                        || statsForSemester.homeHours() != check.homeHours()
-                        || statsForSemester.ects() != check.ects()
-                    ) {
-                        throw new IllegalArgumentException("Specialization stats do not match!");
+                final boolean elective = Main.ELECTIVE.equals(meta.specialization());
+                final ModuleStats statsForSemester = stats.forSpecialization(meta.specializationnumber(), elective);
+                if (elective) {
+                    if (electiveModulesMap.containsKey(meta.specializationnumber())) {
+                        final ModuleStats check = electiveModulesMap.get(meta.specializationnumber());
+                        if (
+                            statsForSemester.contactHours() != check.contactHours()
+                            || statsForSemester.homeHours() != check.homeHours()
+                            || statsForSemester.ects() != check.ects()
+                        ) {
+                            throw new IllegalArgumentException("Elective stats do not match!");
+                        }
+                    } else {
+                        electiveModulesMap.put(meta.specializationnumber(), statsForSemester);
+                        contactHoursSum += contactHours.intValue();
+                        homeHoursSum += homeHours.intValue();
+                        ectsSum += ects.intValue();
+                        weightSum += meta.weight();
+                        semesterMap.merge(meta.semester(), List.of(statsForSemester), ModuleOverview::concatLists);
                     }
                 } else {
-                    specializationModulesMap.put(meta.specializationnumber(), statsForSemester);
-                    contactHoursSum += contactHours.intValue();
-                    homeHoursSum += homeHours.intValue();
-                    ectsSum += ects.intValue();
-                    weightSum += meta.weight();
-                    semesterMap.merge(meta.semester(), List.of(statsForSemester), ModuleOverview::concatLists);
+                    if (specializationModulesMap.containsKey(meta.specializationnumber())) {
+                        final ModuleStats check = specializationModulesMap.get(meta.specializationnumber());
+                        if (
+                            statsForSemester.contactHours() != check.contactHours()
+                            || statsForSemester.homeHours() != check.homeHours()
+                            || statsForSemester.ects() != check.ects()
+                        ) {
+                            throw new IllegalArgumentException("Specialization stats do not match!");
+                        }
+                    } else {
+                        specializationModulesMap.put(meta.specializationnumber(), statsForSemester);
+                        contactHoursSum += contactHours.intValue();
+                        homeHoursSum += homeHours.intValue();
+                        ectsSum += ects.intValue();
+                        weightSum += meta.weight();
+                        semesterMap.merge(meta.semester(), List.of(statsForSemester), ModuleOverview::concatLists);
+                    }
                 }
                 specializations.merge(meta.specialization(), List.of(stats), ModuleOverview::concatLists);
             } else {

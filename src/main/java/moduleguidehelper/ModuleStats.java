@@ -17,6 +17,8 @@ public record ModuleStats(
 
     public static final String SEE_SPECIALIZATION = "S. Spezialisierung";
 
+    public static final String SEE_ELECTIVE = "S. Wahlpflicht";
+
     static {
         ROMAN_NUMERALS = new TreeMap<Integer, String>();
         ModuleStats.ROMAN_NUMERALS.put(1000, "M");
@@ -34,16 +36,19 @@ public record ModuleStats(
         ModuleStats.ROMAN_NUMERALS.put(1, "I");
     }
 
-    public ModuleStats forSpecialization(final int number) {
+    public ModuleStats forSpecialization(final int number, final boolean elective) {
         return new ModuleStats(
             this.id(),
-            String.format("Modul %s aus Spezialisierung", ModuleStats.toRomanNumeral(number)),
+            String.format(
+                elective ? "Wahlpflichtmodul %s" : "Modul %s aus Spezialisierung",
+                ModuleStats.toRomanNumeral(number)
+            ),
             this.semester(),
             this.duration(),
             this.contactHours(),
             this.homeHours(),
             this.ects(),
-            ModuleStats.SEE_SPECIALIZATION
+            elective ? ModuleStats.SEE_ELECTIVE : ModuleStats.SEE_SPECIALIZATION
         );
     }
 

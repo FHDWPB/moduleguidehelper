@@ -18,6 +18,8 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
 
     private static final String OVERVIEW_FIRST_COL_SIZE = "7.2cm";
 
+    private static final String OVERVIEW_FIRST_COL_SIZE_ELECTIVE = "5.7cm";
+
     public static void writeModule(
         final String id,
         final RawModule module,
@@ -64,6 +66,39 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         } catch (final IOException e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    private static String computeNumbersForElectiveStats(final ModuleStats stats, final ModuleGuide guide) {
+        final TreeSet<Integer> numbers =
+            guide
+            .modules()
+            .stream()
+            .filter(
+                module -> module.meta().module().equals(stats.id())
+                && Main.ELECTIVE.equals(module.meta().specialization())
+            ).map(module -> module.meta().specializationnumber())
+            .collect(Collectors.toCollection(TreeSet::new));
+        if (numbers.size() == 1) {
+            return ModuleStats.toRomanNumeral(numbers.first());
+        }
+        int previous = numbers.first() - 1;
+        boolean consecutive = true;
+        for (final Integer number : numbers) {
+            if (number - 1 == previous) {
+                previous = number;
+            } else {
+                consecutive = false;
+                break;
+            }
+        }
+        if (consecutive) {
+            return String.format(
+                "%s--%s",
+                ModuleStats.toRomanNumeral(numbers.first()),
+                ModuleStats.toRomanNumeral(numbers.last())
+            );
+        }
+        return numbers.stream().map(ModuleStats::toRomanNumeral).collect(Collectors.joining(", "));
     }
 
     private static String escapeForLaTeX(final String text) {
@@ -188,6 +223,26 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         return ids.stream().map(id -> ModuleGuideLaTeXWriter.lookupModule(id, modulesFolder, linkable)).toList();
     }
 
+    private static List<List<Chapter>> separateContentsByHints(final List<Chapter> content) {
+        final List<List<Chapter>> result = new LinkedList<List<Chapter>>();
+        List<Chapter> currentContents = new LinkedList<Chapter>();
+        for (final Chapter chapter : content) {
+            if (chapter.chapter().startsWith("!")) {
+                if (!currentContents.isEmpty()) {
+                    result.add(currentContents);
+                    currentContents = new LinkedList<Chapter>();
+                }
+                result.add(List.of(chapter));
+            } else {
+                currentContents.add(chapter);
+            }
+        }
+        if (!currentContents.isEmpty()) {
+            result.add(currentContents);
+        }
+        return result;
+    }
+
     private static int[] toPagebreaks(final List<Integer> pagebreaks) {
         if (pagebreaks == null) {
             return new int[0];
@@ -287,9 +342,8 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write("\\titlespacing{\\section}{0pt}{*0}{*4}");
         Main.newLine(writer);
         Main.newLine(writer);
-        writer.write(
-            "\\titlecontents{chapter}[0em]{\\vskip 0.5ex}{\\bfseries\\contentsmargin{0pt}}{}{\\titlerule*[3pt]{.}\\contentspage}"
-        );
+        writer.write("\\titlecontents{chapter}[0em]{\\vskip 0.5ex}{\\bfseries\\contentsmargin{0pt}}{}");
+        writer.write("{\\titlerule*[3pt]{.}\\contentspage}");
         Main.newLine(writer);
         writer.write(
             "\\titlecontents{section}[0em]{\\vskip 0.5ex}{\\contentsmargin{0pt}}{}{\\titlerule*[3pt]{.}\\contentspage}"
@@ -456,6 +510,49 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         Main.newLine(writer);
     }
 
+    private static void writeGeneralModuleInformationSection(
+        final Module module,
+        final BufferedWriter writer
+    ) throws IOException {
+        final List<String[]> table = new LinkedList<String[]>();
+        table.add(new String[] {"Kürzel", ModuleGuideLaTeXWriter.escapeForLaTeX(module.meta().module())});
+        table.add(new String[] {"Modulverantwortung", module.module().responsible()});
+        table.add(new String[] {"Lehrsprache", ModuleGuideLaTeXWriter.escapeForLaTeX(module.module().language())});
+        table.add(new String[] {"ECTS-Punkte", String.valueOf(module.module().ects())});
+        table.add(new String[] {"Kontaktstunden", String.valueOf(module.module().contacthours())});
+        table.add(new String[] {"Selbststudium", String.valueOf(module.module().homehours())});
+        table.add(new String[] {"Dauer", module.meta().duration() + " Semester"});
+        table.add(new String[] {"Häufigkeit", ModuleGuideLaTeXWriter.escapeForLaTeX(module.meta().frequency())});
+        table.add(
+            new String[] {"Prüfungsleistung", ModuleGuideLaTeXWriter.formatExamination(module.module().examination())}
+        );
+        writer.write("\\subsection*{Allgemeine Angaben}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\begin{tabularx}{\\textwidth}");
+        writer.write("{!{\\color{mtabgray}\\vrule}l!{\\color{mtabgray}\\vrule}X!{\\color{mtabgray}\\vrule}}");
+        Main.newLine(writer);
+        writer.write("\\arrayrulecolor{mtabgray}\\hline");
+        Main.newLine(writer);
+        boolean odd = true;
+        for (final String[] line : table) {
+            if (odd) {
+                writer.write("\\rowcolor{mtabback}");
+                Main.newLine(writer);
+            }
+            odd = !odd;
+            writer.write("\\textbf{");
+            writer.write(line[0]);
+            writer.write("} & ");
+            writer.write(line[1]);
+            writer.write("\\\\\\arrayrulecolor{mtabgray}\\hline");
+            Main.newLine(writer);
+        }
+        writer.write("\\end{tabularx}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+    }
+
     private static void writeItemize(
         final List<String> items,
         final String noItems,
@@ -496,7 +593,23 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         Main.newLine(writer);
     }
 
-    private static void writeLiterature(
+    private static void writeItemizeSection(
+        final String section,
+        final List<String> items,
+        final String noItems,
+        final BufferedWriter writer
+    ) throws IOException {
+        if (items != null && !items.isEmpty()) {
+            writer.write("\\subsection*{");
+            writer.write(section);
+            writer.write("}");
+            Main.newLine(writer);
+            Main.newLine(writer);
+            ModuleGuideLaTeXWriter.writeItemize(items, noItems, true, writer);
+        }
+    }
+
+    private static void writeLiteratureSection(
         final String title,
         final List<Source> literature,
         final BufferedWriter writer
@@ -524,136 +637,173 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
 
     private static void writeLongtableHeader(
         final boolean withHeadings,
+        final boolean elective,
         final BufferedWriter writer
     ) throws IOException {
-        writer.write("\\begin{longtable}{|l|*{3}{C{1.1cm}|}C{1.6cm}|C{2.2cm}|}");
+        writer.write(String.format("\\begin{longtable}{|l|*{%d}{C{1.1cm}|}C{1.6cm}|C{2.2cm}|}", elective ? 4 : 3));
         Main.newLine(writer);
         writer.write("\\hline\\endhead");
         Main.newLine(writer);
         if (withHeadings) {
             writer.write("\\rule{0pt}{9mm}\\begin{minipage}{");
-            writer.write(ModuleGuideLaTeXWriter.OVERVIEW_FIRST_COL_SIZE);
-            writer.write("}\\textbf{\\textcolor{fhdwblue}{MODUL}}\\end{minipage} & \\begin{minipage}{1cm}");
-            writer.write("\\begin{center}\\rotatebox{270}{\\begin{minipage}{2cm}");
+            writer.write(
+                elective ?
+                    ModuleGuideLaTeXWriter.OVERVIEW_FIRST_COL_SIZE_ELECTIVE :
+                        ModuleGuideLaTeXWriter.OVERVIEW_FIRST_COL_SIZE
+            );
+            writer.write("}\\textbf{\\textcolor{fhdwblue}{MODUL}}\\end{minipage} & ");
+            if (elective) {
+                writer.write("\\begin{minipage}{1cm}\\begin{center}\\rotatebox{270}{\\begin{minipage}{2cm}");
+                writer.write("\\begin{center}\\textbf{\\textcolor{fhdwblue}{MODUL}}\\end{center}");
+                writer.write("\\end{minipage}}\\\\[1mm]\\end{center}\\end{minipage} & ");
+            }
+            writer.write("\\begin{minipage}{1cm}\\begin{center}\\rotatebox{270}{\\begin{minipage}{2cm}");
             writer.write("\\begin{center}\\textbf{\\textcolor{fhdwblue}{SEMES\\-TER}}\\end{center}");
-            writer.write("\\end{minipage}}\\\\[1mm]\\end{center}\\end{minipage} & \\begin{minipage}{1cm}");
-            writer.write("\\begin{center}\\rotatebox{270}{\\begin{minipage}{2cm}\\begin{center}");
-            writer.write("\\textbf{\\textcolor{fhdwblue}{KONTAKT\\-STUNDEN}}\\end{center}");
-            writer.write("\\end{minipage}}\\\\[1mm]\\end{center}\\end{minipage} & \\begin{minipage}{1cm}");
-            writer.write("\\begin{center}\\rotatebox{270}{\\begin{minipage}{2cm}\\begin{center}");
-            writer.write("\\textbf{\\textcolor{fhdwblue}{SELBST\\-STUDIUM}}\\end{center}");
-            writer.write("\\end{minipage}}\\\\[1mm]\\end{center}\\end{minipage} & \\begin{minipage}{1.5cm}");
-            writer.write("\\begin{center}\\rotatebox{270}{\\begin{minipage}{2cm}\\begin{center}");
-            writer.write("\\textbf{\\textcolor{fhdwblue}{CREDIT POINTS (ECTS)}}\\end{center}");
-            writer.write("\\end{minipage}}\\\\[1mm]\\end{center}\\end{minipage} & \\begin{minipage}{2.1cm}");
-            writer.write("\\begin{center}\\rotatebox{270}{\\begin{minipage}{2cm}\\begin{center}");
-            writer.write("\\textbf{\\textcolor{fhdwblue}{PRÜ\\-FUNGS\\-FORM}}");
+            writer.write("\\end{minipage}}\\\\[1mm]\\end{center}\\end{minipage} & ");
+            writer.write("\\begin{minipage}{1cm}\\begin{center}\\rotatebox{270}{\\begin{minipage}{2cm}");
+            writer.write("\\begin{center}\\textbf{\\textcolor{fhdwblue}{KONTAKT\\-STUNDEN}}\\end{center}");
+            writer.write("\\end{minipage}}\\\\[1mm]\\end{center}\\end{minipage} & ");
+            writer.write("\\begin{minipage}{1cm}\\begin{center}\\rotatebox{270}{\\begin{minipage}{2cm}");
+            writer.write("\\begin{center}\\textbf{\\textcolor{fhdwblue}{SELBST\\-STUDIUM}}\\end{center}");
+            writer.write("\\end{minipage}}\\\\[1mm]\\end{center}\\end{minipage} & ");
+            writer.write("\\begin{minipage}{1.5cm}\\begin{center}\\rotatebox{270}{\\begin{minipage}{2cm}");
+            writer.write("\\begin{center}\\textbf{\\textcolor{fhdwblue}{CREDIT POINTS (ECTS)}}\\end{center}");
+            writer.write("\\end{minipage}}\\\\[1mm]\\end{center}\\end{minipage} & ");
+            writer.write("\\begin{minipage}{2.1cm}\\begin{center}\\rotatebox{270}{\\begin{minipage}{2cm}");
+            writer.write("\\begin{center}\\textbf{\\textcolor{fhdwblue}{PRÜ\\-FUNGS\\-FORM}}");
             writer.write("\\end{center}\\end{minipage}}\\\\[1mm]\\end{center}\\end{minipage}\\\\\\hline");
             Main.newLine(writer);
         }
     }
 
+    private static void writeLongtableHeader(
+        final boolean withHeadings,
+        final BufferedWriter writer
+    ) throws IOException {
+        ModuleGuideLaTeXWriter.writeLongtableHeader(withHeadings, false, writer);
+    }
+
+    private static void writeLookupSection(
+        final String section,
+        final List<String> items,
+        final String modulesFolder,
+        final List<String> linkable,
+        final BufferedWriter writer
+    ) throws IOException {
+        writer.write("\\subsection*{");
+        writer.write(section);
+        writer.write("}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        ModuleGuideLaTeXWriter.writeItemize(
+            ModuleGuideLaTeXWriter.lookupModules(items, modulesFolder, linkable),
+            "Keine",
+            false,
+            writer
+        );
+    }
+
     private static void writeModule(
-        final Module mod,
+        final Module module,
         final int weightSum,
         final List<String> linkable,
         final String modulesFolder,
         final BufferedWriter writer
     ) throws IOException {
-        final RawModule module = mod.module();
-        final MetaModule meta = mod.meta();
-        if (module == null) {
-            System.out.println(meta.module());
+        if (module.module() == null) {
+            System.out.println(module.meta().module());
             return;
         }
-        final List<String[]> table = new LinkedList<String[]>();
-        table.add(new String[] {"Kürzel", ModuleGuideLaTeXWriter.escapeForLaTeX(meta.module())});
-        table.add(new String[] {"Modulverantwortung", module.responsible()});
-        table.add(new String[] {"Lehrsprache", ModuleGuideLaTeXWriter.escapeForLaTeX(module.language())});
-        table.add(new String[] {"ECTS-Punkte", String.valueOf(module.ects())});
-        table.add(new String[] {"Kontaktstunden", String.valueOf(module.contacthours())});
-        table.add(new String[] {"Selbststudium", String.valueOf(module.homehours())});
-        table.add(new String[] {"Dauer", meta.duration() + " Semester"});
-        table.add(new String[] {"Häufigkeit", ModuleGuideLaTeXWriter.escapeForLaTeX(meta.frequency())});
-        table.add(new String[] {"Prüfungsleistung", ModuleGuideLaTeXWriter.formatExamination(module.examination())});
-        writer.write("\\section{");
-        writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(module.title()));
-        writer.write("}\\label{sec:");
-        writer.write(meta.module());
-        writer.write("}");
+        ModuleGuideLaTeXWriter.writeModuleTitle(module, writer);
+        ModuleGuideLaTeXWriter.writeGeneralModuleInformationSection(module, writer);
+        ModuleGuideLaTeXWriter.writeItemizeSection("Stichwörter", module.module().keywords(), "Keine", writer);
+        ModuleGuideLaTeXWriter.writeLookupSection(
+            "Zugangsvoraussetzungen",
+            module.module().preconditions(),
+            modulesFolder,
+            linkable,
+            writer
+        );
+        ModuleGuideLaTeXWriter.writeLookupSection(
+            "Zugangsempfehlungen",
+            module.module().recommendations(),
+            modulesFolder,
+            linkable,
+            writer
+        );
+        ModuleGuideLaTeXWriter.writeModuleQualificationSection(module, writer);
+        ModuleGuideLaTeXWriter.writeModuleTeachingMethodsSection(module, writer);
+        ModuleGuideLaTeXWriter.writeModuleContentsSection(module, writer);
+        ModuleGuideLaTeXWriter.writeLiteratureSection(
+            "Grundlegende Literaturhinweise",
+            module.module().requiredliterature(),
+            writer
+        );
+        ModuleGuideLaTeXWriter.writeLiteratureSection(
+            "Ergänzende Literaturempfehlungen",
+            module.module().optionalliterature(),
+            writer
+        );
+        writer.write("\\clearpage");
         Main.newLine(writer);
         Main.newLine(writer);
-        writer.write("\\subsection*{Allgemeine Angaben}");
+    }
+
+    private static void writeModuleContentsSection(
+        final Module module,
+        final BufferedWriter writer
+    ) throws IOException {
+        writer.write("\\subsection*{Inhalte}");
         Main.newLine(writer);
         Main.newLine(writer);
-        writer.write("\\begin{tabularx}{\\textwidth}");
-        writer.write("{!{\\color{mtabgray}\\vrule}l!{\\color{mtabgray}\\vrule}X!{\\color{mtabgray}\\vrule}}");
-        Main.newLine(writer);
-        writer.write("\\arrayrulecolor{mtabgray}\\hline");
-        Main.newLine(writer);
-        boolean odd = true;
-        for (final String[] line : table) {
-            if (odd) {
-                writer.write("\\rowcolor{mtabback}");
-                Main.newLine(writer);
+        if (module.module().content() != null) {
+            final List<List<Chapter>> separatedContents =
+                ModuleGuideLaTeXWriter.separateContentsByHints(module.module().content());
+            for (final List<Chapter> contents : separatedContents) {
+                if (contents.getFirst().chapter().startsWith("!")) {
+                    writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(contents.getFirst().chapter().substring(1)));
+                    Main.newLine(writer);
+                    Main.newLine(writer);
+                } else {
+                    ModuleGuideLaTeXWriter.writeItemize(
+                        contents.stream().map(ModuleGuideLaTeXWriter::chapterToItem).toList(),
+                        "keine",
+                        false,
+                        writer
+                    );
+                }
             }
-            odd = !odd;
-            writer.write("\\textbf{");
-            writer.write(line[0]);
-            writer.write("} & ");
-            writer.write(line[1]);
-            writer.write("\\\\\\arrayrulecolor{mtabgray}\\hline");
-            Main.newLine(writer);
         }
-        writer.write("\\end{tabularx}");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        if (module.keywords() != null && !module.keywords().isEmpty()) {
-            writer.write("\\subsection*{Stichwörter}");
-            Main.newLine(writer);
-            Main.newLine(writer);
-            ModuleGuideLaTeXWriter.writeItemize(
-                module.keywords(),
-                "Keine",
-                true,
-                writer
-            );
-        }
-        writer.write("\\subsection*{Zugangsvoraussetzungen}");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        ModuleGuideLaTeXWriter.writeItemize(
-            ModuleGuideLaTeXWriter.lookupModules(module.preconditions(), modulesFolder, linkable),
-            "Keine",
-            false,
-            writer
-        );
-        writer.write("\\subsection*{Zugangsempfehlungen}");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        ModuleGuideLaTeXWriter.writeItemize(
-            ModuleGuideLaTeXWriter.lookupModules(module.recommendations(), modulesFolder, linkable),
-            "Keine",
-            false,
-            writer
-        );
+    }
+
+    private static void writeModuleQualificationSection(
+        final Module module,
+        final BufferedWriter writer
+    ) throws IOException {
         writer.write("\\subsection*{Qualifikations- und Kompetenzziele}");
         Main.newLine(writer);
         Main.newLine(writer);
-        if (module.competenciespreface() != null && !module.competenciespreface().isBlank()) {
-            writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(module.competenciespreface()));
+        if (module.module().competenciespreface() != null && !module.module().competenciespreface().isBlank()) {
+            writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(module.module().competenciespreface()));
             Main.newLine(writer);
         }
         writer.write("Nach erfolgreichem Abschluss dieses Moduls sind die Studierenden in der Lage\\\\");
         Main.newLine(writer);
-        ModuleGuideLaTeXWriter.writeItemize(module.competencies(), "", true, writer);
+        ModuleGuideLaTeXWriter.writeItemize(module.module().competencies(), "", true, writer);
         Main.newLine(writer);
+    }
+
+    private static void writeModuleTeachingMethodsSection(
+        final Module module,
+        final BufferedWriter writer
+    ) throws IOException {
         writer.write("\\subsection*{Lehr- und Lernmethoden}");
         Main.newLine(writer);
         Main.newLine(writer);
-        if (module.teachingmethods() != null) {
+        if (module.module().teachingmethods() != null) {
             ModuleGuideLaTeXWriter.writeCommaSeparated(
                 module
+                .module()
                 .teachingmethods()
                 .stream()
                 .map(text -> "DEFAULT".equals(text) ? ModuleGuideLaTeXWriter.DEFAULT_TEACHING : text)
@@ -661,33 +811,21 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
                 writer
             );
         }
-        if (module.teachingpostface() != null && !module.teachingpostface().isBlank()) {
+        if (module.module().teachingpostface() != null && !module.module().teachingpostface().isBlank()) {
             writer.write("\\\\");
             Main.newLine(writer);
-            writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(module.teachingpostface()));
+            writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(module.module().teachingpostface()));
         }
         Main.newLine(writer);
         Main.newLine(writer);
-        writer.write("\\subsection*{Inhalte}");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        if (module.content() != null) {
-            if (module.content().getFirst().chapter().startsWith("!")) {
-                writer.write(module.content().getFirst().chapter().substring(1));
-                Main.newLine(writer);
-                Main.newLine(writer);
-            } else {
-                ModuleGuideLaTeXWriter.writeItemize(
-                    module.content().stream().map(ModuleGuideLaTeXWriter::chapterToItem).toList(),
-                    "keine",
-                    false,
-                    writer
-                );
-            }
-        }
-        ModuleGuideLaTeXWriter.writeLiterature("Grundlegende Literaturhinweise", module.requiredliterature(), writer);
-        ModuleGuideLaTeXWriter.writeLiterature("Ergänzende Literaturempfehlungen", module.optionalliterature(), writer);
-        writer.write("\\clearpage");
+    }
+
+    private static void writeModuleTitle(final Module module, final BufferedWriter writer) throws IOException {
+        writer.write("\\section{");
+        writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(module.module().title()));
+        writer.write("}\\label{sec:");
+        writer.write(module.meta().module());
+        writer.write("}");
         Main.newLine(writer);
         Main.newLine(writer);
     }
@@ -794,13 +932,29 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
     }
 
     private static void writeStats(final ModuleStats stats, final BufferedWriter writer) throws IOException {
+        ModuleGuideLaTeXWriter.writeStats(stats, Optional.empty(), writer);
+    }
+
+    private static void writeStats(
+        final ModuleStats stats,
+        final Optional<String> elective,
+        final BufferedWriter writer
+    ) throws IOException {
         writer.write("\\begin{minipage}{");
-        writer.write(ModuleGuideLaTeXWriter.OVERVIEW_FIRST_COL_SIZE);
+        writer.write(
+            elective.isEmpty() ?
+                ModuleGuideLaTeXWriter.OVERVIEW_FIRST_COL_SIZE :
+                    ModuleGuideLaTeXWriter.OVERVIEW_FIRST_COL_SIZE_ELECTIVE
+        );
         writer.write("}\\raggedright\\strut{}\\hyperref[sec:");
         writer.write(stats.id());
         writer.write("]{");
         writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(stats.title()));
         writer.write("}\\strut{}\\end{minipage} & ");
+        if (elective.isPresent()) {
+            writer.write(elective.get());
+            writer.write(" & ");
+        }
         writer.write(String.valueOf(stats.semester()));
         if (stats.duration() > 1) {
             writer.write("--");
@@ -906,9 +1060,13 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         for (final Module module : guide.modules().stream().sorted().toList()) {
             if (module.meta().specialization() != null && !specialization.equals(module.meta().specialization())) {
                 specialization = module.meta().specialization();
-                writer.write("\\chapter{Spezialisierung ");
-                writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(specialization));
-                writer.write("}");
+                if (Main.ELECTIVE.equals(specialization)) {
+                    writer.write("\\chapter{Wahlpflichtmodule}");
+                } else {
+                    writer.write("\\chapter{Spezialisierung ");
+                    writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(specialization));
+                    writer.write("}");
+                }
                 Main.newLine(writer);
                 Main.newLine(writer);
             } else if (
@@ -973,6 +1131,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         int groupsOnPage = 0;
         int pagebreakIndex = 0;
         int numberOfSpecializationModules = 0;
+        int numberOfElectiveModules = 0;
         final int[] pagebreaks = ModuleGuideLaTeXWriter.toPagebreaks(guide.pagebreaks());
         for (final List<ModuleStats> modules : overview.semesters()) {
             if (pagebreakIndex < pagebreaks.length && groupsOnPage >= pagebreaks[pagebreakIndex]) {
@@ -989,6 +1148,9 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
                 if (ModuleStats.SEE_SPECIALIZATION.equals(stats.examination())) {
                     numberOfSpecializationModules++;
                 }
+                if (ModuleStats.SEE_ELECTIVE.equals(stats.examination())) {
+                    numberOfElectiveModules++;
+                }
             }
             semester++;
             groupsOnPage++;
@@ -1004,7 +1166,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write(String.valueOf(overview.ectsSum()));
         writer.write("} & \\\\\\hline");
         Main.newLine(writer);
-        if (!overview.specializations().isEmpty()) {
+        if (numberOfSpecializationModules > 0) {
             writer.write("\\end{longtable}");
             Main.newLine(writer);
             Main.newLine(writer);
@@ -1022,6 +1184,9 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
                 ModuleGuideLaTeXWriter.toPagebreaks(guide.pagebreaksspecialization());
             ModuleGuideLaTeXWriter.writeLongtableHeader(true, writer);
             for (final Map.Entry<String, List<ModuleStats>> entry : overview.specializations().entrySet()) {
+                if (Main.ELECTIVE.equals(entry.getKey())) {
+                    continue;
+                }
                 if (
                     pagebreakIndex < pagebreaksSpecialization.length
                     && groupsOnPage >= pagebreaksSpecialization[pagebreakIndex]
@@ -1038,6 +1203,45 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
                     ModuleGuideLaTeXWriter.writeStats(stats, writer);
                 }
                 groupsOnPage++;
+            }
+        }
+        if (numberOfElectiveModules > 0) {
+            writer.write("\\end{longtable}");
+            Main.newLine(writer);
+            Main.newLine(writer);
+            writer.write("\\clearpage");
+            Main.newLine(writer);
+            Main.newLine(writer);
+            writer.write("\\chapter{Wahlpflichtmodule I bis ");
+            writer.write(ModuleStats.toRomanNumeral(numberOfElectiveModules));
+            writer.write("}\\label{chap:electiveareas}");
+            Main.newLine(writer);
+            Main.newLine(writer);
+            ModuleGuideLaTeXWriter.writeLongtableHeader(true, true, writer);
+            for (final Map.Entry<String, List<ModuleStats>> entry : overview.specializations().entrySet()) {
+                if (!Main.ELECTIVE.equals(entry.getKey())) {
+                    continue;
+                }
+                final Map<String, List<ModuleStats>> electiveByNumbers = new TreeMap<String, List<ModuleStats>>();
+                for (final ModuleStats stats : entry.getValue()) {
+                    final String numbers = ModuleGuideLaTeXWriter.computeNumbersForElectiveStats(stats, guide);
+                    if (!electiveByNumbers.containsKey(numbers)) {
+                        electiveByNumbers.put(numbers, new LinkedList<ModuleStats>());
+                    }
+                    final List<ModuleStats> statsList = electiveByNumbers.get(numbers);
+                    if (statsList.stream().noneMatch(s -> s.id().equals(stats.id()))) {
+                        statsList.add(stats);
+                    }
+                }
+                writer.write("\\rowcolor{fhdwblue}\\multicolumn{7}{c}{\\textcolor{white}{");
+                writer.write("Wahlpflichtmodule");
+                writer.write("}}\\\\\\hline");
+                Main.newLine(writer);
+                for (final Map.Entry<String, List<ModuleStats>> electiveEntry : electiveByNumbers.entrySet()) {
+                    for (final ModuleStats stats : electiveEntry.getValue()) {
+                        ModuleGuideLaTeXWriter.writeStats(stats, Optional.of(electiveEntry.getKey()), writer);
+                    }
+                }
             }
         }
         writer.write("\\end{longtable}");

@@ -8,6 +8,8 @@ import com.google.gson.stream.*;
 
 public class Main {
 
+    public static final String ELECTIVE = "Wahlpflicht";
+
     public static final Gson GSON = new Gson();
 
     public static String lineSeparator = "\n";

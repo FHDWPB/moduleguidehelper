@@ -19,13 +19,13 @@ public record MetaModule(
     public int compareTo(final MetaModule o) {
         if (this.specializationnumber() != null) {
             if (o.specializationnumber() != null) {
-                if ("Wahlpflicht".equals(this.specialization())) {
-                    if ("Wahlpflicht".equals(o.specialization())) {
+                if (Main.ELECTIVE.equals(this.specialization())) {
+                    if (Main.ELECTIVE.equals(o.specialization())) {
                         return this.specializationnumber().compareTo(o.specializationnumber());
                     }
                     return 1;
                 }
-                if ("Wahlpflicht".equals(o.specialization())) {
+                if (Main.ELECTIVE.equals(o.specialization())) {
                     return -1;
                 }
                 final int compare = this.specialization().compareTo(o.specialization());
