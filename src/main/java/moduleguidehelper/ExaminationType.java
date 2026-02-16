@@ -64,8 +64,7 @@ public enum ExaminationType {
         this.position = position;
     }
 
-    @Override
-    public String toString() {
+    public String toString(final Internationalization internationalization) {
         return String.valueOf(this.code);
     }
 

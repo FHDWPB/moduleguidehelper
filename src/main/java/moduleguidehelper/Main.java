@@ -120,6 +120,7 @@ public class Main {
             metaGuide.degree(),
             metaGuide.timemodel(),
             metaGuide.year(),
+            metaGuide.generallanguage(),
             metaGuide.pagebreaks(),
             metaGuide.pagebreaksspecialization(),
             metaGuide.signature(),

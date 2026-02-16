@@ -87,6 +87,7 @@ public record ModuleOverview(
     };
 
     public static ModuleOverview create(final ModuleGuide guide) {
+        final Internationalization internationalization = guide.generalLanguage().getInternationalization();
         final List<List<ModuleStats>> semesters = new ArrayList<List<ModuleStats>>();
         final Map<Integer, List<ModuleStats>> semesterMap = new TreeMap<Integer, List<ModuleStats>>();
         final Map<Integer, ModuleStats> specializationModulesMap = new LinkedHashMap<Integer, ModuleStats>();
@@ -123,7 +124,8 @@ public record ModuleOverview(
                 );
             if (meta.specialization() != null) {
                 final boolean elective = Main.ELECTIVE.equals(meta.specialization());
-                final ModuleStats statsForSemester = stats.forSpecialization(meta.specializationnumber(), elective);
+                final ModuleStats statsForSemester =
+                    stats.forSpecialization(meta.specializationnumber(), elective, internationalization);
                 if (elective) {
                     if (electiveModulesMap.containsKey(meta.specializationnumber())) {
                         final ModuleStats check = electiveModulesMap.get(meta.specializationnumber());

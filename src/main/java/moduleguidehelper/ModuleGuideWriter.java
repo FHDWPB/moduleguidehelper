@@ -4,7 +4,7 @@ import java.io.*;
 
 public abstract class ModuleGuideWriter {
 
-    private final ModuleGuide guide;
+    protected final ModuleGuide guide;
 
     public ModuleGuideWriter(final ModuleGuide guide) {
         this.guide = guide;
@@ -12,11 +12,11 @@ public abstract class ModuleGuideWriter {
 
     public void write(final String modulesFolder, final BufferedWriter writer) throws IOException {
         this.writeDocumentStart(writer);
-        this.writeTitlePage(this.guide, writer);
-        this.writeIntro(this.guide, writer);
+        this.writeTitlePage(writer);
+        this.writeIntro(writer);
         final ModuleOverview overview = ModuleOverview.create(this.guide);
-        this.writeOverview(this.guide, overview, writer);
-        this.writeModules(this.guide, overview.weightSum(), modulesFolder, writer);
+        this.writeOverview(overview, writer);
+        this.writeModules(overview.weightSum(), modulesFolder, writer);
         this.writeDocumentEnd(writer);
     }
 
@@ -24,21 +24,19 @@ public abstract class ModuleGuideWriter {
 
     protected abstract void writeDocumentStart(final BufferedWriter writer) throws IOException;
 
-    protected abstract void writeIntro(final ModuleGuide guide, final BufferedWriter writer) throws IOException;
+    protected abstract void writeIntro(final BufferedWriter writer) throws IOException;
 
     protected abstract void writeModules(
-        final ModuleGuide guide,
         final int weightSum,
         final String modulesFolder,
         final BufferedWriter writer
     ) throws IOException;
 
     protected abstract void writeOverview(
-        final ModuleGuide guide,
         final ModuleOverview overview,
         final BufferedWriter writer
     ) throws IOException;
 
-    protected abstract void writeTitlePage(final ModuleGuide guide, final BufferedWriter writer) throws IOException;
+    protected abstract void writeTitlePage(final BufferedWriter writer) throws IOException;
 
 }

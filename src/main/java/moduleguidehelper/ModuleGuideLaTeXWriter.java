@@ -9,11 +9,6 @@ import com.google.gson.*;
 
 public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
 
-    private static final String DEFAULT_TEACHING =
-        "Präsenzveranstaltungen, Eigenstudium, individuelles und kooperatives Lernen, "
-        + "problemorientiertes und integratives Lernen, forschendes Lernen, synchrones und "
-        + "asynchrones Lernen, Übungen, Fallstudien, Expertenvorträge, Projekte, Gruppenarbeit";
-
     private static final Pattern ESCAPE_PATTERN = Pattern.compile("\\$\\$[^\\$]+\\$\\$");
 
     private static final String OVERVIEW_FIRST_COL_SIZE = "7.2cm";
@@ -166,7 +161,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         return result.toString();
     }
 
-    private static String formatExamination(final String examination) {
+    private static String formatExamination(final String examination, final Internationalization internationalization) {
         if (examination == null) {
             return "";
         }
@@ -175,7 +170,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             if (types.types().size() == 1) {
                 return String.format(
                     "\\textbf{%s}",
-                    types.types().iterator().next().toString()
+                    types.types().iterator().next().toString(internationalization)
                 );
             }
             return types
@@ -183,8 +178,8 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
                 .stream()
                 .map(
                     type -> types.preferred().contains(type) ?
-                        String.format("\\textbf{%s}", type.toString()) :
-                            type.toString()
+                        String.format("\\textbf{%s}", type.toString(internationalization)) :
+                            type.toString(internationalization)
                 ).collect(Collectors.joining());
         }
         return examination;
@@ -404,56 +399,62 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         Main.newLine(writer);
     }
 
-    private static void writeExaminationTypes(final BufferedWriter writer) throws IOException {
-        writer.write("\\chapter{Prüfungsleistungen}\\label{chap:examinations}");
+    private static void writeExaminationTypes(
+        final Internationalization internationalization,
+        final BufferedWriter writer
+    ) throws IOException {
+        writer.write("\\chapter{");
+        writer.write(internationalization.internationalize(InternationalizationKey.EXAMINATIONS));
+        writer.write("}\\label{chap:examinations}");
         Main.newLine(writer);
         Main.newLine(writer);
-        writer.write("Zu Anlage 1 gehört die folgende Legende, welche Art und Umfang der Prüfungsleistungen näher ");
-        writer.write("erläutert:\\\\[3ex]");
+        writer.write(internationalization.internationalize(InternationalizationKey.EXAMINATIONS_INTRO));
+        writer.write(":\\\\[3ex]");
         Main.newLine(writer);
         writer.write("\\begin{tikzpicture}[node distance=2 and 1]");
         Main.newLine(writer);
-        writer.write("\\node (ex) {\\textbf{\\textcolor{fhdwblue}{PRÜFUNG}}};");
+        writer.write("\\node (ex) {\\textbf{\\textcolor{fhdwblue}{");
+        writer.write(internationalization.internationalize(InternationalizationKey.EXAMINATIONS_HEADER1));
+        writer.write("}}};");
         Main.newLine(writer);
         writer.write("\\node (per) [right=0.2 of ex.south east, anchor=south west] ");
-        writer.write("{\\textbf{\\textcolor{fhdwblue}{LEISTUNG}}};");
+        writer.write("{\\textbf{\\textcolor{fhdwblue}{");
+        writer.write(internationalization.internationalize(InternationalizationKey.EXAMINATIONS_HEADER2));
+        writer.write("}}};");
         Main.newLine(writer);
         writer.write("\\node (ex1) [below=of ex] {\\phantom{g}\\textbf{K}\\phantom{g}};");
         Main.newLine(writer);
         writer.write("\\node (per1) at (ex1 -| per.west) [anchor=west] ");
         writer.write("{\\begin{minipage}{14cm}\\raggedright\\strut{}");
-        writer.write("Die Prüfung besteht aus einer 90-minütigen Klausur.");
+        writer.write(internationalization.internationalize(InternationalizationKey.EXAM_FORM));
         writer.write("\\strut{}\\end{minipage}};");
         Main.newLine(writer);
         writer.write("\\node (ex2) [below=of ex1] {\\phantom{g}\\textbf{R}\\phantom{g}};");
         Main.newLine(writer);
         writer.write("\\node (per2) at (ex2 -| per.west) [anchor=west] ");
         writer.write("{\\begin{minipage}{14cm}\\raggedright\\strut{}");
-        writer.write("Die Prüfung besteht aus einem Referat.");
+        writer.write(internationalization.internationalize(InternationalizationKey.PRESENTATION_FORM));
         writer.write("\\strut{}\\end{minipage}};");
         Main.newLine(writer);
         writer.write("\\node (ex3) [below=of ex2] {\\phantom{g}\\textbf{S}\\phantom{g}};");
         Main.newLine(writer);
         writer.write("\\node (per3) at (ex3 -| per.west) [anchor=west] ");
         writer.write("{\\begin{minipage}{14cm}\\raggedright\\strut{}");
-        writer.write("Die Prüfung besteht aus einer Studienarbeit.");
+        writer.write(internationalization.internationalize(InternationalizationKey.PAPER_FORM));
         writer.write("\\strut{}\\end{minipage}};");
         Main.newLine(writer);
         writer.write("\\node (ex4) [below=of ex3] {\\phantom{g}\\textbf{P}\\phantom{g}};");
         Main.newLine(writer);
         writer.write("\\node (per4) at (ex4 -| per.west) [anchor=west] ");
         writer.write("{\\begin{minipage}{14cm}\\raggedright\\strut{}");
-        writer.write("Die Prüfung ist eine praktische Prüfung.");
+        writer.write(internationalization.internationalize(InternationalizationKey.PRACTICAL_FORM));
         writer.write("\\strut{}\\end{minipage}};");
         Main.newLine(writer);
         writer.write("\\node (ex5) [below=of ex4] {\\phantom{g}\\textbf{X}\\phantom{g}};");
         Main.newLine(writer);
         writer.write("\\node (per5) at (ex5 -| per.west) [anchor=west] ");
         writer.write("{\\begin{minipage}{14cm}\\raggedright\\strut{}");
-        writer.write("Die Prüfung ist eine kombinierte Prüfung aus \\textbf{entweder} einer Klausur und einem ");
-        writer.write("Referat \\textbf{oder} aus zwei Klausuren; der kombinierte Prüfungsumfang muss dabei dem einer ");
-        writer.write("Einzelprüfung als Klausur oder Referat entsprechen (bei zwei Klausuren addieren sich ");
-        writer.write("beispielsweise die Bearbeitungszeiten dieser beiden Klausuren zu 90 Minuten auf).");
+        writer.write(internationalization.internationalize(InternationalizationKey.PORTFOLIO_FORM));
         writer.write("\\strut{}\\end{minipage}};");
         Main.newLine(writer);
         writer.write("\\coordinate (topright) at ($(per2.east |- ex.north)+(0.1,0.5)$);");
@@ -496,13 +497,11 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write("\\vspace*{3ex}");
         Main.newLine(writer);
         Main.newLine(writer);
-        writer.write("Sind mehrere Prüfungsformen angegeben, stellt dies eine Auswahl aus den angegeben Alternativen ");
-        writer.write("dar; nicht jedoch die Kombination dieser verschiedenen Prüfungsformen.");
+        writer.write(internationalization.internationalize(InternationalizationKey.EXAMINATIONS_MULTIPLE));
         Main.newLine(writer);
-        writer.write("Ist bei mehreren Prüfungsformen eine davon hervorgehoben, so wird diese bevorzugt.");
+        writer.write(internationalization.internationalize(InternationalizationKey.EXAMINATIONS_PREFERRED));
         Main.newLine(writer);
-        writer.write("Die jeweils ausgewählte Prüfungsform wird zu Beginn der entsprechenden Veranstaltung ");
-        writer.write("bekanntgegeben.");
+        writer.write(internationalization.internationalize(InternationalizationKey.EXAMINATIONS_ANNOUNCEMENT));
         Main.newLine(writer);
         Main.newLine(writer);
         writer.write("\\clearpage");
@@ -512,21 +511,72 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
 
     private static void writeGeneralModuleInformationSection(
         final Module module,
+        final Internationalization internationalization,
         final BufferedWriter writer
     ) throws IOException {
         final List<String[]> table = new LinkedList<String[]>();
-        table.add(new String[] {"Kürzel", ModuleGuideLaTeXWriter.escapeForLaTeX(module.meta().module())});
-        table.add(new String[] {"Modulverantwortung", module.module().responsible()});
-        table.add(new String[] {"Lehrsprache", ModuleGuideLaTeXWriter.escapeForLaTeX(module.module().language())});
-        table.add(new String[] {"ECTS-Punkte", String.valueOf(module.module().ects())});
-        table.add(new String[] {"Kontaktstunden", String.valueOf(module.module().contacthours())});
-        table.add(new String[] {"Selbststudium", String.valueOf(module.module().homehours())});
-        table.add(new String[] {"Dauer", module.meta().duration() + " Semester"});
-        table.add(new String[] {"Häufigkeit", ModuleGuideLaTeXWriter.escapeForLaTeX(module.meta().frequency())});
         table.add(
-            new String[] {"Prüfungsleistung", ModuleGuideLaTeXWriter.formatExamination(module.module().examination())}
+            new String[] {
+                internationalization.internationalize(InternationalizationKey.ID),
+                ModuleGuideLaTeXWriter.escapeForLaTeX(module.meta().module())
+            }
         );
-        writer.write("\\subsection*{Allgemeine Angaben}");
+        table.add(
+            new String[] {
+                internationalization.internationalize(InternationalizationKey.RESPONSIBLE),
+                module.module().responsible()
+            }
+        );
+        table.add(
+            new String[] {
+                internationalization.internationalize(InternationalizationKey.TEACHING_LANGUAGE),
+                ModuleGuideLaTeXWriter.escapeForLaTeX(
+                    module.module().teachinglanguage().toString(module.module().descriptionlanguage())
+                )
+            }
+        );
+        table.add(
+            new String[] {
+                internationalization.internationalize(InternationalizationKey.ECTS),
+                String.valueOf(module.module().ects())
+            }
+        );
+        table.add(
+            new String[] {
+                internationalization.internationalize(InternationalizationKey.CONTACT_HOURS),
+                String.valueOf(module.module().contacthours())
+            }
+        );
+        table.add(
+            new String[] {
+                internationalization.internationalize(InternationalizationKey.SELF_STUDY),
+                String.valueOf(module.module().homehours())
+            }
+        );
+        table.add(
+            new String[] {
+                internationalization.internationalize(InternationalizationKey.DURATION),
+                String.format(
+                    "%d %s",
+                    module.meta().duration(),
+                    internationalization.internationalize(InternationalizationKey.SEMESTER)
+                )
+            }
+        );
+        table.add(
+            new String[] {
+                internationalization.internationalize(InternationalizationKey.FREQUENCY),
+                ModuleGuideLaTeXWriter.escapeForLaTeX(module.meta().frequency())
+            }
+        );
+        table.add(
+            new String[] {
+                internationalization.internationalize(InternationalizationKey.EXAMINATION),
+                ModuleGuideLaTeXWriter.formatExamination(module.module().examination(), internationalization)}
+            );
+        writer.write("\\subsection*{");
+        writer.write(internationalization.internationalize(InternationalizationKey.GENERAL_INFORMATION));
+        writer.write("}");
         Main.newLine(writer);
         Main.newLine(writer);
         writer.write("\\begin{tabularx}{\\textwidth}");
@@ -612,6 +662,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
     private static void writeLiteratureSection(
         final String title,
         final List<Source> literature,
+        final Internationalization internationalization,
         final BufferedWriter writer
     ) throws IOException {
         if (literature != null && !literature.isEmpty()) {
@@ -628,7 +679,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
                     writer.write("\\\\[1.5ex]");
                     Main.newLine(writer);
                 }
-                ModuleGuideLaTeXWriter.writeSource(source, writer);
+                ModuleGuideLaTeXWriter.writeSource(source, internationalization, writer);
             }
             Main.newLine(writer);
             Main.newLine(writer);
@@ -638,6 +689,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
     private static void writeLongtableHeader(
         final boolean withHeadings,
         final boolean elective,
+        final Internationalization internationalization,
         final BufferedWriter writer
     ) throws IOException {
         writer.write(String.format("\\begin{longtable}{|l|*{%d}{C{1.1cm}|}C{1.6cm}|C{2.2cm}|}", elective ? 4 : 3));
@@ -651,26 +703,36 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
                     ModuleGuideLaTeXWriter.OVERVIEW_FIRST_COL_SIZE_ELECTIVE :
                         ModuleGuideLaTeXWriter.OVERVIEW_FIRST_COL_SIZE
             );
-            writer.write("}\\textbf{\\textcolor{fhdwblue}{MODUL}}\\end{minipage} & ");
+            writer.write("}\\textbf{\\textcolor{fhdwblue}{");
+            writer.write(internationalization.internationalize(InternationalizationKey.MODULE_HEADER));
+            writer.write("}}\\end{minipage} & ");
             if (elective) {
                 writer.write("\\begin{minipage}{1cm}\\begin{center}\\rotatebox{270}{\\begin{minipage}{2cm}");
-                writer.write("\\begin{center}\\textbf{\\textcolor{fhdwblue}{MODUL}}\\end{center}");
-                writer.write("\\end{minipage}}\\\\[1mm]\\end{center}\\end{minipage} & ");
+                writer.write("\\begin{center}\\textbf{\\textcolor{fhdwblue}{");
+                writer.write(internationalization.internationalize(InternationalizationKey.ELECTIVE_HEADER));
+                writer.write("}}\\end{center}\\end{minipage}}\\\\[1mm]\\end{center}\\end{minipage} & ");
             }
             writer.write("\\begin{minipage}{1cm}\\begin{center}\\rotatebox{270}{\\begin{minipage}{2cm}");
-            writer.write("\\begin{center}\\textbf{\\textcolor{fhdwblue}{SEMES\\-TER}}\\end{center}");
+            writer.write("\\begin{center}\\textbf{\\textcolor{fhdwblue}{");
+            writer.write(internationalization.internationalize(InternationalizationKey.SEMESTER_HEADER));
+            writer.write("}}\\end{center}");
             writer.write("\\end{minipage}}\\\\[1mm]\\end{center}\\end{minipage} & ");
             writer.write("\\begin{minipage}{1cm}\\begin{center}\\rotatebox{270}{\\begin{minipage}{2cm}");
-            writer.write("\\begin{center}\\textbf{\\textcolor{fhdwblue}{KONTAKT\\-STUNDEN}}\\end{center}");
-            writer.write("\\end{minipage}}\\\\[1mm]\\end{center}\\end{minipage} & ");
+            writer.write("\\begin{center}\\textbf{\\textcolor{fhdwblue}{");
+            writer.write(internationalization.internationalize(InternationalizationKey.CONTACT_HOURS_HEADER));
+            writer.write("}}\\end{center}\\end{minipage}}\\\\[1mm]\\end{center}\\end{minipage} & ");
             writer.write("\\begin{minipage}{1cm}\\begin{center}\\rotatebox{270}{\\begin{minipage}{2cm}");
-            writer.write("\\begin{center}\\textbf{\\textcolor{fhdwblue}{SELBST\\-STUDIUM}}\\end{center}");
-            writer.write("\\end{minipage}}\\\\[1mm]\\end{center}\\end{minipage} & ");
+            writer.write("\\begin{center}\\textbf{\\textcolor{fhdwblue}{");
+            writer.write(internationalization.internationalize(InternationalizationKey.SELF_STUDY_HEADER));
+            writer.write("}}\\end{center}\\end{minipage}}\\\\[1mm]\\end{center}\\end{minipage} & ");
             writer.write("\\begin{minipage}{1.5cm}\\begin{center}\\rotatebox{270}{\\begin{minipage}{2cm}");
-            writer.write("\\begin{center}\\textbf{\\textcolor{fhdwblue}{CREDIT POINTS (ECTS)}}\\end{center}");
-            writer.write("\\end{minipage}}\\\\[1mm]\\end{center}\\end{minipage} & ");
+            writer.write("\\begin{center}\\textbf{\\textcolor{fhdwblue}{");
+            writer.write(internationalization.internationalize(InternationalizationKey.ECTS_HEADER));
+            writer.write("}}\\end{center}\\end{minipage}}\\\\[1mm]\\end{center}\\end{minipage} & ");
             writer.write("\\begin{minipage}{2.1cm}\\begin{center}\\rotatebox{270}{\\begin{minipage}{2cm}");
-            writer.write("\\begin{center}\\textbf{\\textcolor{fhdwblue}{PRÜ\\-FUNGS\\-FORM}}");
+            writer.write("\\begin{center}\\textbf{\\textcolor{fhdwblue}{");
+            writer.write(internationalization.internationalize(InternationalizationKey.EXAMINATION_HEADER));
+            writer.write("}}");
             writer.write("\\end{center}\\end{minipage}}\\\\[1mm]\\end{center}\\end{minipage}\\\\\\hline");
             Main.newLine(writer);
         }
@@ -678,9 +740,10 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
 
     private static void writeLongtableHeader(
         final boolean withHeadings,
+        final Internationalization internationalization,
         final BufferedWriter writer
     ) throws IOException {
-        ModuleGuideLaTeXWriter.writeLongtableHeader(withHeadings, false, writer);
+        ModuleGuideLaTeXWriter.writeLongtableHeader(withHeadings, false, internationalization, writer);
     }
 
     private static void writeLookupSection(
@@ -688,6 +751,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         final List<String> items,
         final String modulesFolder,
         final List<String> linkable,
+        final String none,
         final BufferedWriter writer
     ) throws IOException {
         writer.write("\\subsection*{");
@@ -697,7 +761,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         Main.newLine(writer);
         ModuleGuideLaTeXWriter.writeItemize(
             ModuleGuideLaTeXWriter.lookupModules(items, modulesFolder, linkable),
-            "Keine",
+            none,
             false,
             writer
         );
@@ -714,34 +778,46 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             System.out.println(module.meta().module());
             return;
         }
+        final Internationalization internationalization =
+            module.module().descriptionlanguage().getInternationalization();
+        final String none = internationalization.internationalize(InternationalizationKey.NONE);
         ModuleGuideLaTeXWriter.writeModuleTitle(module, writer);
-        ModuleGuideLaTeXWriter.writeGeneralModuleInformationSection(module, writer);
-        ModuleGuideLaTeXWriter.writeItemizeSection("Stichwörter", module.module().keywords(), "Keine", writer);
+        ModuleGuideLaTeXWriter.writeGeneralModuleInformationSection(module, internationalization, writer);
+        ModuleGuideLaTeXWriter.writeItemizeSection(
+            internationalization.internationalize(InternationalizationKey.KEYWORDS),
+            module.module().keywords(),
+            none,
+            writer
+        );
         ModuleGuideLaTeXWriter.writeLookupSection(
-            "Zugangsvoraussetzungen",
+            internationalization.internationalize(InternationalizationKey.REQUIREMENTS),
             module.module().preconditions(),
             modulesFolder,
             linkable,
+            none,
             writer
         );
         ModuleGuideLaTeXWriter.writeLookupSection(
-            "Zugangsempfehlungen",
+            internationalization.internationalize(InternationalizationKey.RECOMMENDATIONS),
             module.module().recommendations(),
             modulesFolder,
             linkable,
+            none,
             writer
         );
-        ModuleGuideLaTeXWriter.writeModuleQualificationSection(module, writer);
-        ModuleGuideLaTeXWriter.writeModuleTeachingMethodsSection(module, writer);
-        ModuleGuideLaTeXWriter.writeModuleContentsSection(module, writer);
+        ModuleGuideLaTeXWriter.writeModuleQualificationSection(module, internationalization, writer);
+        ModuleGuideLaTeXWriter.writeModuleTeachingMethodsSection(module, internationalization, writer);
+        ModuleGuideLaTeXWriter.writeModuleContentsSection(module, internationalization, writer);
         ModuleGuideLaTeXWriter.writeLiteratureSection(
-            "Grundlegende Literaturhinweise",
+            internationalization.internationalize(InternationalizationKey.REQUIRED_LITERATURE),
             module.module().requiredliterature(),
+            internationalization,
             writer
         );
         ModuleGuideLaTeXWriter.writeLiteratureSection(
-            "Ergänzende Literaturempfehlungen",
+            internationalization.internationalize(InternationalizationKey.RECOMMENDED_LITERATURE),
             module.module().optionalliterature(),
+            internationalization,
             writer
         );
         writer.write("\\clearpage");
@@ -751,9 +827,12 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
 
     private static void writeModuleContentsSection(
         final Module module,
+        final Internationalization internationalization,
         final BufferedWriter writer
     ) throws IOException {
-        writer.write("\\subsection*{Inhalte}");
+        writer.write("\\subsection*{");
+        writer.write(internationalization.internationalize(InternationalizationKey.CONTENTS));
+        writer.write("}");
         Main.newLine(writer);
         Main.newLine(writer);
         if (module.module().content() != null) {
@@ -767,7 +846,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
                 } else {
                     ModuleGuideLaTeXWriter.writeItemize(
                         contents.stream().map(ModuleGuideLaTeXWriter::chapterToItem).toList(),
-                        "keine",
+                        internationalization.internationalize(InternationalizationKey.NONE),
                         false,
                         writer
                     );
@@ -778,16 +857,20 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
 
     private static void writeModuleQualificationSection(
         final Module module,
+        final Internationalization internationalization,
         final BufferedWriter writer
     ) throws IOException {
-        writer.write("\\subsection*{Qualifikations- und Kompetenzziele}");
+        writer.write("\\subsection*{");
+        writer.write(internationalization.internationalize(InternationalizationKey.QUALIFICATION));
+        writer.write("}");
         Main.newLine(writer);
         Main.newLine(writer);
         if (module.module().competenciespreface() != null && !module.module().competenciespreface().isBlank()) {
             writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(module.module().competenciespreface()));
             Main.newLine(writer);
         }
-        writer.write("Nach erfolgreichem Abschluss dieses Moduls sind die Studierenden in der Lage\\\\");
+        writer.write(internationalization.internationalize(InternationalizationKey.QUALIFICATION_START));
+        writer.write("\\\\");
         Main.newLine(writer);
         ModuleGuideLaTeXWriter.writeItemize(module.module().competencies(), "", true, writer);
         Main.newLine(writer);
@@ -795,9 +878,12 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
 
     private static void writeModuleTeachingMethodsSection(
         final Module module,
+        final Internationalization internationalization,
         final BufferedWriter writer
     ) throws IOException {
-        writer.write("\\subsection*{Lehr- und Lernmethoden}");
+        writer.write("\\subsection*{");
+        writer.write(internationalization.internationalize(InternationalizationKey.TEACHING_METHODS));
+        writer.write("}");
         Main.newLine(writer);
         Main.newLine(writer);
         if (module.module().teachingmethods() != null) {
@@ -806,8 +892,11 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
                 .module()
                 .teachingmethods()
                 .stream()
-                .map(text -> "DEFAULT".equals(text) ? ModuleGuideLaTeXWriter.DEFAULT_TEACHING : text)
-                .toList(),
+                .map(text ->
+                    "DEFAULT".equals(text) ?
+                        internationalization.internationalize(InternationalizationKey.DEFAULT_TEACHING) :
+                            text
+                ).toList(),
                 writer
             );
         }
@@ -830,15 +919,22 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         Main.newLine(writer);
     }
 
-    private static void writePagebreakForLongtable(final BufferedWriter writer) throws IOException {
+    private static void writePagebreakForLongtable(
+        final Internationalization internationalization,
+        final BufferedWriter writer
+    ) throws IOException {
         writer.write("\\end{longtable}");
         Main.newLine(writer);
         writer.write("\\pagebreak{}");
         Main.newLine(writer);
-        ModuleGuideLaTeXWriter.writeLongtableHeader(false, writer);
+        ModuleGuideLaTeXWriter.writeLongtableHeader(false, internationalization, writer);
     }
 
-    private static void writeSource(final Source source, final BufferedWriter writer) throws IOException {
+    private static void writeSource(
+        final Source source,
+        final Internationalization internationalization,
+        final BufferedWriter writer
+    ) throws IOException {
         if (source == null) {
             return;
         }
@@ -864,8 +960,10 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         case BOOK:
             if (source.edition() != null && source.edition() > 0) {
                 writer.write(", ");
-                writer.write(String.valueOf(source.edition()));
-                writer.write(".~Auflage. ");
+                writer.write(internationalization.enumerate(source.edition()));
+                writer.write("~");
+                writer.write(internationalization.internationalize(InternationalizationKey.EDITION));
+                writer.write(". ");
             } else {
                 writer.write(".");
             }
@@ -878,18 +976,31 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             }
             final boolean hasVolume = source.volume() != null && !source.volume().isBlank();
             if (hasVolume) {
-                writer.write(", Ausgabe ");
+                writer.write(", ");
+                writer.write(internationalization.internationalize(InternationalizationKey.VOLUME));
+                writer.write(" ");
                 writer.write(source.volume());
             }
             final boolean hasNumber = source.number() != null && !source.number().isBlank();
             if (hasNumber) {
-                writer.write(", Nummer ");
+                writer.write(", ");
+                writer.write(internationalization.internationalize(InternationalizationKey.NUMBER));
+                writer.write(" ");
                 writer.write(source.number());
             }
             if (source.frompage() != null) {
-                writer.write(", S. ");
+                final boolean multiplePages = source.topage() != null;
+                writer.write(", ");
+                writer.write(
+                    internationalization.internationalize(
+                        multiplePages ?
+                            InternationalizationKey.PAGE_ABR_PLURAL :
+                                InternationalizationKey.PAGE_ABR_SINGULAR
+                    )
+                );
+                writer.write(". ");
                 writer.write(String.valueOf(source.frompage()));
-                if (source.topage() != null) {
+                if (multiplePages) {
                     writer.write("--");
                     writer.write(String.valueOf(source.topage()));
                 }
@@ -931,13 +1042,18 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write("\\end{minipage}");
     }
 
-    private static void writeStats(final ModuleStats stats, final BufferedWriter writer) throws IOException {
-        ModuleGuideLaTeXWriter.writeStats(stats, Optional.empty(), writer);
+    private static void writeStats(
+        final ModuleStats stats,
+        final Internationalization internationalization,
+        final BufferedWriter writer
+    ) throws IOException {
+        ModuleGuideLaTeXWriter.writeStats(stats, Optional.empty(), internationalization, writer);
     }
 
     private static void writeStats(
         final ModuleStats stats,
         final Optional<String> elective,
+        final Internationalization internationalization,
         final BufferedWriter writer
     ) throws IOException {
         writer.write("\\begin{minipage}{");
@@ -967,7 +1083,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write(" & ");
         writer.write(String.valueOf(stats.ects()));
         writer.write(" & ");
-        writer.write(ModuleGuideLaTeXWriter.formatExamination(stats.examination()));
+        writer.write(ModuleGuideLaTeXWriter.formatExamination(stats.examination(), internationalization));
         writer.write("\\\\\\hline");
         Main.newLine(writer);
     }
@@ -987,51 +1103,51 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
     }
 
     @Override
-    protected void writeIntro(final ModuleGuide guide, final BufferedWriter writer) throws IOException {
+    protected void writeIntro(final BufferedWriter writer) throws IOException {
         writer.write("\\pagestyle{fancy}");
         Main.newLine(writer);
         Main.newLine(writer);
-        writer.write("Sehr geehrte Studierende,\\\\");
+        final Internationalization internationalization = this.guide.generalLanguage().getInternationalization();
+        writer.write(internationalization.internationalize(InternationalizationKey.GREETING_STUDENTS));
+        writer.write(",\\\\");
         Main.newLine(writer);
-        writer.write("sehr geehrte Kooperationspartner,\\\\");
+        writer.write(internationalization.internationalize(InternationalizationKey.GREETING_PARTNERS));
+        writer.write(",\\\\");
         Main.newLine(writer);
-        writer.write("sehr geehrte Kolleginnen und Kollegen,\\\\[2ex]");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        writer.write("Sie erhalten das Modulhandbuch für den ");
-        writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(guide.degree().substring(0, guide.degree().indexOf(' '))));
-        writer.write("-Studiengang ");
-        writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(guide.subject()));
-        writer.write(" im Studienjahr ");
-        writer.write(guide.year());
-        writer.write(".\\\\[2ex]");
+        writer.write(internationalization.internationalize(InternationalizationKey.GREETING_COLLEAGUES));
+        writer.write(",\\\\[2ex]");
         Main.newLine(writer);
         Main.newLine(writer);
-        writer.write("Dieses Modulhandbuch stellt zum einen für die Studierenden eine Information über ");
-        Main.newLine(writer);
-        writer.write("die Studieninhalte dar, zum Zweiten dient es den Partnerunternehmen als Hilfe zur inhaltlichen ");
-        Main.newLine(writer);
-        writer.write("Vorbereitung der Praxisphasen. Daneben ist diese Übersicht ein Leitfaden für die Dozentinnen ");
-        Main.newLine(writer);
-        writer.write("und Dozenten zur modulübergreifenden Abstimmung der Lehrinhalte.\\\\[2ex]");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        writer.write("Mit freundlichen Grüßen");
+        writer.write(
+            internationalization.introduction(
+                this.guide.degree().substring(0, this.guide.degree().indexOf(' ')),
+                ModuleGuideLaTeXWriter.escapeForLaTeX(this.guide.subject()),
+                this.guide.year()
+            )
+        );
+        writer.write("\\\\[2ex]");
         Main.newLine(writer);
         Main.newLine(writer);
-        switch (guide.signature()) {
+        writer.write(internationalization.internationalize(InternationalizationKey.INTRO));
+        writer.write("\\\\[2ex]");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write(internationalization.internationalize(InternationalizationKey.REGARDS));
+        Main.newLine(writer);
+        Main.newLine(writer);
+        switch (this.guide.signature()) {
         case GREGOR:
             writer.write("\\includegraphics{signature.png}");
             Main.newLine(writer);
             Main.newLine(writer);
             writer.write("Prof. Dr. Gregor Sandhaus\\\\");
             Main.newLine(writer);
-            writer.write("Dekan des Fachbereichs Informatik");
+            writer.write(internationalization.internationalize(InternationalizationKey.DEAN_CS));
             break;
         case ANGELIKA:
             writer.write("Prof. Dr. ANGELIKA RÖCHTER\\\\");
             Main.newLine(writer);
-            writer.write("Dekanin Betriebswirtschaft");
+            writer.write(internationalization.internationalize(InternationalizationKey.DEAN_BA));
             break;
         }
         Main.newLine(writer);
@@ -1049,21 +1165,25 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
 
     @Override
     protected void writeModules(
-        final ModuleGuide guide,
         final int weightSum,
         final String modulesFolder,
         final BufferedWriter writer
     ) throws IOException {
-        final List<String> linkable = guide.modules().stream().map(module -> module.meta().module()).toList();
+        final Internationalization internationalization = this.guide.generalLanguage().getInternationalization();
+        final List<String> linkable = this.guide.modules().stream().map(module -> module.meta().module()).toList();
         String specialization = "";
         int semester = 0;
-        for (final Module module : guide.modules().stream().sorted().toList()) {
+        for (final Module module : this.guide.modules().stream().sorted().toList()) {
             if (module.meta().specialization() != null && !specialization.equals(module.meta().specialization())) {
                 specialization = module.meta().specialization();
                 if (Main.ELECTIVE.equals(specialization)) {
-                    writer.write("\\chapter{Wahlpflichtmodule}");
+                    writer.write("\\chapter{");
+                    writer.write(internationalization.internationalize(InternationalizationKey.ELECTIVE_MODULES));
+                    writer.write("}");
                 } else {
-                    writer.write("\\chapter{Spezialisierung ");
+                    writer.write("\\chapter{");
+                    writer.write(internationalization.internationalize(InternationalizationKey.SPECIALIZATION));
+                    writer.write(" ");
                     writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(specialization));
                     writer.write("}");
                 }
@@ -1075,8 +1195,10 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             ) {
                 semester = module.meta().semester();
                 writer.write("\\chapter{");
-                writer.write(String.valueOf(semester));
-                writer.write(". Semester}");
+                writer.write(internationalization.enumerate(semester));
+                writer.write(" ");
+                writer.write(internationalization.internationalize(InternationalizationKey.SEMESTER));
+                writer.write("}");
                 Main.newLine(writer);
                 Main.newLine(writer);
             }
@@ -1086,32 +1208,36 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
 
     @Override
     protected void writeOverview(
-        final ModuleGuide guide,
         final ModuleOverview overview,
         final BufferedWriter writer
     ) throws IOException {
+        final Internationalization internationalization = this.guide.generalLanguage().getInternationalization();
         writer.write("\\tableofcontents");
         Main.newLine(writer);
         Main.newLine(writer);
         writer.write("\\clearpage");
         Main.newLine(writer);
         Main.newLine(writer);
-        ModuleGuideLaTeXWriter.writeExaminationTypes(writer);
-        writer.write("\\chapter{Studienplan -- Lehrveranstaltungen}\\label{chap:studienplan}");
+        ModuleGuideLaTeXWriter.writeExaminationTypes(internationalization, writer);
+        writer.write("\\chapter{");
+        writer.write(internationalization.internationalize(InternationalizationKey.STUDY_PLAN));
+        writer.write(" -- ");
+        writer.write(internationalization.internationalize(InternationalizationKey.TEACHING_EVENTS));
+        writer.write("}\\label{chap:studyplan}");
         Main.newLine(writer);
         Main.newLine(writer);
         writer.write("\\begin{tikzpicture}");
         Main.newLine(writer);
         writer.write("\\node[fhdwblue] (subject) {\\large\\textbf{");
-        writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(guide.subject().toUpperCase()));
+        writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(this.guide.subject().toUpperCase()));
         writer.write("}};");
         Main.newLine(writer);
         writer.write("\\node[fhdwblue] (degree) [below=0.5 of subject.west, anchor=west] {\\large ");
-        writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(guide.degree()));
+        writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(this.guide.degree()));
         writer.write("};");
         Main.newLine(writer);
         writer.write("\\node[fhdwblue] (time) [below=0.5 of degree.west, anchor=west] {\\large ");
-        writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(guide.timemodel()));
+        writer.write(internationalization.internationalize(this.guide.timeModel().internationalizationKey));
         writer.write("studium};");
         Main.newLine(writer);
         writer.write("\\draw[fhdwblue,thick] ($(subject.west)+(-0.1,0.2)$) -- ($(time.west)+(-0.1,-0.2)$);");
@@ -1126,29 +1252,35 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         Main.newLine(writer);
         writer.write("\\renewcommand{\\arraystretch}{1.5}");
         Main.newLine(writer);
-        ModuleGuideLaTeXWriter.writeLongtableHeader(true, writer);
+        ModuleGuideLaTeXWriter.writeLongtableHeader(true, internationalization, writer);
         int semester = 1;
         int groupsOnPage = 0;
         int pagebreakIndex = 0;
         int numberOfSpecializationModules = 0;
         int numberOfElectiveModules = 0;
-        final int[] pagebreaks = ModuleGuideLaTeXWriter.toPagebreaks(guide.pagebreaks());
+        final int[] pagebreaks = ModuleGuideLaTeXWriter.toPagebreaks(this.guide.pagebreaks());
+        final String seeElective =
+            internationalization.internationalize(InternationalizationKey.SEE_ELECTIVE);
+        final String seeSpecialization =
+            internationalization.internationalize(InternationalizationKey.SEE_SPECIALIZATION);
         for (final List<ModuleStats> modules : overview.semesters()) {
             if (pagebreakIndex < pagebreaks.length && groupsOnPage >= pagebreaks[pagebreakIndex]) {
-                ModuleGuideLaTeXWriter.writePagebreakForLongtable(writer);
+                ModuleGuideLaTeXWriter.writePagebreakForLongtable(internationalization, writer);
                 groupsOnPage = 0;
                 pagebreakIndex++;
             }
             writer.write("\\rowcolor{fhdwblue}\\multicolumn{6}{c}{\\textcolor{white}{");
-            writer.write(String.valueOf(semester));
-            writer.write(". Semester}}\\\\\\hline");
+            writer.write(internationalization.enumerate(semester));
+            writer.write(" ");
+            writer.write(internationalization.internationalize(InternationalizationKey.SEMESTER));
+            writer.write("}}\\\\\\hline");
             Main.newLine(writer);
             for (final ModuleStats stats : modules) {
-                ModuleGuideLaTeXWriter.writeStats(stats, writer);
-                if (ModuleStats.SEE_SPECIALIZATION.equals(stats.examination())) {
+                ModuleGuideLaTeXWriter.writeStats(stats, internationalization, writer);
+                if (seeSpecialization.equals(stats.examination())) {
                     numberOfSpecializationModules++;
                 }
-                if (ModuleStats.SEE_ELECTIVE.equals(stats.examination())) {
+                if (seeElective.equals(stats.examination())) {
                     numberOfElectiveModules++;
                 }
             }
@@ -1157,8 +1289,9 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         }
         writer.write("\\rowcolor{fhdwblue}\\begin{minipage}{");
         writer.write(ModuleGuideLaTeXWriter.OVERVIEW_FIRST_COL_SIZE);
-        writer.write("}\\textcolor{white}{Summe}\\end{minipage} &  & ");
-        writer.write("\\textcolor{white}{");
+        writer.write("}\\textcolor{white}{");
+        writer.write(internationalization.internationalize(InternationalizationKey.SUM));
+        writer.write("}\\end{minipage} &  & \\textcolor{white}{");
         writer.write(String.valueOf(overview.contactHoursSum()));
         writer.write("} & \\textcolor{white}{");
         writer.write(String.valueOf(overview.homeHoursSum()));
@@ -1173,7 +1306,9 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             writer.write("\\clearpage");
             Main.newLine(writer);
             Main.newLine(writer);
-            writer.write("\\chapter{Spezialisierungsbereiche mit jeweils den Modulen I bis ");
+            writer.write("\\chapter{");
+            writer.write(internationalization.internationalize(InternationalizationKey.SPECIALIZATION_AREAS_HEADER));
+            writer.write(" ");
             writer.write(ModuleStats.toRomanNumeral(numberOfSpecializationModules));
             writer.write("}\\label{chap:specialareas}");
             Main.newLine(writer);
@@ -1181,8 +1316,8 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             pagebreakIndex = 0;
             groupsOnPage = 0;
             final int[] pagebreaksSpecialization =
-                ModuleGuideLaTeXWriter.toPagebreaks(guide.pagebreaksspecialization());
-            ModuleGuideLaTeXWriter.writeLongtableHeader(true, writer);
+                ModuleGuideLaTeXWriter.toPagebreaks(this.guide.pagebreaksSpecialization());
+            ModuleGuideLaTeXWriter.writeLongtableHeader(true, internationalization, writer);
             for (final Map.Entry<String, List<ModuleStats>> entry : overview.specializations().entrySet()) {
                 if (Main.ELECTIVE.equals(entry.getKey())) {
                     continue;
@@ -1191,7 +1326,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
                     pagebreakIndex < pagebreaksSpecialization.length
                     && groupsOnPage >= pagebreaksSpecialization[pagebreakIndex]
                 ) {
-                    ModuleGuideLaTeXWriter.writePagebreakForLongtable(writer);
+                    ModuleGuideLaTeXWriter.writePagebreakForLongtable(internationalization, writer);
                     groupsOnPage = 0;
                     pagebreakIndex++;
                 }
@@ -1200,7 +1335,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
                 writer.write("}}\\\\\\hline");
                 Main.newLine(writer);
                 for (final ModuleStats stats : entry.getValue()) {
-                    ModuleGuideLaTeXWriter.writeStats(stats, writer);
+                    ModuleGuideLaTeXWriter.writeStats(stats, internationalization, writer);
                 }
                 groupsOnPage++;
             }
@@ -1212,19 +1347,21 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             writer.write("\\clearpage");
             Main.newLine(writer);
             Main.newLine(writer);
-            writer.write("\\chapter{Wahlpflichtmodule I bis ");
+            writer.write("\\chapter{");
+            writer.write(internationalization.internationalize(InternationalizationKey.ELECTIVE_MODULES_HEADER));
+            writer.write(" ");
             writer.write(ModuleStats.toRomanNumeral(numberOfElectiveModules));
             writer.write("}\\label{chap:electiveareas}");
             Main.newLine(writer);
             Main.newLine(writer);
-            ModuleGuideLaTeXWriter.writeLongtableHeader(true, true, writer);
+            ModuleGuideLaTeXWriter.writeLongtableHeader(true, true, internationalization, writer);
             for (final Map.Entry<String, List<ModuleStats>> entry : overview.specializations().entrySet()) {
                 if (!Main.ELECTIVE.equals(entry.getKey())) {
                     continue;
                 }
                 final Map<String, List<ModuleStats>> electiveByNumbers = new TreeMap<String, List<ModuleStats>>();
                 for (final ModuleStats stats : entry.getValue()) {
-                    final String numbers = ModuleGuideLaTeXWriter.computeNumbersForElectiveStats(stats, guide);
+                    final String numbers = ModuleGuideLaTeXWriter.computeNumbersForElectiveStats(stats, this.guide);
                     if (!electiveByNumbers.containsKey(numbers)) {
                         electiveByNumbers.put(numbers, new LinkedList<ModuleStats>());
                     }
@@ -1234,12 +1371,17 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
                     }
                 }
                 writer.write("\\rowcolor{fhdwblue}\\multicolumn{7}{c}{\\textcolor{white}{");
-                writer.write("Wahlpflichtmodule");
+                writer.write(internationalization.internationalize(InternationalizationKey.ELECTIVE_MODULES));
                 writer.write("}}\\\\\\hline");
                 Main.newLine(writer);
                 for (final Map.Entry<String, List<ModuleStats>> electiveEntry : electiveByNumbers.entrySet()) {
                     for (final ModuleStats stats : electiveEntry.getValue()) {
-                        ModuleGuideLaTeXWriter.writeStats(stats, Optional.of(electiveEntry.getKey()), writer);
+                        ModuleGuideLaTeXWriter.writeStats(
+                            stats,
+                            Optional.of(electiveEntry.getKey()),
+                            internationalization,
+                            writer
+                        );
                     }
                 }
             }
@@ -1255,7 +1397,8 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
     }
 
     @Override
-    protected void writeTitlePage(final ModuleGuide guide, final BufferedWriter writer) throws IOException {
+    protected void writeTitlePage(final BufferedWriter writer) throws IOException {
+        final Internationalization internationalization = this.guide.generalLanguage().getInternationalization();
         writer.write("\\pagestyle{empty}");
         Main.newLine(writer);
         Main.newLine(writer);
@@ -1274,20 +1417,24 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         Main.newLine(writer);
         writer.write("{\\color{white}");
         Main.newLine(writer);
-        writer.write("\\Large Modulhandbuch ");
-        writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(guide.timemodel()));
+        writer.write("\\Large ");
+        writer.write(internationalization.internationalize(InternationalizationKey.MODULE_GUIDE));
+        writer.write(" ");
+        writer.write(internationalization.internationalize(this.guide.timeModel().internationalizationKey));
         writer.write("\\\\[1ex]");
         Main.newLine(writer);
         writer.write("\\Huge \\textbf{");
-        writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(guide.subject()));
+        writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(this.guide.subject()));
         writer.write("}\\\\[0.5ex]");
         Main.newLine(writer);
         writer.write("\\Huge \\textbf{");
-        writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(guide.degree()));
+        writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(this.guide.degree()));
         writer.write("}\\\\[0.5ex]");
         Main.newLine(writer);
-        writer.write("\\Large Studienjahr ");
-        writer.write(guide.year());
+        writer.write("\\Large ");
+        writer.write(internationalization.internationalize(InternationalizationKey.STUDY_YEAR));
+        writer.write(" ");
+        writer.write(this.guide.year());
         Main.newLine(writer);
         writer.write("}");
         Main.newLine(writer);
