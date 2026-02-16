@@ -162,8 +162,8 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
     }
 
     private static String formatExamination(final String examination, final Internationalization internationalization) {
-        if (examination == null) {
-            return "";
+        if (examination == null || examination.isBlank()) {
+            return "\\textbf{\\textcolor{red}{ANGABEN FEHLEN!}}";
         }
         final ExaminationTypes types = ExaminationType.parse(examination);
         if (types != null) {
@@ -337,7 +337,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write("\\titlespacing{\\section}{0pt}{*0}{*4}");
         Main.newLine(writer);
         Main.newLine(writer);
-        writer.write("\\titlecontents{chapter}[0em]{\\vskip 0.5ex}{\\bfseries\\contentsmargin{0pt}}{}");
+        writer.write("\\titlecontents{chapter}[0em]{\\vskip 1.5ex}{\\bfseries\\contentsmargin{0pt}}{}");
         writer.write("{\\titlerule*[3pt]{.}\\contentspage}");
         Main.newLine(writer);
         writer.write(
@@ -776,6 +776,10 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
     ) throws IOException {
         if (module.module() == null) {
             System.out.println(module.meta().module());
+            return;
+        }
+        if (module.module().descriptionlanguage() == null) {
+            System.out.println("Description language is missing in module " + module.meta().module() + "!");
             return;
         }
         final Internationalization internationalization =
