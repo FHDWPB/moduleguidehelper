@@ -3,6 +3,14 @@ package moduleguidehelper;
 public class German implements Internationalization {
 
     @Override
+    public String electiveHeader(final int maxNumber) {
+        if (maxNumber > 1) {
+            return "Wahlpflichtmodule I bis " + ModuleStats.toRomanNumeral(maxNumber);
+        }
+        return "Wahlpflichtmodule";
+    }
+
+    @Override
     public String enumerate(final int number) {
         return String.format("%d.", number);
     }
@@ -38,8 +46,6 @@ public class German implements Internationalization {
             return "Wahlpflichtmodul %s";
         case ELECTIVE_MODULES:
             return "Wahlpflichtmodule";
-        case ELECTIVE_MODULES_HEADER:
-            return "Wahlpflichtmodule I bis";
         case EXAM_FORM:
             return "Die Prüfung besteht aus einer 90-minütigen Klausur.";
         case EXAMINATION:

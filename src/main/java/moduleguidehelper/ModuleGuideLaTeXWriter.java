@@ -1352,9 +1352,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             Main.newLine(writer);
             Main.newLine(writer);
             writer.write("\\chapter{");
-            writer.write(internationalization.internationalize(InternationalizationKey.ELECTIVE_MODULES_HEADER));
-            writer.write(" ");
-            writer.write(ModuleStats.toRomanNumeral(numberOfElectiveModules));
+            writer.write(internationalization.electiveHeader(numberOfElectiveModules));
             writer.write("}\\label{chap:electiveareas}");
             Main.newLine(writer);
             Main.newLine(writer);

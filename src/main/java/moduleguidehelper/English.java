@@ -3,6 +3,14 @@ package moduleguidehelper;
 public class English implements Internationalization {
 
     @Override
+    public String electiveHeader(final int maxNumber) {
+        if (maxNumber > 1) {
+            return "Elective modules I to " + ModuleStats.toRomanNumeral(maxNumber);
+        }
+        return "Elective modules";
+    }
+
+    @Override
     public String enumerate(final int number) {
         if (number % 100 == 11 || number % 100 == 12) {
             return String.format("%dth", number);
@@ -50,8 +58,6 @@ public class English implements Internationalization {
             return "Elective module %s";
         case ELECTIVE_MODULES:
             return "Elective modules";
-        case ELECTIVE_MODULES_HEADER:
-            return "Elective modules I to";
         case EXAM_FORM:
             return "The examination is a written exam with a duration of 90 minutes.";
         case EXAMINATION:
