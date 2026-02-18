@@ -2,6 +2,7 @@ package moduleguidehelper;
 
 import java.math.*;
 import java.util.*;
+import java.util.logging.*;
 import java.util.stream.*;
 
 import org.apache.commons.math3.fraction.*;
@@ -176,7 +177,8 @@ public record ModuleOverview(
             semesters.add(entry.getValue());
         }
         if (weightSum != ectsSum) {
-            System.out.println(
+            Main.LOGGER.log(
+                Level.SEVERE,
                 String.format(
                     "WARNING: Sum of weights and ECTS does not match (%d vs. %d in %s)!",
                     weightSum,

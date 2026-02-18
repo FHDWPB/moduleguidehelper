@@ -2,6 +2,7 @@ package moduleguidehelper;
 
 import java.io.*;
 import java.util.*;
+import java.util.logging.*;
 
 import com.google.gson.*;
 import com.google.gson.stream.*;
@@ -14,8 +15,11 @@ public class Main {
 
     public static String lineSeparator = "\n";
 
+    public static final Logger LOGGER = Logger.getLogger("moduleguidehelper");
+
     public static void main(final String[] args) throws IOException {
         if (args != null && args.length == 1) {
+            Main.LOGGER.setLevel(Level.FINE);
             final String singeModules = "singlepdfs";
             final File singleModulesDirectory = new File(singeModules);
             if (!singleModulesDirectory.exists()) {
@@ -31,7 +35,7 @@ public class Main {
                 try (FileReader moduleReader = new FileReader(json)) {
                     module = Main.GSON.fromJson(moduleReader, RawModule.class);
                 } catch (final MalformedJsonException | JsonSyntaxException e) {
-                    System.out.println(json.getAbsolutePath());
+                    Main.LOGGER.log(Level.SEVERE, json.getAbsolutePath());
                     throw e;
                 }
                 try (BufferedWriter writer = new BufferedWriter(new FileWriter(singeModules + "/" + id + ".tex"))) {
@@ -40,6 +44,7 @@ public class Main {
             }
             return;
         }
+        Main.LOGGER.setLevel(Level.SEVERE);
         if (args != null && args.length == 2) {
             try (
                 BufferedReader reader = new BufferedReader(new FileReader(args[0]));
@@ -108,7 +113,7 @@ public class Main {
         for (final MetaModule meta : metaGuide.modules()) {
             final File moduleJson = new File(modulesFolder + "/" + meta.module().toLowerCase() + ".json");
             if (!moduleJson.exists()) {
-                System.out.println(meta.module());
+                Main.LOGGER.log(Level.SEVERE, meta.module() + " is missing!");
                 continue;
             }
             try (FileReader moduleReader = new FileReader(moduleJson)) {

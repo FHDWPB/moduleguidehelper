@@ -2,6 +2,7 @@ package moduleguidehelper;
 
 import java.io.*;
 import java.util.*;
+import java.util.logging.*;
 import java.util.regex.*;
 import java.util.stream.*;
 
@@ -203,6 +204,8 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
                 return String.format("\\hyperref[sec:%s]{%s}", id, title);
             }
             return title;
+        } else {
+            Main.LOGGER.log(Level.WARNING, "Lookup failed for: " + id);
         }
         return ModuleGuideLaTeXWriter.escapeForLaTeX(id);
     }
@@ -774,59 +777,70 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         final String modulesFolder,
         final BufferedWriter writer
     ) throws IOException {
-        if (module.module() == null) {
-            System.out.println(module.meta().module());
-            return;
+        try {
+            if (module.module() == null) {
+                Main.LOGGER.log(Level.SEVERE, module.meta().module());
+                return;
+            }
+            if (module.module().descriptionlanguage() == null) {
+                Main.LOGGER.log(
+                    Level.SEVERE,
+                    String.format("Description language is missing in module %s!", module.meta().module())
+                );
+                return;
+            }
+            final Internationalization internationalization =
+                module.module().descriptionlanguage().getInternationalization();
+            final String none = internationalization.internationalize(InternationalizationKey.NONE);
+            ModuleGuideLaTeXWriter.writeModuleTitle(module, writer);
+            ModuleGuideLaTeXWriter.writeGeneralModuleInformationSection(module, internationalization, writer);
+            ModuleGuideLaTeXWriter.writeItemizeSection(
+                internationalization.internationalize(InternationalizationKey.KEYWORDS),
+                module.module().keywords(),
+                none,
+                writer
+            );
+            ModuleGuideLaTeXWriter.writeLookupSection(
+                internationalization.internationalize(InternationalizationKey.REQUIREMENTS),
+                module.module().preconditions(),
+                modulesFolder,
+                linkable,
+                none,
+                writer
+            );
+            ModuleGuideLaTeXWriter.writeLookupSection(
+                internationalization.internationalize(InternationalizationKey.RECOMMENDATIONS),
+                module.module().recommendations(),
+                modulesFolder,
+                linkable,
+                none,
+                writer
+            );
+            ModuleGuideLaTeXWriter.writeModuleQualificationSection(module, internationalization, writer);
+            ModuleGuideLaTeXWriter.writeModuleTeachingMethodsSection(module, internationalization, writer);
+            ModuleGuideLaTeXWriter.writeModuleContentsSection(module, internationalization, writer);
+            ModuleGuideLaTeXWriter.writeLiteratureSection(
+                internationalization.internationalize(InternationalizationKey.REQUIRED_LITERATURE),
+                module.module().requiredliterature(),
+                internationalization,
+                writer
+            );
+            ModuleGuideLaTeXWriter.writeLiteratureSection(
+                internationalization.internationalize(InternationalizationKey.RECOMMENDED_LITERATURE),
+                module.module().optionalliterature(),
+                internationalization,
+                writer
+            );
+            writer.write("\\clearpage");
+            Main.newLine(writer);
+            Main.newLine(writer);
+        } catch (RuntimeException | IOException e) {
+            Main.LOGGER.log(
+                Level.SEVERE,
+                String.format("Exception in module %s: %s", module.meta().module(), e.getMessage())
+            );
+            throw e;
         }
-        if (module.module().descriptionlanguage() == null) {
-            System.out.println("Description language is missing in module " + module.meta().module() + "!");
-            return;
-        }
-        final Internationalization internationalization =
-            module.module().descriptionlanguage().getInternationalization();
-        final String none = internationalization.internationalize(InternationalizationKey.NONE);
-        ModuleGuideLaTeXWriter.writeModuleTitle(module, writer);
-        ModuleGuideLaTeXWriter.writeGeneralModuleInformationSection(module, internationalization, writer);
-        ModuleGuideLaTeXWriter.writeItemizeSection(
-            internationalization.internationalize(InternationalizationKey.KEYWORDS),
-            module.module().keywords(),
-            none,
-            writer
-        );
-        ModuleGuideLaTeXWriter.writeLookupSection(
-            internationalization.internationalize(InternationalizationKey.REQUIREMENTS),
-            module.module().preconditions(),
-            modulesFolder,
-            linkable,
-            none,
-            writer
-        );
-        ModuleGuideLaTeXWriter.writeLookupSection(
-            internationalization.internationalize(InternationalizationKey.RECOMMENDATIONS),
-            module.module().recommendations(),
-            modulesFolder,
-            linkable,
-            none,
-            writer
-        );
-        ModuleGuideLaTeXWriter.writeModuleQualificationSection(module, internationalization, writer);
-        ModuleGuideLaTeXWriter.writeModuleTeachingMethodsSection(module, internationalization, writer);
-        ModuleGuideLaTeXWriter.writeModuleContentsSection(module, internationalization, writer);
-        ModuleGuideLaTeXWriter.writeLiteratureSection(
-            internationalization.internationalize(InternationalizationKey.REQUIRED_LITERATURE),
-            module.module().requiredliterature(),
-            internationalization,
-            writer
-        );
-        ModuleGuideLaTeXWriter.writeLiteratureSection(
-            internationalization.internationalize(InternationalizationKey.RECOMMENDED_LITERATURE),
-            module.module().optionalliterature(),
-            internationalization,
-            writer
-        );
-        writer.write("\\clearpage");
-        Main.newLine(writer);
-        Main.newLine(writer);
     }
 
     private static void writeModuleContentsSection(
