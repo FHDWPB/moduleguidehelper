@@ -1,4 +1,4 @@
-package moduleguidehelper;
+package moduleguidehelper.model;
 
 import java.util.*;
 import java.util.stream.*;
@@ -19,7 +19,8 @@ public record Source(
     Integer topage,
     String isbn,
     String doi,
-    String url
+    String url,
+    String comment
 ) {
 
     @Override

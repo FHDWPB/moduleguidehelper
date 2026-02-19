@@ -1,4 +1,6 @@
-package moduleguidehelper;
+package moduleguidehelper.internationalization;
+
+import moduleguidehelper.model.*;
 
 public class English implements Internationalization {
 

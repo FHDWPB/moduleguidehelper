@@ -1,4 +1,4 @@
-package moduleguidehelper;
+package moduleguidehelper.model;
 
 import java.util.*;
 
@@ -22,5 +22,6 @@ public record RawModule(
     String teachingpostface,
     List<Chapter> content,
     List<Source> requiredliterature,
-    List<Source> optionalliterature
+    List<Source> optionalliterature,
+    String comment
 ) {}

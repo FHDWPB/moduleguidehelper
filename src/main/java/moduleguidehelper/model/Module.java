@@ -1,4 +1,4 @@
-package moduleguidehelper;
+package moduleguidehelper.model;
 
 public record Module(MetaModule meta, RawModule module) implements Comparable<Module> {
 

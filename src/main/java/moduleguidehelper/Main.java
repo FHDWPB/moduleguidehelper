@@ -7,17 +7,39 @@ import java.util.logging.*;
 import com.google.gson.*;
 import com.google.gson.stream.*;
 
+import moduleguidehelper.model.*;
+import moduleguidehelper.model.Module;
+import moduleguidehelper.view.*;
+
 public class Main {
 
     public static final String ELECTIVE = "Wahlpflicht";
 
-    public static final Gson GSON = new Gson();
+    public static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 
     public static String lineSeparator = "\n";
 
     public static final Logger LOGGER = Logger.getLogger("moduleguidehelper");
 
+    private static final String VERSION = "1.0";
+
+    public static Process buildAndStartPDFLaTeXProcess(final String fileName, final File directory) throws IOException {
+        return new ProcessBuilder(
+            "pdflatex",
+            fileName,
+            "-interaction=nonstopmode",
+            "-halt-on-error"
+        ).inheritIO().directory(directory).start();
+    }
+
     public static void main(final String[] args) throws IOException {
+        if (args == null || args.length == 0) {
+            new MainFrame(
+                Main.VERSION,
+                new File(System.getProperty("user.dir"))
+            ).setVisible(true);
+            return;
+        }
         if (args != null && args.length == 1) {
             Main.LOGGER.setLevel(Level.FINE);
             final String singeModules = "singlepdfs";
@@ -27,9 +49,6 @@ public class Main {
             }
             final File modules = new File(args[0]);
             for (final File json : modules.listFiles()) {
-                if ("schema.json".equals(json.getName())) {
-                    continue;
-                }
                 final String id = json.getName().substring(0, json.getName().length() - 5);
                 final RawModule module;
                 try (FileReader moduleReader = new FileReader(json)) {
@@ -38,9 +57,14 @@ public class Main {
                     Main.LOGGER.log(Level.SEVERE, json.getAbsolutePath());
                     throw e;
                 }
+                if ("schema.json".equals(json.getName())) {
+                    Main.prettyPrint(json, module);
+                    continue;
+                }
                 try (BufferedWriter writer = new BufferedWriter(new FileWriter(singeModules + "/" + id + ".tex"))) {
                     ModuleGuideLaTeXWriter.writeModule(id.toUpperCase(), module, 180, args[0], writer);
                 }
+                Main.prettyPrint(json, module);
             }
             return;
         }
@@ -108,6 +132,8 @@ public class Main {
         final MetaModuleGuide metaGuide;
         try (FileReader guideReader = new FileReader(guide)) {
             metaGuide = Main.GSON.fromJson(guideReader, MetaModuleGuide.class);
+        } catch (RuntimeException | IOException e) {
+            throw new IOException(String.format("Exception on module guide %s: %s", guide, e.getMessage()), e);
         }
         final List<Module> modules = new ArrayList<Module>();
         for (final MetaModule meta : metaGuide.modules()) {
@@ -118,6 +144,11 @@ public class Main {
             }
             try (FileReader moduleReader = new FileReader(moduleJson)) {
                 modules.add(new Module(meta, Main.GSON.fromJson(moduleReader, RawModule.class)));
+            } catch (RuntimeException | IOException e) {
+                throw new IOException(
+                    String.format("Exception on module %s: %s", moduleJson.getPath(), e.getMessage()),
+                    e
+                );
             }
         }
         return new ModuleGuide(
@@ -131,6 +162,14 @@ public class Main {
             metaGuide.signature(),
             modules
         );
+    }
+
+    private static void prettyPrint(final File json, final RawModule module) throws IOException {
+        try (JsonWriter writer = new JsonWriter(new FileWriter(json))) {
+            writer.setIndent("    ");
+            writer.setSerializeNulls(false);
+            Main.GSON.toJson(module, RawModule.class, writer);
+        }
     }
 
 }

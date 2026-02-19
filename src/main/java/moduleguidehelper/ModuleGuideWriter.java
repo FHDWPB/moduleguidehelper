@@ -2,6 +2,8 @@ package moduleguidehelper;
 
 import java.io.*;
 
+import moduleguidehelper.model.*;
+
 public abstract class ModuleGuideWriter {
 
     protected final ModuleGuide guide;

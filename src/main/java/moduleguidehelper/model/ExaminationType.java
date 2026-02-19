@@ -1,7 +1,9 @@
-package moduleguidehelper;
+package moduleguidehelper.model;
 
 import java.util.*;
 import java.util.regex.*;
+
+import moduleguidehelper.internationalization.*;
 
 public enum ExaminationType {
 

@@ -1,4 +1,4 @@
-package moduleguidehelper;
+package moduleguidehelper.model;
 
 import java.util.*;
 

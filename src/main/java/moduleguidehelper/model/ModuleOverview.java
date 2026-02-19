@@ -1,4 +1,4 @@
-package moduleguidehelper;
+package moduleguidehelper.model;
 
 import java.math.*;
 import java.util.*;
@@ -6,6 +6,9 @@ import java.util.logging.*;
 import java.util.stream.*;
 
 import org.apache.commons.math3.fraction.*;
+
+import moduleguidehelper.*;
+import moduleguidehelper.internationalization.*;
 
 public record ModuleOverview(
     List<List<ModuleStats>> semesters,

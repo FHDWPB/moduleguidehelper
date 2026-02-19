@@ -1,4 +1,4 @@
-package moduleguidehelper;
+package moduleguidehelper.internationalization;
 
 public enum InternationalizationKey {
 

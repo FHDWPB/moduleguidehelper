@@ -8,6 +8,10 @@ import java.util.stream.*;
 
 import com.google.gson.*;
 
+import moduleguidehelper.internationalization.*;
+import moduleguidehelper.model.*;
+import moduleguidehelper.model.Module;
+
 public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
 
     private static final Pattern ESCAPE_PATTERN = Pattern.compile("\\$\\$[^\\$]+\\$\\$");

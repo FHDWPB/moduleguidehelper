@@ -1,4 +1,6 @@
-package moduleguidehelper;
+package moduleguidehelper.model;
+
+import moduleguidehelper.internationalization.*;
 
 public enum TimeModel {
 

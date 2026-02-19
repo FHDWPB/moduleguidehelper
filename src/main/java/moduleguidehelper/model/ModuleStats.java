@@ -1,6 +1,8 @@
-package moduleguidehelper;
+package moduleguidehelper.model;
 
 import java.util.*;
+
+import moduleguidehelper.internationalization.*;
 
 public record ModuleStats(
     String id,
