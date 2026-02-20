@@ -22,6 +22,7 @@ public class Store {
     public void generatePDFs(final File directory) throws Exception {
         final String texSuffix = ".tex";
         final String modules = directory.toPath().resolve("modules").toString();
+        Main.main(new String[] {modules});
         for (final File guide : this.guides) {
             final String texFile = guide.getName().substring(0, guide.getName().length() - 5) + texSuffix;
             Main.main(
