@@ -42,6 +42,10 @@ public class German implements Internationalization {
             return "CREDIT POINTS (ECTS)";
         case EDITION:
             return "Auflage";
+        case EDITOR_ABBR:
+            return "Hrsg.";
+        case EDITORS_ABBR:
+            return "Hrsg.";
         case ELECTIVE_HEADER:
             return "BLOCK";
         case ELECTIVE_MODULE_PATTERN:
@@ -102,9 +106,9 @@ public class German implements Internationalization {
             return "Nummer";
         case PAGE:
             return "Seite";
-        case PAGE_ABR_PLURAL:
+        case PAGE_ABBR_PLURAL:
             return "S";
-        case PAGE_ABR_SINGULAR:
+        case PAGE_ABBR_SINGULAR:
             return "S";
         case PAPER_FORM:
             return "Die Prüfung besteht aus einer Studienarbeit.";

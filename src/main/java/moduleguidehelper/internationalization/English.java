@@ -54,6 +54,10 @@ public class English implements Internationalization {
             return "CREDIT POINTS (ECTS)";
         case EDITION:
             return "edition";
+        case EDITOR_ABBR:
+            return "ed.";
+        case EDITORS_ABBR:
+            return "eds.";
         case ELECTIVE_HEADER:
             return "BLOCK";
         case ELECTIVE_MODULE_PATTERN:
@@ -109,9 +113,9 @@ public class English implements Internationalization {
             return "number";
         case PAGE:
             return "Page";
-        case PAGE_ABR_PLURAL:
+        case PAGE_ABBR_PLURAL:
             return "pp";
-        case PAGE_ABR_SINGULAR:
+        case PAGE_ABBR_SINGULAR:
             return "p";
         case PAPER_FORM:
             return "The examination is a scientific paper.";

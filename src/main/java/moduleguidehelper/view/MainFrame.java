@@ -27,30 +27,32 @@ public class MainFrame extends JFrame {
         final JPanel buttons = new JPanel();
         buttons.setLayout(new GridBagLayout());
         final JButton pullButton = new JButton("Aktualisieren");
+        final File resetFile = directory.toPath().resolve("reset.log").toFile();
+        final File cleanFile = directory.toPath().resolve("clean.log").toFile();
+        final File pullFile = directory.toPath().resolve("pull.log").toFile();
         pullButton.addActionListener(new ActionListener() {
 
             @Override
             public void actionPerformed(final ActionEvent e) {
-                Process process;
                 try {
-                    process = new ProcessBuilder(
+                    Process process = new ProcessBuilder(
                         "git",
                         "reset",
                         "--hard"
-                    ).inheritIO().directory(directory).start();
+                    ).inheritIO().directory(directory).redirectOutput(resetFile).redirectError(resetFile).start();
                     process.waitFor(60, TimeUnit.SECONDS);
                     process = new ProcessBuilder(
                         "git",
                         "clean",
                         "-f",
                         "-d"
-                    ).inheritIO().directory(directory).start();
+                    ).inheritIO().directory(directory).redirectOutput(cleanFile).redirectError(cleanFile).start();
                     process.waitFor(60, TimeUnit.SECONDS);
                     process = new ProcessBuilder(
                         "git",
                         "pull",
                         "--rebase"
-                    ).inheritIO().directory(directory).start();
+                    ).inheritIO().directory(directory).redirectOutput(pullFile).redirectError(pullFile).start();
                     process.waitFor(60, TimeUnit.SECONDS);
                 } catch (IOException | InterruptedException e1) {
                     JOptionPane.showMessageDialog(MainFrame.this, e1);

@@ -16,6 +16,8 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
 
     private static final Pattern ESCAPE_PATTERN = Pattern.compile("\\$\\$[^\\$]+\\$\\$");
 
+    private static final int MAX_NUMBER_OF_AUTHORS = 3;
+
     private static final String OVERVIEW_FIRST_COL_SIZE = "7.2cm";
 
     private static final String OVERVIEW_FIRST_COL_SIZE_ELECTIVE = "5.7cm";
@@ -190,6 +192,10 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         return examination;
     }
 
+    private static boolean isSet(final String text) {
+        return text != null && !text.isBlank();
+    }
+
     private static String lookupModule(
         final String id,
         final String modulesFolder,
@@ -257,8 +263,49 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         return result;
     }
 
-    private static void writeAuthors(final List<String> authors, final BufferedWriter writer) throws IOException {
-        writer.write(authors.stream().map(ModuleGuideLaTeXWriter::formatAuthor).collect(Collectors.joining(", ")));
+    private static void writeAuthors(
+        final List<String> authors,
+        final List<String> editors,
+        final String institution,
+        final Internationalization internationalization,
+        final BufferedWriter writer
+    ) throws IOException {
+        if (authors == null || authors.isEmpty()) {
+            if (editors == null || editors.isEmpty()) {
+                if (ModuleGuideLaTeXWriter.isSet(institution)) {
+                    writer.write(institution);
+                }
+                return;
+            }
+            writer.write(
+                editors
+                .stream()
+                .limit(ModuleGuideLaTeXWriter.MAX_NUMBER_OF_AUTHORS)
+                .map(ModuleGuideLaTeXWriter::formatAuthor)
+                .collect(Collectors.joining(", "))
+            );
+            if (editors.size() > ModuleGuideLaTeXWriter.MAX_NUMBER_OF_AUTHORS) {
+                writer.write(" et al.");
+            }
+            writer.write(" (");
+            writer.write(
+                internationalization.internationalize(
+                    editors.size() == 1 ? InternationalizationKey.EDITOR_ABBR : InternationalizationKey.EDITORS_ABBR
+                )
+            );
+            writer.write(")");
+        } else {
+            writer.write(
+                authors
+                .stream()
+                .limit(ModuleGuideLaTeXWriter.MAX_NUMBER_OF_AUTHORS)
+                .map(ModuleGuideLaTeXWriter::formatAuthor)
+                .collect(Collectors.joining(", "))
+            );
+            if (authors.size() > ModuleGuideLaTeXWriter.MAX_NUMBER_OF_AUTHORS) {
+                writer.write(" et al.");
+            }
+        }
     }
 
     private static void writeCommaSeparated(final List<String> items, final BufferedWriter writer) throws IOException {
@@ -399,6 +446,9 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write("\\renewcommand{\\headrulewidth}{0pt}");
         Main.newLine(writer);
         writer.write("\\cfoot{\\thepage{}}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\newcommand{\\llb}{\\\\}");
         Main.newLine(writer);
         Main.newLine(writer);
         writer.write("\\begin{document}");
@@ -903,6 +953,12 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         final Internationalization internationalization,
         final BufferedWriter writer
     ) throws IOException {
+        if (
+            (module.module().teachingmethods() == null || module.module().teachingmethods().isEmpty())
+            && (module.module().teachingpostface() == null || module.module().teachingpostface().isEmpty())
+        ) {
+            return;
+        }
         writer.write("\\subsection*{");
         writer.write(internationalization.internationalize(InternationalizationKey.TEACHING_METHODS));
         writer.write("}");
@@ -966,14 +1022,20 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         }
         writer.write("\\begin{minipage}{\\textwidth}");
         Main.newLine(writer);
-        ModuleGuideLaTeXWriter.writeAuthors(source.authors(), writer);
+        ModuleGuideLaTeXWriter.writeAuthors(
+            source.authors(),
+            source.editors(),
+            source.institution(),
+            internationalization,
+            writer
+        );
         if (source.year() != null) {
             writer.write(", ");
             writer.write(String.valueOf(source.year()));
         }
         writer.write(". \\textit{");
         writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(source.title()));
-        if (source.subtitle() != null && !source.subtitle().isBlank()) {
+        if (ModuleGuideLaTeXWriter.isSet(source.subtitle())) {
             writer.write(": ");
             writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(source.subtitle()));
         }
@@ -991,19 +1053,19 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             }
             break;
         case ARTICLE:
-            final boolean hasJournal = source.journal() != null && !source.journal().isBlank();
+            final boolean hasJournal = ModuleGuideLaTeXWriter.isSet(source.journal());
             if (hasJournal) {
                 writer.write(", ");
                 writer.write(source.journal());
             }
-            final boolean hasVolume = source.volume() != null && !source.volume().isBlank();
+            final boolean hasVolume = ModuleGuideLaTeXWriter.isSet(source.volume());
             if (hasVolume) {
                 writer.write(", ");
                 writer.write(internationalization.internationalize(InternationalizationKey.VOLUME));
                 writer.write(" ");
                 writer.write(source.volume());
             }
-            final boolean hasNumber = source.number() != null && !source.number().isBlank();
+            final boolean hasNumber = ModuleGuideLaTeXWriter.isSet(source.number());
             if (hasNumber) {
                 writer.write(", ");
                 writer.write(internationalization.internationalize(InternationalizationKey.NUMBER));
@@ -1016,8 +1078,8 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
                 writer.write(
                     internationalization.internationalize(
                         multiplePages ?
-                            InternationalizationKey.PAGE_ABR_PLURAL :
-                                InternationalizationKey.PAGE_ABR_SINGULAR
+                            InternationalizationKey.PAGE_ABBR_PLURAL :
+                                InternationalizationKey.PAGE_ABBR_SINGULAR
                     )
                 );
                 writer.write(". ");
@@ -1034,28 +1096,28 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         default:
             writer.write(".");
         }
-        final boolean hasLocation = source.location() != null && !source.location().isBlank();
-        if (hasLocation) {
+        final boolean hasPublisher = ModuleGuideLaTeXWriter.isSet(source.publisher());
+        if (ModuleGuideLaTeXWriter.isSet(source.location())) {
             writer.write(" ");
             writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(source.location()));
-            writer.write(":");
+            writer.write(hasPublisher ? ":" : ".");
         }
-        if (source.publisher() != null && !source.publisher().isBlank()) {
+        if (hasPublisher) {
             writer.write(" ");
             writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(source.publisher()));
             writer.write(".");
         }
-        if (source.isbn() != null && !source.isbn().isBlank()) {
+        if (ModuleGuideLaTeXWriter.isSet(source.isbn())) {
             writer.write(" ISBN: ");
             writer.write(source.isbn());
             writer.write(".");
         }
-        if (source.doi() != null && !source.doi().isBlank()) {
+        if (ModuleGuideLaTeXWriter.isSet(source.doi())) {
             writer.write(" DOI: ");
             writer.write(source.doi());
             writer.write(".");
         }
-        if (source.url() != null && !source.url().isBlank()) {
+        if (ModuleGuideLaTeXWriter.isSet(source.url())) {
             writer.write(" URL: \\url{");
             writer.write(source.url());
             writer.write("}.");
@@ -1274,6 +1336,10 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         Main.newLine(writer);
         writer.write("\\renewcommand{\\arraystretch}{1.5}");
         Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\renewcommand{\\llb}{}");
+        Main.newLine(writer);
+        Main.newLine(writer);
         ModuleGuideLaTeXWriter.writeLongtableHeader(true, internationalization, writer);
         int semester = 1;
         int groupsOnPage = 0;
@@ -1409,6 +1475,9 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write("\\end{longtable}");
         Main.newLine(writer);
         writer.write("\\renewcommand{\\arraystretch}{1}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\renewcommand{\\llb}{\\\\}");
         Main.newLine(writer);
         Main.newLine(writer);
         writer.write("\\clearpage");

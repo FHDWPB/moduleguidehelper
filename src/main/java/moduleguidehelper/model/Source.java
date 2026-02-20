@@ -5,6 +5,8 @@ import java.util.stream.*;
 
 public record Source(
     List<String> authors,
+    List<String> editors,
+    String institution,
     String title,
     String subtitle,
     SourceType type,
