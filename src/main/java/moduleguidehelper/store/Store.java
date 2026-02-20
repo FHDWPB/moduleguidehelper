@@ -36,6 +36,24 @@ public class Store {
                 pdfProcess.waitFor(60, TimeUnit.SECONDS);
             }
         }
+        Process process = new ProcessBuilder(
+            "git",
+            "add",
+            "-A"
+        ).inheritIO().directory(directory).start();
+        process.waitFor(60, TimeUnit.SECONDS);
+        process = new ProcessBuilder(
+            "git",
+            "commit",
+            "-m",
+            "update"
+        ).inheritIO().directory(directory).start();
+        process.waitFor(60, TimeUnit.SECONDS);
+        process = new ProcessBuilder(
+            "git",
+            "push"
+        ).inheritIO().directory(directory).start();
+        process.waitFor(60, TimeUnit.SECONDS);
     }
 
     public void registerGuideObserver(final GuideObserver observer) {

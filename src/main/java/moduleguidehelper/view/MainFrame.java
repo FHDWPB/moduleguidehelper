@@ -35,26 +35,21 @@ public class MainFrame extends JFrame {
                 try {
                     process = new ProcessBuilder(
                         "git",
-                        "add",
-                        "-A"
+                        "reset",
+                        "--hard"
                     ).inheritIO().directory(directory).start();
                     process.waitFor(60, TimeUnit.SECONDS);
                     process = new ProcessBuilder(
                         "git",
-                        "commit",
-                        "-m",
-                        "update"
+                        "clean",
+                        "-f",
+                        "-d"
                     ).inheritIO().directory(directory).start();
                     process.waitFor(60, TimeUnit.SECONDS);
                     process = new ProcessBuilder(
                         "git",
                         "pull",
                         "--rebase"
-                    ).inheritIO().directory(directory).start();
-                    process.waitFor(60, TimeUnit.SECONDS);
-                    process = new ProcessBuilder(
-                        "git",
-                        "push"
                     ).inheritIO().directory(directory).start();
                     process.waitFor(60, TimeUnit.SECONDS);
                 } catch (IOException | InterruptedException e1) {
