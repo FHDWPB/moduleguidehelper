@@ -201,6 +201,9 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         final String modulesFolder,
         final List<String> linkable
     ) {
+        if (id.startsWith("!")) {
+            return ModuleGuideLaTeXWriter.escapeForLaTeX(id.substring(1));
+        }
         final File json = new File(modulesFolder + "/" + id.toLowerCase() + ".json");
         if (json.exists()) {
             final RawModule raw;
