@@ -104,6 +104,8 @@ public class German implements Internationalization {
             return "Keine";
         case NUMBER:
             return "Nummer";
+        case ORAL_FORM:
+            return "Die Prüfung besteht aus einer mündlichen Prüfung.";
         case PAGE:
             return "Seite";
         case PAGE_ABBR_PLURAL:
@@ -169,6 +171,8 @@ public class German implements Internationalization {
             return "Lehrveranstaltungen";
         case TEACHING_METHODS:
             return "Lehr- und Lernmethoden";
+        case THESIS_FORM:
+            return "Die Prüfung besteht aus einer wissenschaftlichen Arbeit (Thesis).";
         case VOLUME:
             return "Ausgabe";
         default:

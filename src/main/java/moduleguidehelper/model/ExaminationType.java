@@ -7,11 +7,13 @@ import moduleguidehelper.internationalization.*;
 
 public enum ExaminationType {
 
-    EXAM('K', 1),
-    PAPER('S', 3),
-    PORTFOLIO('X', 5),
-    PRACTICAL('P', 4),
-    PRESENTATION('R', 2);
+    EXAM('K', 2),
+    ORAL('M', 3),
+    PAPER('S', 5),
+    PORTFOLIO('X', 7),
+    PRACTICAL('P', 6),
+    PRESENTATION('R', 4),
+    THESIS('A', 1);
 
     private static final Comparator<ExaminationType> COMPARATOR = new Comparator<ExaminationType>() {
 
@@ -22,7 +24,7 @@ public enum ExaminationType {
 
     };
 
-    private static final Pattern EXAMINATION_CODE = Pattern.compile("[KRSPX\\*]+");
+    private static final Pattern EXAMINATION_CODE = Pattern.compile("[AKMRSPX\\*]+");
 
     public static ExaminationTypes parse(final String examinationTypes) {
         if (!ExaminationType.EXAMINATION_CODE.matcher(examinationTypes).matches()) {

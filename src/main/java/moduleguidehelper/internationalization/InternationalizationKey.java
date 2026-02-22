@@ -40,6 +40,7 @@ public enum InternationalizationKey {
     MODULE_HEADER,
     NONE,
     NUMBER,
+    ORAL_FORM,
     PAGE,
     PAGE_ABBR_PLURAL,
     PAGE_ABBR_SINGULAR,
@@ -71,6 +72,7 @@ public enum InternationalizationKey {
     TEACHING_EVENTS,
     TEACHING_LANGUAGE,
     TEACHING_METHODS,
+    THESIS_FORM,
     VOLUME
 
 }

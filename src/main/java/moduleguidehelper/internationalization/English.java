@@ -111,6 +111,8 @@ public class English implements Internationalization {
             return "none";
         case NUMBER:
             return "number";
+        case ORAL_FORM:
+            return "The examination is an oral exam.";
         case PAGE:
             return "Page";
         case PAGE_ABBR_PLURAL:
@@ -175,6 +177,8 @@ public class English implements Internationalization {
             return "Teaching Events";
         case TEACHING_METHODS:
             return "Teaching and Learning Methods";
+        case THESIS_FORM:
+            return "The examination is a scientific thesis.";
         case VOLUME:
             return "volume";
         default:
