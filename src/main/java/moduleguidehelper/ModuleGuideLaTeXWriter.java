@@ -1301,7 +1301,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
                     writer.write("\\chapter");
                     if (escaped.contains("\\llb{}")) {
                         writer.write("[");
-                        writer.write(escaped.replaceAll("\\Qllb{}\\E", ""));
+                        writer.write(escaped.replaceAll("\\Q\\llb{}\\E", ""));
                         writer.write("]");
                     }
                     writer.write("{");
