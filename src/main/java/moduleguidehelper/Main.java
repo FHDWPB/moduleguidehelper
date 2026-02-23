@@ -21,7 +21,7 @@ public class Main {
 
     public static final Logger LOGGER = Logger.getLogger("moduleguidehelper");
 
-    private static final String VERSION = "1.1.5";
+    private static final String VERSION = "1.1.6";
 
     public static Process buildAndStartPDFLaTeXProcess(final String fileName, final File directory) throws IOException {
         return new ProcessBuilder(

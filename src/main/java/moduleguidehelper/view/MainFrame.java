@@ -54,6 +54,28 @@ public class MainFrame extends JFrame {
                         "--rebase"
                     ).inheritIO().directory(directory).redirectOutput(pullFile).redirectError(pullFile).start();
                     process.waitFor(60, TimeUnit.SECONDS);
+                    try (BufferedReader reader = new BufferedReader(new FileReader(resetFile))) {
+                        final String line = reader.readLine();
+                        if (!line.startsWith("HEAD is now")) {
+                            JOptionPane.showMessageDialog(null, "Fehler beim Reset: " + line);
+                            return;
+                        }
+                    }
+                    try (BufferedReader reader = new BufferedReader(new FileReader(cleanFile))) {
+                        final String line = reader.readLine();
+                        if (line != null) {
+                            JOptionPane.showMessageDialog(null, "Fehler beim Clean: " + line);
+                            return;
+                        }
+                    }
+                    try (BufferedReader reader = new BufferedReader(new FileReader(pullFile))) {
+                        final String line = reader.readLine();
+                        if (line.startsWith("error")) {
+                            JOptionPane.showMessageDialog(null, "Fehler beim Pull: " + line);
+                            return;
+                        }
+                    }
+                    JOptionPane.showMessageDialog(null, "Erfolgreich aktualisiert!");
                 } catch (IOException | InterruptedException e1) {
                     JOptionPane.showMessageDialog(MainFrame.this, e1);
                 }
