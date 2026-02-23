@@ -21,7 +21,7 @@ public class Main {
 
     public static final Logger LOGGER = Logger.getLogger("moduleguidehelper");
 
-    private static final String VERSION = "1.1.6";
+    private static final String VERSION = "1.1.7";
 
     public static Process buildAndStartPDFLaTeXProcess(final String fileName, final File directory) throws IOException {
         return new ProcessBuilder(
@@ -62,9 +62,6 @@ public class Main {
                     continue;
                 }
                 try (BufferedWriter writer = new BufferedWriter(new FileWriter(singeModules + "/" + id + ".tex"))) {
-                    if (module.title().equals("Kompositversicherungen")) {
-                        System.out.println("Foo");
-                    }
                     ModuleGuideLaTeXWriter.writeModule(id.toUpperCase(), module, 180, args[0], writer);
                 }
                 Main.prettyPrint(json, module);
