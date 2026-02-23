@@ -1292,10 +1292,20 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
                     writer.write(internationalization.internationalize(InternationalizationKey.ELECTIVE_MODULES));
                     writer.write("}");
                 } else {
-                    writer.write("\\chapter{");
-                    writer.write(internationalization.internationalize(InternationalizationKey.SPECIALIZATION));
-                    writer.write(" ");
-                    writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(specialization));
+                    final String escaped =
+                        String.format(
+                            "%s %s",
+                            internationalization.internationalize(InternationalizationKey.SPECIALIZATION),
+                            ModuleGuideLaTeXWriter.escapeForLaTeX(specialization)
+                        );
+                    writer.write("\\chapter");
+                    if (escaped.contains("\\llb{}")) {
+                        writer.write("[");
+                        writer.write(escaped.replaceAll("\\Qllb{}\\E", ""));
+                        writer.write("]");
+                    }
+                    writer.write("{");
+                    writer.write(escaped);
                     writer.write("}");
                 }
                 Main.newLine(writer);
