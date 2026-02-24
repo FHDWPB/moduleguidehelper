@@ -1015,8 +1015,15 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
     }
 
     private static void writeModuleTitle(final Module module, final BufferedWriter writer) throws IOException {
-        writer.write("\\section{");
-        writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(module.module().title()));
+        final String title = ModuleGuideLaTeXWriter.escapeForLaTeX(module.module().title());
+        writer.write("\\section");
+        if (title.contains("\\llb{}")) {
+            writer.write("[");
+            writer.write(title.replaceAll("\\Q\\llb{}\\E", ""));
+            writer.write("]");
+        }
+        writer.write("{");
+        writer.write(title);
         writer.write("}\\label{sec:");
         writer.write(module.meta().module());
         writer.write("}");
