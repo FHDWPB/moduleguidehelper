@@ -14,7 +14,7 @@ import moduleguidehelper.model.Module;
 
 public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
 
-    private static final Pattern ESCAPE_PATTERN = Pattern.compile("\\$\\$[^\\$]+\\$\\$");
+    private static final Pattern ESCAPE_PATTERN = Pattern.compile("\\$\\$([^\\$]|\\$[^\\$])+\\$\\$");
 
     private static final int MAX_NUMBER_OF_AUTHORS = 3;
 
@@ -46,6 +46,42 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             writer
         );
         ModuleGuideLaTeXWriter.writeDocumentEndStatic(writer);
+    }
+
+    static String escapeForLaTeX(final String text) {
+        if (text == null) {
+            return "";
+        }
+        final Matcher matcher = ModuleGuideLaTeXWriter.ESCAPE_PATTERN.matcher(text);
+        final List<Integer> indices = new LinkedList<Integer>();
+        while (matcher.find()) {
+            indices.add(matcher.start());
+            indices.add(matcher.end());
+        }
+        indices.add(text.length());
+        final StringBuilder result = new StringBuilder();
+        boolean escape = true;
+        int from = 0;
+        for (final Integer index : indices) {
+            if (escape) {
+                result.append(
+                    text
+                    .substring(from, index)
+                    .replaceAll("\\\\", "\\\\textbackslash")
+                    .replaceAll("([&\\$%\\{\\}_#])", "\\\\$1")
+                    .replaceAll("~", "\\\\textasciitilde{}")
+                    .replaceAll("\\^", "\\\\textasciicircum{}")
+                    .replaceAll("\\\\textbackslash", "\\\\textbackslash{}")
+                    .replaceAll("([^\\\\])\"", "$1''")
+                    .replaceAll("^\"", "''")
+                );
+            } else {
+                result.append(text.substring(from + 2, index - 2));
+            }
+            from = index;
+            escape = !escape;
+        }
+        return result.toString();
     }
 
     private static String chapterToItem(final Chapter chapter) {
@@ -101,42 +137,6 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             );
         }
         return numbers.stream().map(ModuleStats::toRomanNumeral).collect(Collectors.joining(", "));
-    }
-
-    private static String escapeForLaTeX(final String text) {
-        if (text == null) {
-            return "";
-        }
-        final Matcher matcher = ModuleGuideLaTeXWriter.ESCAPE_PATTERN.matcher(text);
-        final List<Integer> indices = new LinkedList<Integer>();
-        while (matcher.find()) {
-            indices.add(matcher.start());
-            indices.add(matcher.end());
-        }
-        indices.add(text.length());
-        final StringBuilder result = new StringBuilder();
-        boolean escape = true;
-        int from = 0;
-        for (final Integer index : indices) {
-            if (escape) {
-                result.append(
-                    text
-                    .substring(from, index)
-                    .replaceAll("\\\\", "\\\\textbackslash")
-                    .replaceAll("([&\\$%\\{\\}_#])", "\\\\$1")
-                    .replaceAll("~", "\\\\textasciitilde{}")
-                    .replaceAll("\\^", "\\\\textasciicircum{}")
-                    .replaceAll("\\\\textbackslash", "\\\\textbackslash{}")
-                    .replaceAll("([^\\\\])\"", "$1''")
-                    .replaceAll("^\"", "''")
-                );
-            } else {
-                result.append(text.substring(from + 2, index - 2));
-            }
-            from = index;
-            escape = !escape;
-        }
-        return result.toString();
     }
 
     private static String formatAuthor(final String author) {
