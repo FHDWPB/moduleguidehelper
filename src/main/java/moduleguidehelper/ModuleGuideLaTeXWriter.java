@@ -37,7 +37,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         modules.put(id, module);
         ModuleGuideLaTeXWriter.writeModule(
             new Module(
-                new MetaModule(id, 1, 1, "Pflicht", "jedes Jahr", 5, 1, "", "", "", "", null),
+                new MetaModule(id, 1, 1, "Pflicht", "jedes Jahr", 5, 1, "", "", "", "", "", null),
                 module
             ),
             weightSum,
@@ -608,7 +608,9 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         table.add(
             new String[] {
                 internationalization.internationalize(InternationalizationKey.RESPONSIBLE),
-                module.module().responsible()
+                ModuleGuideLaTeXWriter.isSet(module.meta().responsible()) ?
+                    module.meta().responsible() :
+                        module.module().responsible()
             }
         );
         table.add(

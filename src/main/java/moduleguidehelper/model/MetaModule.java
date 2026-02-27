@@ -10,6 +10,7 @@ public record MetaModule(
     String frequency,
     int weight,
     int duration,
+    String responsible,
     String contacthoursfactor,
     String homehoursfactor,
     String ectsfactor,
