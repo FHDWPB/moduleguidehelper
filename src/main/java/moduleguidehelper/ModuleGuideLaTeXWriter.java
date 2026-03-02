@@ -1294,45 +1294,52 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         String specialization = "";
         int semester = 0;
         for (final Module module : this.guide.modules().stream().sorted().toList()) {
-            if (module.meta().specialization() != null && !specialization.equals(module.meta().specialization())) {
-                specialization = module.meta().specialization();
-                if (Main.ELECTIVE.equals(specialization)) {
-                    writer.write("\\chapter{");
-                    writer.write(internationalization.internationalize(InternationalizationKey.ELECTIVE_MODULES));
-                    writer.write("}");
-                } else {
-                    final String escaped =
-                        String.format(
-                            "%s %s",
-                            internationalization.internationalize(InternationalizationKey.SPECIALIZATION),
-                            ModuleGuideLaTeXWriter.escapeForLaTeX(specialization)
-                        );
-                    writer.write("\\chapter");
-                    if (escaped.contains("\\llb{}")) {
-                        writer.write("[");
-                        writer.write(escaped.replaceAll("\\Q\\llb{}\\E", ""));
-                        writer.write("]");
+            try {
+                if (module.meta().specialization() != null && !specialization.equals(module.meta().specialization())) {
+                    specialization = module.meta().specialization();
+                    if (Main.ELECTIVE.equals(specialization)) {
+                        writer.write("\\chapter{");
+                        writer.write(internationalization.internationalize(InternationalizationKey.ELECTIVE_MODULES));
+                        writer.write("}");
+                    } else {
+                        final String escaped =
+                            String.format(
+                                "%s %s",
+                                internationalization.internationalize(InternationalizationKey.SPECIALIZATION),
+                                ModuleGuideLaTeXWriter.escapeForLaTeX(specialization)
+                            );
+                        writer.write("\\chapter");
+                        if (escaped.contains("\\llb{}")) {
+                            writer.write("[");
+                            writer.write(escaped.replaceAll("\\Q\\llb{}\\E", ""));
+                            writer.write("]");
+                        }
+                        writer.write("{");
+                        writer.write(escaped);
+                        writer.write("}");
                     }
-                    writer.write("{");
-                    writer.write(escaped);
+                    Main.newLine(writer);
+                    Main.newLine(writer);
+                } else if (
+                    (module.meta().specialization() == null || module.meta().specialization().isBlank())
+                    && module.meta().semester() != semester
+                ) {
+                    semester = module.meta().semester();
+                    writer.write("\\chapter{");
+                    writer.write(internationalization.enumerate(semester));
+                    writer.write(" ");
+                    writer.write(internationalization.internationalize(InternationalizationKey.SEMESTER));
                     writer.write("}");
+                    Main.newLine(writer);
+                    Main.newLine(writer);
                 }
-                Main.newLine(writer);
-                Main.newLine(writer);
-            } else if (
-                (module.meta().specialization() == null || module.meta().specialization().isBlank())
-                && module.meta().semester() != semester
-            ) {
-                semester = module.meta().semester();
-                writer.write("\\chapter{");
-                writer.write(internationalization.enumerate(semester));
-                writer.write(" ");
-                writer.write(internationalization.internationalize(InternationalizationKey.SEMESTER));
-                writer.write("}");
-                Main.newLine(writer);
-                Main.newLine(writer);
+                ModuleGuideLaTeXWriter.writeModule(module, weightSum, linkable, modulesFolder, writer);
+            } catch (final Exception e) {
+                throw new IOException(
+                    String.format("Exception in module %s: %s", module.meta().module(), e.getMessage()),
+                    e
+                );
             }
-            ModuleGuideLaTeXWriter.writeModule(module, weightSum, linkable, modulesFolder, writer);
         }
     }
 
