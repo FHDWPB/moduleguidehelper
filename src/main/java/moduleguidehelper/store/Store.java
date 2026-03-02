@@ -3,6 +3,7 @@ package moduleguidehelper.store;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.*;
 
 import moduleguidehelper.*;
 
@@ -19,10 +20,13 @@ public class Store {
         this.guideObservers = new LinkedList<GuideObserver>();
     }
 
-    public void generatePDFs(final File directory) throws Exception {
+    public void generatePDFs(final File directory, final Consumer<Integer> progressListener) throws Exception {
         final String texSuffix = ".tex";
         final String modules = directory.toPath().resolve("modules").toString();
         Main.main(new String[] {modules});
+        final int total = 4 * this.guides.size();
+        int current = 0;
+        progressListener.accept(0);
         for (final File guide : this.guides) {
             final String texFile = guide.getName().substring(0, guide.getName().length() - 5) + texSuffix;
             Main.main(
@@ -35,6 +39,8 @@ public class Store {
             for (int i = 0; i < 4; i++) {
                 final Process pdfProcess = Main.buildAndStartPDFLaTeXProcess(texFile, directory);
                 pdfProcess.waitFor(60, TimeUnit.SECONDS);
+                current++;
+                progressListener.accept(current * 100 / total);
             }
         }
         Process process = new ProcessBuilder(
@@ -67,6 +73,57 @@ public class Store {
             this.guides = new LinkedHashSet<File>(guides);
             for (final GuideObserver observer : this.guideObservers) {
                 observer.notify(this.guides);
+            }
+        }
+    }
+
+    public void syncgit(
+        final File directory,
+        final Consumer<Integer> progressListener
+    ) throws IOException, InterruptedException {
+        progressListener.accept(0);
+        final File resetFile = directory.toPath().resolve("reset.log").toFile();
+        final File cleanFile = directory.toPath().resolve("clean.log").toFile();
+        final File pullFile = directory.toPath().resolve("pull.log").toFile();
+        Process process = new ProcessBuilder(
+            "git",
+            "reset",
+            "--hard"
+        ).inheritIO().directory(directory).redirectOutput(resetFile).redirectError(resetFile).start();
+        process.waitFor(60, TimeUnit.SECONDS);
+        progressListener.accept(33);
+        process = new ProcessBuilder(
+            "git",
+            "clean",
+            "-f",
+            "-d"
+        ).inheritIO().directory(directory).redirectOutput(cleanFile).redirectError(cleanFile).start();
+        process.waitFor(60, TimeUnit.SECONDS);
+        progressListener.accept(66);
+        process = new ProcessBuilder(
+            "git",
+            "pull",
+            "--rebase",
+            "-X ours"
+        ).inheritIO().directory(directory).redirectOutput(pullFile).redirectError(pullFile).start();
+        process.waitFor(60, TimeUnit.SECONDS);
+        progressListener.accept(100);
+        try (BufferedReader reader = new BufferedReader(new FileReader(resetFile))) {
+            final String line = reader.readLine();
+            if (!line.startsWith("HEAD is now")) {
+                throw new IllegalStateException("Fehler beim Reset: " + line);
+            }
+        }
+        try (BufferedReader reader = new BufferedReader(new FileReader(cleanFile))) {
+            final String line = reader.readLine();
+            if (line != null) {
+                throw new IllegalStateException("Fehler beim Clean: " + line);
+            }
+        }
+        try (BufferedReader reader = new BufferedReader(new FileReader(pullFile))) {
+            final String line = reader.readLine();
+            if (line.startsWith("error")) {
+                throw new IllegalStateException("Fehler beim Pull: " + line);
             }
         }
     }

@@ -3,7 +3,7 @@ package moduleguidehelper.view;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
-import java.util.concurrent.*;
+import java.util.function.*;
 
 import javax.swing.*;
 
@@ -23,66 +23,41 @@ public class MainFrame extends JFrame {
         final GridBagConstraints constraints = new GridBagConstraints();
         constraints.gridx = 0;
         constraints.gridy = 0;
-        constraints.fill = GridBagConstraints.BOTH;
+        final JLabel progress = new JLabel(" ");
+        final Consumer<Integer> progressListener = p -> {
+            if (p < 0) {
+                progress.setText(" ");
+            } else {
+                progress.setText(String.format("Fortschritt: %d%%", p));
+            }
+            MainFrame.this.revalidate();
+            MainFrame.this.repaint();
+        };
         final JPanel buttons = new JPanel();
         buttons.setLayout(new GridBagLayout());
         final JButton pullButton = new JButton("Aktualisieren");
-        final File resetFile = directory.toPath().resolve("reset.log").toFile();
-        final File cleanFile = directory.toPath().resolve("clean.log").toFile();
-        final File pullFile = directory.toPath().resolve("pull.log").toFile();
         pullButton.addActionListener(new ActionListener() {
 
             @Override
-            public void actionPerformed(final ActionEvent e) {
+            public void actionPerformed(final ActionEvent event) {
                 try {
-                    Process process = new ProcessBuilder(
-                        "git",
-                        "reset",
-                        "--hard"
-                    ).inheritIO().directory(directory).redirectOutput(resetFile).redirectError(resetFile).start();
-                    process.waitFor(60, TimeUnit.SECONDS);
-                    process = new ProcessBuilder(
-                        "git",
-                        "clean",
-                        "-f",
-                        "-d"
-                    ).inheritIO().directory(directory).redirectOutput(cleanFile).redirectError(cleanFile).start();
-                    process.waitFor(60, TimeUnit.SECONDS);
-                    process = new ProcessBuilder(
-                        "git",
-                        "pull",
-                        "--rebase",
-                        "-X ours"
-                    ).inheritIO().directory(directory).redirectOutput(pullFile).redirectError(pullFile).start();
-                    process.waitFor(60, TimeUnit.SECONDS);
-                    try (BufferedReader reader = new BufferedReader(new FileReader(resetFile))) {
-                        final String line = reader.readLine();
-                        if (!line.startsWith("HEAD is now")) {
-                            JOptionPane.showMessageDialog(null, "Fehler beim Reset: " + line);
-                            return;
+                    new Thread(() -> {
+                        try {
+                            Store.INSTANCE.syncgit(directory, progressListener);
+                            progressListener.accept(-1);
+                            JOptionPane.showMessageDialog(null, "Erfolgreich aktualisiert!");
+                        } catch (final Exception e) {
+                            throw new RuntimeException(e);
                         }
-                    }
-                    try (BufferedReader reader = new BufferedReader(new FileReader(cleanFile))) {
-                        final String line = reader.readLine();
-                        if (line != null) {
-                            JOptionPane.showMessageDialog(null, "Fehler beim Clean: " + line);
-                            return;
-                        }
-                    }
-                    try (BufferedReader reader = new BufferedReader(new FileReader(pullFile))) {
-                        final String line = reader.readLine();
-                        if (line.startsWith("error")) {
-                            JOptionPane.showMessageDialog(null, "Fehler beim Pull: " + line);
-                            return;
-                        }
-                    }
-                    JOptionPane.showMessageDialog(null, "Erfolgreich aktualisiert!");
-                } catch (IOException | InterruptedException e1) {
-                    JOptionPane.showMessageDialog(MainFrame.this, e1);
+                    }).start();
+                } catch (final Exception e) {
+                    progressListener.accept(-1);
+                    JOptionPane.showMessageDialog(MainFrame.this, e);
                 }
             }
 
         });
+        constraints.fill = GridBagConstraints.BOTH;
         buttons.add(pullButton, constraints);
         final JButton generateButton = new JButton("Modulhandbücher erzeugen");
         Store.INSTANCE.registerGuideObserver(
@@ -96,8 +71,17 @@ public class MainFrame extends JFrame {
             @Override
             public void actionPerformed(final ActionEvent event) {
                 try {
-                    Store.INSTANCE.generatePDFs(directory);
+                    new Thread(() -> {
+                        try {
+                            Store.INSTANCE.generatePDFs(directory, progressListener);
+                            progressListener.accept(-1);
+                            JOptionPane.showMessageDialog(null, "Erfolgreich kompiliert!");
+                        } catch (final Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    }).start();
                 } catch (final Exception e) {
+                    progressListener.accept(-1);
                     JOptionPane.showMessageDialog(MainFrame.this, e);
                 }
             }
@@ -109,6 +93,7 @@ public class MainFrame extends JFrame {
         constraints.ipadx = 10;
         constraints.ipady = 10;
         constraints.gridwidth = 4;
+        constraints.fill = GridBagConstraints.NONE;
         content.add(new JLabel(), constraints);
         constraints.gridy = 1;
         constraints.gridwidth = 1;
@@ -123,6 +108,10 @@ public class MainFrame extends JFrame {
         constraints.gridy = 2;
         constraints.gridheight = 1;
         constraints.gridwidth = 4;
+        content.add(new JLabel(), constraints);
+        constraints.gridy = 3;
+        content.add(progress, constraints);
+        constraints.gridy = 4;
         content.add(new JLabel(), constraints);
         this.pack();
         this.setLocationRelativeTo(null);
