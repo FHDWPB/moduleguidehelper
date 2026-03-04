@@ -47,7 +47,8 @@ public class MainFrame extends JFrame {
                             progressListener.accept(-1);
                             JOptionPane.showMessageDialog(null, "Erfolgreich aktualisiert!");
                         } catch (final Exception e) {
-                            throw new RuntimeException(e);
+                            progressListener.accept(-1);
+                            JOptionPane.showMessageDialog(MainFrame.this, e);
                         }
                     }).start();
                 } catch (final Exception e) {
@@ -77,7 +78,8 @@ public class MainFrame extends JFrame {
                             progressListener.accept(-1);
                             JOptionPane.showMessageDialog(null, "Erfolgreich kompiliert!");
                         } catch (final Exception e) {
-                            throw new RuntimeException(e);
+                            progressListener.accept(-1);
+                            JOptionPane.showMessageDialog(MainFrame.this, e);
                         }
                     }).start();
                 } catch (final Exception e) {

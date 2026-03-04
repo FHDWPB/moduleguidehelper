@@ -55,7 +55,7 @@ public class Main {
                     module = Main.GSON.fromJson(moduleReader, RawModule.class);
                 } catch (final MalformedJsonException | JsonSyntaxException e) {
                     Main.LOGGER.log(Level.SEVERE, json.getAbsolutePath());
-                    throw e;
+                    throw new IOException(String.format("%s: %s", json.getAbsolutePath(), e.getMessage()), e);
                 }
                 if ("schema.json".equals(json.getName())) {
                     Main.prettyPrint(json, module);
