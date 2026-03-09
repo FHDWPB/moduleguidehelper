@@ -82,6 +82,7 @@ public class Main {
             final FileFilter fileFilter =
                 file -> file.getName().endsWith(".json") && !file.getName().startsWith("schema");
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(args[1]))) {
+                final List<Source> sources = new ArrayList<Source>();
                 for (final File json : modulesDirectory.listFiles(fileFilter)) {
                     final RawModule module;
                     try (FileReader moduleReader = new FileReader(json)) {
@@ -90,12 +91,16 @@ public class Main {
                         Main.LOGGER.log(Level.SEVERE, json.getAbsolutePath());
                         throw e;
                     }
-                    for (final Source source : module.requiredliterature()) {
-                        Main.writeSource(source, writer);
+                    if (module.requiredliterature() != null) {
+                        sources.addAll(module.requiredliterature());
                     }
-                    for (final Source source : module.optionalliterature()) {
-                        Main.writeSource(source, writer);
+                    if (module.optionalliterature() != null) {
+                        sources.addAll(module.optionalliterature());
                     }
+                }
+                Collections.sort(sources, (s1, s2) -> Main.toSourceId(s1).compareTo(Main.toSourceId(s2)));
+                for (final Source source : sources) {
+                    Main.writeSource(source, writer);
                 }
             }
             return;
@@ -114,6 +119,20 @@ public class Main {
 
     public static void newLine(final BufferedWriter writer) throws IOException {
         writer.write(Main.lineSeparator);
+    }
+
+    private static String formatAuthor(final String author) {
+        if (author.contains("|")) {
+            final int index = author.indexOf('|');
+            return String.format("%s, %s", author.substring(index + 1), author.substring(0, index));
+        } else {
+            final String[] nameParts = author.split(" ");
+            return String.format(
+                "%s, %s",
+                nameParts[nameParts.length - 1],
+                Arrays.stream(nameParts).limit(nameParts.length - 1).collect(Collectors.joining(" "))
+            );
+        }
     }
 
     private static ModuleGuide parseModuleGuide(final String guide, final String modulesFolder) throws IOException {
@@ -161,8 +180,20 @@ public class Main {
     }
 
     private static String toAuthorEntry(final List<String> authors) {
-        // TODO Auto-generated method stub
-        return null;
+        if (authors == null || authors.isEmpty()) {
+            return "";
+        }
+        return authors.stream().map(Main::formatAuthor).collect(Collectors.joining(" and "));
+    }
+
+    private static String toPageEntry(final Integer frompage, final Integer topage) {
+        if (frompage == null) {
+            return "";
+        }
+        if (topage == null) {
+            return String.valueOf(frompage);
+        }
+        return String.format("%d--%d", frompage, topage);
     }
 
     private static String toSourceEntry(final String key, final String value) {
@@ -173,12 +204,29 @@ public class Main {
     }
 
     private static String toSourceId(final Source source) {
-        // TODO Auto-generated method stub
-        return null;
+        if (source.authors() == null || source.authors().isEmpty()) {
+            if (source.editors() == null || source.editors().isEmpty()) {
+                if (source.institution() == null || source.institution().isBlank()) {
+                    return "Anonymous_" + source.year();
+                }
+                return String.format("%s_%d", source.institution().split(" ")[0], source.year());
+            }
+            final String author = Main.formatAuthor(source.editors().getFirst());
+            final String lastName = author.substring(0, author.indexOf(","));
+            if (source.editors().size() > 1) {
+                return String.format("%s_et_al_%d", lastName, source.year());
+            }
+            return String.format("%s_%d", lastName, source.year());
+        }
+        final String author = Main.formatAuthor(source.authors().getFirst());
+        final String lastName = author.substring(0, author.indexOf(","));
+        if (source.authors().size() > 1) {
+            return String.format("%s_et_al_%d", lastName, source.year());
+        }
+        return String.format("%s_%d", lastName, source.year());
     }
 
     private static void writeSource(final Source source, final BufferedWriter writer) throws IOException {
-        // TODO Auto-generated method stub
         switch (source.type()) {
         case ARTICLE:
             writer.write("@article{");
@@ -194,7 +242,16 @@ public class Main {
         default:
             writer.write("@misc{");
         }
-        writer.write(Main.toSourceId(source));
+        writer.write(
+            Main.toSourceId(source)
+            .replaceAll("ä", "ae")
+            .replaceAll("ö", "oe")
+            .replaceAll("ü", "ue")
+            .replaceAll("Ä", "Ae")
+            .replaceAll("Ö", "Oe")
+            .replaceAll("Ü", "Ue")
+            .replaceAll("ß", "ss")
+        );
         writer.write(",\n  ");
         writer.write(
             Stream.of(
@@ -203,8 +260,20 @@ public class Main {
                 Main.toSourceEntry("author", source.institution()),
                 Main.toSourceEntry("title", source.title()),
                 Main.toSourceEntry("subtitle", source.subtitle()),
+                Main.toSourceEntry("journal", source.journal()),
+                Main.toSourceEntry("publisher", source.publisher()),
+                Main.toSourceEntry("location", source.location()),
+                Main.toSourceEntry(
+                    "edition",
+                    source.edition() != null && source.edition() > 0 ? String.valueOf(source.edition()) : ""
+                ),
+                Main.toSourceEntry("volume", source.volume()),
+                Main.toSourceEntry("number", source.number()),
+                Main.toSourceEntry("pages", Main.toPageEntry(source.frompage(), source.topage())),
+                Main.toSourceEntry("isbn", source.isbn()),
+                Main.toSourceEntry("doi", source.doi()),
+                Main.toSourceEntry("url", source.url()),
                 Main.toSourceEntry("year", String.valueOf(source.year()))
-                //TODO
             ).filter(entry -> !entry.isBlank()).collect(Collectors.joining(",\n  "))
         );
         writer.write("\n}\n\n");
