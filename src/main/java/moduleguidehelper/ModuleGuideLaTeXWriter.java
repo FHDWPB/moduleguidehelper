@@ -339,7 +339,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write("\\pdfsuppressptexinfo=-1");
         Main.newLine(writer);
         Main.newLine(writer);
-        writer.write("\\usepackage[ngerman]{babel}");
+        writer.write("\\usepackage[ngerman,english]{babel}");
         Main.newLine(writer);
         writer.write("\\usepackage[T1]{fontenc}");
         Main.newLine(writer);
@@ -376,6 +376,14 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write("\\usetikzlibrary{calc,positioning}");
         Main.newLine(writer);
         writer.write("\\usepackage{hyperref}");
+        Main.newLine(writer);
+        writer.write("\\usepackage[bibencoding=auto,backend=biber,babel=other]{biblatex}");
+        Main.newLine(writer);
+        writer.write("\\setcounter{biburllcpenalty}{7000}");
+        Main.newLine(writer);
+        writer.write("\\setcounter{biburlucpenalty}{8000}");
+        Main.newLine(writer);
+        writer.write("\\addbibresource{references.bib}");
         Main.newLine(writer);
         Main.newLine(writer);
         writer.write(
@@ -765,6 +773,9 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
                     writer.write("\\\\[1.5ex]");
                     Main.newLine(writer);
                 }
+//                writer.write("\\fullcite{");
+//                writer.write(source);
+//                writer.write("}");
                 ModuleGuideLaTeXWriter.writeSource(source, internationalization, writer);
             }
             Main.newLine(writer);

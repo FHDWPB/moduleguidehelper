@@ -24,11 +24,12 @@ public class Store {
         final String texSuffix = ".tex";
         final String modules = directory.toPath().resolve("modules").toString();
         Main.main(new String[] {modules});
-        final int total = 4 * this.guides.size();
+        final int total = 5 * this.guides.size();
         int current = 0;
         progressListener.accept(0);
         for (final File guide : this.guides) {
-            final String texFile = guide.getName().substring(0, guide.getName().length() - 5) + texSuffix;
+            final String fileName = guide.getName().substring(0, guide.getName().length() - 5);
+            final String texFile = fileName + texSuffix;
             Main.main(
                 new String[] {
                     guide.getPath(),
@@ -36,8 +37,16 @@ public class Store {
                     directory.toPath().resolve(texFile).toString()
                 }
             );
-            for (int i = 0; i < 4; i++) {
-                final Process pdfProcess = Main.buildAndStartPDFLaTeXProcess(texFile, directory);
+            Process pdfProcess = Main.buildAndStartPDFLaTeXProcess(texFile, directory);
+            pdfProcess.waitFor(60, TimeUnit.SECONDS);
+            current++;
+            progressListener.accept(current * 100 / total);
+            final Process biberProcess = Main.buildAndStartBiberProcess(fileName, directory);
+            biberProcess.waitFor(60, TimeUnit.SECONDS);
+            current++;
+            progressListener.accept(current * 100 / total);
+            for (int i = 0; i < 3; i++) {
+                pdfProcess = Main.buildAndStartPDFLaTeXProcess(texFile, directory);
                 pdfProcess.waitFor(60, TimeUnit.SECONDS);
                 current++;
                 progressListener.accept(current * 100 / total);

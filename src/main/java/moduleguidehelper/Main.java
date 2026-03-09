@@ -3,6 +3,7 @@ package moduleguidehelper;
 import java.io.*;
 import java.util.*;
 import java.util.logging.*;
+import java.util.stream.*;
 
 import com.google.gson.*;
 import com.google.gson.stream.*;
@@ -22,6 +23,13 @@ public class Main {
     public static final Logger LOGGER = Logger.getLogger("moduleguidehelper");
 
     private static final String VERSION = "1.3.0";
+
+    public static Process buildAndStartBiberProcess(final String fileName, final File directory) throws IOException {
+        return new ProcessBuilder(
+            "biber",
+            fileName
+        ).inheritIO().directory(directory).start();
+    }
 
     public static Process buildAndStartPDFLaTeXProcess(final String fileName, final File directory) throws IOException {
         return new ProcessBuilder(
@@ -70,44 +78,24 @@ public class Main {
         }
         Main.LOGGER.setLevel(Level.SEVERE);
         if (args != null && args.length == 2) {
-            try (
-                BufferedReader reader = new BufferedReader(new FileReader(args[0]));
-                BufferedWriter writer = new BufferedWriter(new FileWriter(args[1]))
-            ) {
-                String line = reader.readLine();
-                boolean contents = false;
-                boolean sections = false;
-                while (line != null) {
-                    if ("inhalte".equals(line.trim().toLowerCase())) {
-                        contents = true;
-                    } else if ("grundlegende literaturhinweise".equals(line.trim().toLowerCase())) {
-                        contents = false;
-                    } else if ("literatur".equals(line.trim().toLowerCase())) {
-                        contents = false;
-                    } else if (contents) {
-                        if (!line.replaceAll("•", "").isBlank() && !line.startsWith("Seite")) {
-                            if (line.startsWith("o")) {
-                                if (!sections) {
-                                    sections = true;
-                                    writer.write(",\n        \"sections\": [\n");
-                                } else {
-                                    writer.write(",\n");
-                                }
-                                writer.write("            \"");
-                                writer.write(line.substring(1).trim());
-                                writer.write("\"");
-                            } else {
-                                if (sections) {
-                                    writer.write("\n        ]");
-                                    sections = false;
-                                }
-                                writer.write("\n    },\n    {\n        \"chapter\": \"");
-                                writer.write(line.trim());
-                                writer.write("\"");
-                            }
-                        }
+            final File modulesDirectory = new File(args[0]);
+            final FileFilter fileFilter =
+                file -> file.getName().endsWith(".json") && !file.getName().startsWith("schema");
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(args[1]))) {
+                for (final File json : modulesDirectory.listFiles(fileFilter)) {
+                    final RawModule module;
+                    try (FileReader moduleReader = new FileReader(json)) {
+                        module = Main.GSON.fromJson(moduleReader, RawModule.class);
+                    } catch (final MalformedJsonException | JsonSyntaxException e) {
+                        Main.LOGGER.log(Level.SEVERE, json.getAbsolutePath());
+                        throw e;
                     }
-                    line = reader.readLine();
+                    for (final Source source : module.requiredliterature()) {
+                        Main.writeSource(source, writer);
+                    }
+                    for (final Source source : module.optionalliterature()) {
+                        Main.writeSource(source, writer);
+                    }
                 }
             }
             return;
@@ -170,6 +158,56 @@ public class Main {
             writer.setSerializeNulls(false);
             Main.GSON.toJson(module, RawModule.class, writer);
         }
+    }
+
+    private static String toAuthorEntry(final List<String> authors) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    private static String toSourceEntry(final String key, final String value) {
+        if (value == null || value.isBlank()) {
+            return "";
+        }
+        return String.format("%s = {%s}", key, value);
+    }
+
+    private static String toSourceId(final Source source) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    private static void writeSource(final Source source, final BufferedWriter writer) throws IOException {
+        // TODO Auto-generated method stub
+        switch (source.type()) {
+        case ARTICLE:
+            writer.write("@article{");
+            break;
+        case BOOK:
+            writer.write("@book{");
+            break;
+        case HINT:
+            return;
+        case PROCEEDINGS:
+            writer.write("@inproceedings{");
+            break;
+        default:
+            writer.write("@misc{");
+        }
+        writer.write(Main.toSourceId(source));
+        writer.write(",\n  ");
+        writer.write(
+            Stream.of(
+                Main.toSourceEntry("author", Main.toAuthorEntry(source.authors())),
+                Main.toSourceEntry("editor", Main.toAuthorEntry(source.editors())),
+                Main.toSourceEntry("author", source.institution()),
+                Main.toSourceEntry("title", source.title()),
+                Main.toSourceEntry("subtitle", source.subtitle()),
+                Main.toSourceEntry("year", String.valueOf(source.year()))
+                //TODO
+            ).filter(entry -> !entry.isBlank()).collect(Collectors.joining(",\n  "))
+        );
+        writer.write("\n}\n\n");
     }
 
 }
