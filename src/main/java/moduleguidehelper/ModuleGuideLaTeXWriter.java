@@ -16,8 +16,6 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
 
     private static final Pattern ESCAPE_PATTERN = Pattern.compile("\\$\\$([^\\$]|\\$[^\\$])+\\$\\$");
 
-    private static final int MAX_NUMBER_OF_AUTHORS = 3;
-
     private static final String OVERVIEW_FIRST_COL_SIZE = "7.2cm";
 
     private static final String OVERVIEW_FIRST_COL_SIZE_ELECTIVE = "5.7cm";
@@ -29,7 +27,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         final String modulesFolder,
         final BufferedWriter writer
     ) throws IOException {
-        ModuleGuideLaTeXWriter.writeDocumentStartStatic(writer);
+        ModuleGuideLaTeXWriter.writeDocumentStartStatic(true, writer);
         writer.write("\\pagestyle{fancy}");
         Main.newLine(writer);
         Main.newLine(writer);
@@ -139,35 +137,6 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         return numbers.stream().map(ModuleStats::toRomanNumeral).collect(Collectors.joining(", "));
     }
 
-    private static String formatAuthor(final String author) {
-        final String familyName;
-        final List<Character> initials = new LinkedList<Character>();
-        if (author.contains("|")) {
-            final int index = author.indexOf('|');
-            familyName = author.substring(index + 1);
-            for (final String namePart : author.substring(0, index).split(" ")) {
-                if (!namePart.isBlank()) {
-                    initials.add(namePart.charAt(0));
-                }
-            }
-        } else {
-            final String[] nameParts = author.split(" ");
-            familyName = nameParts[nameParts.length - 1];
-            for (int i = 0; i < nameParts.length - 1; i++) {
-                initials.add(nameParts[i].charAt(0));
-            }
-        }
-        final StringBuilder result = new StringBuilder();
-        result.append(ModuleGuideLaTeXWriter.escapeForLaTeX(familyName.toUpperCase()));
-        result.append(",");
-        for (final Character c : initials) {
-            result.append(" ");
-            result.append(Character.toUpperCase(c));
-            result.append(".");
-        }
-        return result.toString();
-    }
-
     private static String formatExamination(final String examination, final Internationalization internationalization) {
         if (examination == null || examination.isBlank()) {
             return "\\textbf{\\textcolor{red}{ANGABEN FEHLEN!}}";
@@ -266,51 +235,6 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         return result;
     }
 
-    private static void writeAuthors(
-        final List<String> authors,
-        final List<String> editors,
-        final String institution,
-        final Internationalization internationalization,
-        final BufferedWriter writer
-    ) throws IOException {
-        if (authors == null || authors.isEmpty()) {
-            if (editors == null || editors.isEmpty()) {
-                if (ModuleGuideLaTeXWriter.isSet(institution)) {
-                    writer.write(institution);
-                }
-                return;
-            }
-            writer.write(
-                editors
-                .stream()
-                .limit(ModuleGuideLaTeXWriter.MAX_NUMBER_OF_AUTHORS)
-                .map(ModuleGuideLaTeXWriter::formatAuthor)
-                .collect(Collectors.joining(", "))
-            );
-            if (editors.size() > ModuleGuideLaTeXWriter.MAX_NUMBER_OF_AUTHORS) {
-                writer.write(" et al.");
-            }
-            writer.write(" (");
-            writer.write(
-                internationalization.internationalize(
-                    editors.size() == 1 ? InternationalizationKey.EDITOR_ABBR : InternationalizationKey.EDITORS_ABBR
-                )
-            );
-            writer.write(")");
-        } else {
-            writer.write(
-                authors
-                .stream()
-                .limit(ModuleGuideLaTeXWriter.MAX_NUMBER_OF_AUTHORS)
-                .map(ModuleGuideLaTeXWriter::formatAuthor)
-                .collect(Collectors.joining(", "))
-            );
-            if (authors.size() > ModuleGuideLaTeXWriter.MAX_NUMBER_OF_AUTHORS) {
-                writer.write(" et al.");
-            }
-        }
-    }
-
     private static void writeCommaSeparated(final List<String> items, final BufferedWriter writer) throws IOException {
         writer.write(
             items
@@ -328,7 +252,10 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         Main.newLine(writer);
     }
 
-    private static void writeDocumentStartStatic(final BufferedWriter writer) throws IOException {
+    private static void writeDocumentStartStatic(
+        final boolean innerDirectory,
+        final BufferedWriter writer
+    ) throws IOException {
         writer.write("\\documentclass[11pt]{book}");
         Main.newLine(writer);
         Main.newLine(writer);
@@ -369,6 +296,8 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         Main.newLine(writer);
         writer.write("\\usepackage{enumitem}");
         Main.newLine(writer);
+        writer.write("\\usepackage{multicol}");
+        Main.newLine(writer);
         writer.write("\\usepackage{background}");
         Main.newLine(writer);
         writer.write("\\usepackage{tikz}");
@@ -377,13 +306,20 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         Main.newLine(writer);
         writer.write("\\usepackage{hyperref}");
         Main.newLine(writer);
-        writer.write("\\usepackage[bibencoding=auto,backend=biber,babel=other]{biblatex}");
+        writer.write(
+            "\\usepackage[bibencoding=auto,backend=biber,autolang=other,giveninits=true,style=iso-authoryear,"
+            + "maxcitenames=3]{biblatex}"
+        );
         Main.newLine(writer);
         writer.write("\\setcounter{biburllcpenalty}{7000}");
         Main.newLine(writer);
         writer.write("\\setcounter{biburlucpenalty}{8000}");
         Main.newLine(writer);
-        writer.write("\\addbibresource{references.bib}");
+        writer.write("\\addbibresource{");
+        if (innerDirectory) {
+            writer.write("../");
+        }
+        writer.write("literature.bib}");
         Main.newLine(writer);
         Main.newLine(writer);
         writer.write(
@@ -414,6 +350,20 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         Main.newLine(writer);
         Main.newLine(writer);
         writer.write("\\renewcommand{\\familydefault}{\\sfdefault}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\DefineBibliographyStrings{ngerman}{%");
+        Main.newLine(writer);
+        writer.write("  page={S\\adddot},");
+        Main.newLine(writer);
+        writer.write("  pages={S\\adddot},");
+        Main.newLine(writer);
+        writer.write("  andothers={et al\\adddot}");
+        Main.newLine(writer);
+        writer.write("}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\DeclareFieldFormat*{pages}{\\mkpageprefix[bookpagination]{#1}}");
         Main.newLine(writer);
         Main.newLine(writer);
         writer.write("\\newcolumntype{C}[1]{>{\\centering\\let\\newline\\\\\\arraybackslash\\hspace{0pt}}m{#1}}");
@@ -463,6 +413,9 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         Main.newLine(writer);
         Main.newLine(writer);
         writer.write("\\begin{document}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        writer.write("\\selectlanguage{ngerman}");
         Main.newLine(writer);
         Main.newLine(writer);
     }
@@ -741,6 +694,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         final String section,
         final List<String> items,
         final String noItems,
+        final boolean twoColumns,
         final BufferedWriter writer
     ) throws IOException {
         if (items != null && !items.isEmpty()) {
@@ -749,13 +703,24 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             writer.write("}");
             Main.newLine(writer);
             Main.newLine(writer);
+            final boolean doTwoColumns = twoColumns && items.size() > 4;
+            if (doTwoColumns) {
+                writer.write("\\vspace*{-2ex}");
+                Main.newLine(writer);
+                writer.write("\\begin{multicols}{2}");
+                Main.newLine(writer);
+            }
             ModuleGuideLaTeXWriter.writeItemize(items, noItems, true, writer);
+            if (doTwoColumns) {
+                writer.write("\\end{multicols}");
+                Main.newLine(writer);
+            }
         }
     }
 
     private static void writeLiteratureSection(
         final String title,
-        final List<Source> literature,
+        final List<String> literature,
         final Internationalization internationalization,
         final BufferedWriter writer
     ) throws IOException {
@@ -766,17 +731,20 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             Main.newLine(writer);
             Main.newLine(writer);
             boolean first = true;
-            for (final Source source : literature) {
+            for (final String source : literature) {
                 if (first) {
                     first = false;
                 } else {
                     writer.write("\\\\[1.5ex]");
                     Main.newLine(writer);
                 }
-//                writer.write("\\fullcite{");
-//                writer.write(source);
-//                writer.write("}");
-                ModuleGuideLaTeXWriter.writeSource(source, internationalization, writer);
+                if (source.startsWith("!")) {
+                    writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(source.substring(1)));
+                } else {
+                    writer.write("\\fullcite{");
+                    writer.write(source);
+                    writer.write("}");
+                }
             }
             Main.newLine(writer);
             Main.newLine(writer);
@@ -892,6 +860,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
                 internationalization.internationalize(InternationalizationKey.KEYWORDS),
                 module.module().keywords(),
                 none,
+                true,
                 writer
             );
             ModuleGuideLaTeXWriter.writeLookupSection(
@@ -1055,124 +1024,6 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         ModuleGuideLaTeXWriter.writeLongtableHeader(false, internationalization, writer);
     }
 
-    private static void writeSource(
-        final Source source,
-        final Internationalization internationalization,
-        final BufferedWriter writer
-    ) throws IOException {
-        if (source == null) {
-            return;
-        }
-        if (source.type() == SourceType.HINT) {
-            writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(source.title()));
-            return;
-        }
-        writer.write("\\begin{minipage}{\\textwidth}");
-        Main.newLine(writer);
-        ModuleGuideLaTeXWriter.writeAuthors(
-            source.authors(),
-            source.editors(),
-            source.institution(),
-            internationalization,
-            writer
-        );
-        if (source.year() != null) {
-            writer.write(", ");
-            writer.write(String.valueOf(source.year()));
-        }
-        writer.write(". \\textit{");
-        writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(source.title()));
-        if (ModuleGuideLaTeXWriter.isSet(source.subtitle())) {
-            writer.write(": ");
-            writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(source.subtitle()));
-        }
-        writer.write("}");
-        switch (source.type()) {
-        case BOOK:
-            if (source.edition() != null && source.edition() > 0) {
-                writer.write(", ");
-                writer.write(internationalization.enumerate(source.edition()));
-                writer.write("~");
-                writer.write(internationalization.internationalize(InternationalizationKey.EDITION));
-                writer.write(". ");
-            } else {
-                writer.write(".");
-            }
-            break;
-        case ARTICLE:
-            final boolean hasJournal = ModuleGuideLaTeXWriter.isSet(source.journal());
-            if (hasJournal) {
-                writer.write(", ");
-                writer.write(source.journal());
-            }
-            final boolean hasVolume = ModuleGuideLaTeXWriter.isSet(source.volume());
-            if (hasVolume) {
-                writer.write(", ");
-                writer.write(internationalization.internationalize(InternationalizationKey.VOLUME));
-                writer.write(" ");
-                writer.write(source.volume());
-            }
-            final boolean hasNumber = ModuleGuideLaTeXWriter.isSet(source.number());
-            if (hasNumber) {
-                writer.write(", ");
-                writer.write(internationalization.internationalize(InternationalizationKey.NUMBER));
-                writer.write(" ");
-                writer.write(source.number());
-            }
-            if (source.frompage() != null) {
-                final boolean multiplePages = source.topage() != null;
-                writer.write(", ");
-                writer.write(
-                    internationalization.internationalize(
-                        multiplePages ?
-                            InternationalizationKey.PAGE_ABBR_PLURAL :
-                                InternationalizationKey.PAGE_ABBR_SINGULAR
-                    )
-                );
-                writer.write(". ");
-                writer.write(String.valueOf(source.frompage()));
-                if (multiplePages) {
-                    writer.write("--");
-                    writer.write(String.valueOf(source.topage()));
-                }
-            }
-            if (hasJournal || hasVolume || hasNumber) {
-                writer.write(".");
-            }
-            break;
-        default:
-            writer.write(".");
-        }
-        final boolean hasPublisher = ModuleGuideLaTeXWriter.isSet(source.publisher());
-        if (ModuleGuideLaTeXWriter.isSet(source.location())) {
-            writer.write(" ");
-            writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(source.location()));
-            writer.write(hasPublisher ? ":" : ".");
-        }
-        if (hasPublisher) {
-            writer.write(" ");
-            writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(source.publisher()));
-            writer.write(".");
-        }
-        if (ModuleGuideLaTeXWriter.isSet(source.isbn())) {
-            writer.write(" ISBN: ");
-            writer.write(source.isbn());
-            writer.write(".");
-        }
-        if (ModuleGuideLaTeXWriter.isSet(source.doi())) {
-            writer.write(" DOI: ");
-            writer.write(source.doi());
-            writer.write(".");
-        }
-        if (ModuleGuideLaTeXWriter.isSet(source.url())) {
-            writer.write(" URL: \\url{");
-            writer.write(source.url());
-            writer.write("}.");
-        }
-        Main.newLine(writer);
-        writer.write("\\end{minipage}");
-    }
-
     private static void writeStats(
         final ModuleStats stats,
         final Internationalization internationalization,
@@ -1230,7 +1081,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
 
     @Override
     protected void writeDocumentStart(final BufferedWriter writer) throws IOException {
-        ModuleGuideLaTeXWriter.writeDocumentStartStatic(writer);
+        ModuleGuideLaTeXWriter.writeDocumentStartStatic(false, writer);
     }
 
     @Override

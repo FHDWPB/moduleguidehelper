@@ -21,7 +21,7 @@ public record RawModule(
     List<String> teachingmethods,
     String teachingpostface,
     List<Chapter> content,
-    List<Source> requiredliterature,
-    List<Source> optionalliterature,
+    List<String> requiredliterature,
+    List<String> optionalliterature,
     String comment
 ) {}

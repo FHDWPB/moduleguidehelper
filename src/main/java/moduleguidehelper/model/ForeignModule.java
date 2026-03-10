@@ -8,7 +8,7 @@ public record ForeignModule(
     int hours,
     List<String> competencies,
     String responsible,
-    List<SourceLink> sources
+    List<Source> sources
 ) {
 
 }
