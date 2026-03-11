@@ -12,83 +12,92 @@ import moduleguidehelper.internationalization.*;
 
 public record ModuleOverview(
     List<List<ModuleStats>> semesters,
-    Map<String, List<ModuleStats>> specializations,
+    Map<Specialization, List<ModuleStats>> specializations,
     int contactHoursSum,
     int homeHoursSum,
     int ectsSum,
     int weightSum
 ) {
 
-    private static final Comparator<Module> OVERVIEW_COMPARATOR = new Comparator<Module>() {
+    private static Comparator<Module> createOverviewComparator(final List<String> specializationOrder) {
+        return new Comparator<Module>() {
 
-        @Override
-        public int compare(final Module module1, final Module module2) {
-            final MetaModule meta1 = module1.meta();
-            final MetaModule meta2 = module2.meta();
-            final int compare = meta1.semester() - meta2.semester();
-            if (compare != 0) {
-                return compare;
-            }
-            if (meta1.sempos() != null) {
-                if (meta2.sempos() != null) {
-                    final int poscompare = meta1.sempos().compareTo(meta2.sempos());
-                    if (poscompare != 0) {
-                        return poscompare;
-                    }
-                    if (meta1.specializationnumber() != null) {
-                        if (meta2.specializationnumber() != null) {
-                            if (Main.ELECTIVE.equals(meta1.specialization())) {
-                                if (Main.ELECTIVE.equals(meta2.specialization())) {
-                                    return meta1.specializationnumber().compareTo(meta2.specializationnumber());
+            @Override
+            public int compare(final Module module1, final Module module2) {
+                final MetaModule meta1 = module1.meta();
+                final MetaModule meta2 = module2.meta();
+                final int compare = meta1.semester() - meta2.semester();
+                if (compare != 0) {
+                    return compare;
+                }
+                if (meta1.sempos() != null) {
+                    if (meta2.sempos() != null) {
+                        final int poscompare = meta1.sempos().compareTo(meta2.sempos());
+                        if (poscompare != 0) {
+                            return poscompare;
+                        }
+                        if (meta1.specializationnumber() != null) {
+                            if (meta2.specializationnumber() != null) {
+                                if (Main.ELECTIVE.equals(meta1.specialization())) {
+                                    if (Main.ELECTIVE.equals(meta2.specialization())) {
+                                        return meta1.specializationnumber().compareTo(meta2.specializationnumber());
+                                    }
+                                    return 1;
                                 }
-                                return 1;
+                                if (Main.ELECTIVE.equals(meta2.specialization())) {
+                                    return -1;
+                                }
+                                final int speccompare = meta1.specialization().compareTo(meta2.specialization());
+                                if (speccompare != 0) {
+                                    return speccompare;
+                                }
+                                return meta1.specializationnumber().compareTo(meta2.specializationnumber());
                             }
-                            if (Main.ELECTIVE.equals(meta2.specialization())) {
-                                return -1;
-                            }
-                            final int speccompare = meta1.specialization().compareTo(meta2.specialization());
-                            if (speccompare != 0) {
-                                return speccompare;
-                            }
-                            return meta1.specializationnumber().compareTo(meta2.specializationnumber());
+                            return 1;
                         }
-                        return 1;
+                        if (meta2.specializationnumber() != null) {
+                            return -1;
+                        }
                     }
+                    return -1;
+                }
+                if (meta2.sempos() != null) {
+                    return 1;
+                }
+                if (meta1.specializationnumber() != null) {
                     if (meta2.specializationnumber() != null) {
-                        return -1;
-                    }
-                }
-                return -1;
-            }
-            if (meta2.sempos() != null) {
-                return 1;
-            }
-            if (meta1.specializationnumber() != null) {
-                if (meta2.specializationnumber() != null) {
-                    if (Main.ELECTIVE.equals(meta1.specialization())) {
-                        if (Main.ELECTIVE.equals(meta2.specialization())) {
-                            return meta1.specializationnumber().compareTo(meta2.specializationnumber());
+                        if (Main.ELECTIVE.equals(meta1.specialization())) {
+                            if (Main.ELECTIVE.equals(meta2.specialization())) {
+                                return meta1.specializationnumber().compareTo(meta2.specializationnumber());
+                            }
+                            return 1;
                         }
-                        return 1;
+                        if (Main.ELECTIVE.equals(meta2.specialization())) {
+                            return -1;
+                        }
+                        if (specializationOrder != null && !specializationOrder.isEmpty()) {
+                            final int index1 = specializationOrder.indexOf(meta1.specialization());
+                            final int index2 = specializationOrder.indexOf(meta2.specialization());
+                            if (index1 != index2) {
+                                return Integer.compare(index1, index2);
+                            }
+                        }
+                        final int speccompare = meta1.specialization().compareTo(meta2.specialization());
+                        if (speccompare != 0) {
+                            return speccompare;
+                        }
+                        return meta1.specializationnumber().compareTo(meta2.specializationnumber());
                     }
-                    if (Main.ELECTIVE.equals(meta2.specialization())) {
-                        return -1;
-                    }
-                    final int speccompare = meta1.specialization().compareTo(meta2.specialization());
-                    if (speccompare != 0) {
-                        return speccompare;
-                    }
-                    return meta1.specializationnumber().compareTo(meta2.specializationnumber());
+                    return 1;
                 }
-                return 1;
+                if (meta2.specializationnumber() != null) {
+                    return -1;
+                }
+                return 0;
             }
-            if (meta2.specializationnumber() != null) {
-                return -1;
-            }
-            return 0;
-        }
 
-    };
+        };
+    }
 
     public static ModuleOverview create(final ModuleGuide guide) {
         final Internationalization internationalization = guide.generalLanguage().getInternationalization();
@@ -96,12 +105,19 @@ public record ModuleOverview(
         final Map<Integer, List<ModuleStats>> semesterMap = new TreeMap<Integer, List<ModuleStats>>();
         final Map<Integer, ModuleStats> specializationModulesMap = new LinkedHashMap<Integer, ModuleStats>();
         final Map<Integer, ModuleStats> electiveModulesMap = new LinkedHashMap<Integer, ModuleStats>();
-        final Map<String, List<ModuleStats>> specializations = new TreeMap<String, List<ModuleStats>>();
+        final Map<Specialization, List<ModuleStats>> specializations = new TreeMap<Specialization, List<ModuleStats>>();
+        final List<String> specializationOrder =
+            guide.specializationOrder() == null ? List.of() : guide.specializationOrder();
         int ectsSum = 0;
         int contactHoursSum = 0;
         int homeHoursSum = 0;
         int weightSum = 0;
-        for (final Module module : guide.modules().stream().sorted(ModuleOverview.OVERVIEW_COMPARATOR).toList()) {
+        final List<Module> sortedModules =
+            guide.modules()
+            .stream()
+            .sorted(ModuleOverview.createOverviewComparator(guide.specializationOrder()))
+            .toList();
+        for (final Module module : sortedModules) {
             final RawModule rawModule = module.module();
             final MetaModule meta = module.meta();
             final BigFraction contactHoursFactor = ModuleOverview.parseFactor(meta.contacthoursfactor());
@@ -167,7 +183,11 @@ public record ModuleOverview(
                         semesterMap.merge(meta.semester(), List.of(statsForSemester), ModuleOverview::concatLists);
                     }
                 }
-                specializations.merge(meta.specialization(), List.of(stats), ModuleOverview::concatLists);
+                specializations.merge(
+                    new Specialization(meta.specialization(), specializationOrder.indexOf(meta.specialization())),
+                    List.of(stats),
+                    ModuleOverview::concatLists
+                );
             } else {
                 contactHoursSum += contactHours.intValue();
                 homeHoursSum += homeHours.intValue();

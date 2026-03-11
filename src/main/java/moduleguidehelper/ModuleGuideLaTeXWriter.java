@@ -308,7 +308,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         Main.newLine(writer);
         writer.write(
             "\\usepackage[bibencoding=auto,backend=biber,autolang=other,giveninits=true,style=iso-authoryear,"
-            + "maxcitenames=3]{biblatex}"
+            + "maxcitenames=3,mincitenames=3]{biblatex}"
         );
         Main.newLine(writer);
         writer.write("\\setcounter{biburllcpenalty}{7000}");
@@ -1155,7 +1155,9 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         final List<String> linkable = this.guide.modules().stream().map(module -> module.meta().module()).toList();
         String specialization = "";
         int semester = 0;
-        for (final Module module : this.guide.modules().stream().sorted().toList()) {
+        final List<Module> sortedModules =
+            this.guide.modules().stream().sorted(Module.createComparator(this.guide.specializationOrder())).toList();
+        for (final Module module : sortedModules) {
             try {
                 if (module.meta().specialization() != null && !specialization.equals(module.meta().specialization())) {
                     specialization = module.meta().specialization();
@@ -1321,8 +1323,8 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             final int[] pagebreaksSpecialization =
                 ModuleGuideLaTeXWriter.toPagebreaks(this.guide.pagebreaksSpecialization());
             ModuleGuideLaTeXWriter.writeLongtableHeader(true, internationalization, writer);
-            for (final Map.Entry<String, List<ModuleStats>> entry : overview.specializations().entrySet()) {
-                if (Main.ELECTIVE.equals(entry.getKey())) {
+            for (final Map.Entry<Specialization, List<ModuleStats>> entry : overview.specializations().entrySet()) {
+                if (Main.ELECTIVE.equals(entry.getKey().name())) {
                     continue;
                 }
                 if (
@@ -1334,7 +1336,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
                     pagebreakIndex++;
                 }
                 writer.write("\\rowcolor{fhdwblue}\\multicolumn{6}{c}{\\textcolor{white}{");
-                writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(entry.getKey()));
+                writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(entry.getKey().name()));
                 writer.write("}}\\\\\\hline");
                 Main.newLine(writer);
                 for (final ModuleStats stats : entry.getValue()) {
@@ -1356,8 +1358,8 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             Main.newLine(writer);
             Main.newLine(writer);
             ModuleGuideLaTeXWriter.writeLongtableHeader(true, true, internationalization, writer);
-            for (final Map.Entry<String, List<ModuleStats>> entry : overview.specializations().entrySet()) {
-                if (!Main.ELECTIVE.equals(entry.getKey())) {
+            for (final Map.Entry<Specialization, List<ModuleStats>> entry : overview.specializations().entrySet()) {
+                if (!Main.ELECTIVE.equals(entry.getKey().name())) {
                     continue;
                 }
                 final Map<String, List<ModuleStats>> electiveByNumbers = new TreeMap<String, List<ModuleStats>>();

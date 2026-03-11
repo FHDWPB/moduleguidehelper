@@ -122,13 +122,13 @@ public class German implements Internationalization {
                 + "Einzelprüfung als Klausur oder Referat entsprechen (bei zwei Klausuren addieren sich "
                 + "beispielsweise die Bearbeitungszeiten dieser beiden Klausuren zu 90 Minuten auf).";
         case PRACTICAL_FORM:
-            return "Die Prüfung ist eine praktische Prüfung.";
+            return "Die Prüfung besteht aus einer praktischen Prüfung.";
         case PRESENTATION_FORM:
             return "Die Prüfung besteht aus einem Referat.";
         case QUALIFICATION:
             return "Qualifikations- und Kompetenzziele";
         case QUALIFICATION_START:
-            return "Nach erfolgreichem Abschluss dieses Moduls sind die Studierenden in der Lage";
+            return "Nach erfolgreichem Abschluss dieses Moduls sind die Studierenden in der Lage,";
         case RECOMMENDATIONS:
             return "Zugangsempfehlungen";
         case RECOMMENDED_LITERATURE:

@@ -11,6 +11,7 @@ public record ModuleGuide(
     List<Integer> pagebreaks,
     List<Integer> pagebreaksSpecialization,
     Signature signature,
+    List<String> specializationOrder,
     List<Module> modules
 ) {
 
