@@ -741,9 +741,13 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
                 if (source.startsWith("!")) {
                     writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(source.substring(1)));
                 } else {
+                    writer.write("\\begin{minipage}{\\textwidth}");
+                    Main.newLine(writer);
                     writer.write("\\fullcite{");
                     writer.write(source);
                     writer.write("}");
+                    Main.newLine(writer);
+                    writer.write("\\end{minipage}");
                 }
             }
             Main.newLine(writer);
