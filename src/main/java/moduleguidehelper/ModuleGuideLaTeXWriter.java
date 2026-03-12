@@ -709,6 +709,8 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
                 Main.newLine(writer);
                 writer.write("\\begin{multicols}{2}");
                 Main.newLine(writer);
+                writer.write("\\raggedcolumns");
+                Main.newLine(writer);
             }
             ModuleGuideLaTeXWriter.writeItemize(items, noItems, true, writer);
             if (doTwoColumns) {
