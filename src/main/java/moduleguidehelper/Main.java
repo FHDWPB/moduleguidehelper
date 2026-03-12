@@ -1,6 +1,7 @@
 package moduleguidehelper;
 
 import java.io.*;
+import java.nio.file.*;
 import java.util.*;
 import java.util.logging.*;
 
@@ -9,6 +10,8 @@ import com.google.gson.stream.*;
 
 import moduleguidehelper.model.*;
 import moduleguidehelper.model.Module;
+import moduleguidehelper.model.equivalence.*;
+import moduleguidehelper.parser.*;
 import moduleguidehelper.view.*;
 
 public class Main {
@@ -21,7 +24,7 @@ public class Main {
 
     public static final Logger LOGGER = Logger.getLogger("moduleguidehelper");
 
-    private static final String VERSION = "2.1.3";
+    private static final String VERSION = "3.0.0";
 
     public static Process buildAndStartBiberProcess(final String fileName, final File directory) throws IOException {
         return new ProcessBuilder(
@@ -75,6 +78,23 @@ public class Main {
             }
             return;
         }
+        if (args == null || args.length == 9) {
+            System.out.println(
+                "Expected input: qualification, major, comments, ownModules, numberOfSemesters, foreignModules, matches, decision, output"
+            );
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(args[8])))) {
+                new Documentation(
+                    args[0],
+                    args[1],
+                    Files.readAllLines(new File(args[2]).toPath()),
+                    new OwnModuleParser(Integer.parseInt(args[4])).apply(new File(args[3])),
+                    new ForeignModuleParser().apply(new File(args[5])),
+                    new MatchesParser().apply(new File(args[6])),
+                    new DecisionParser().apply(new File(args[7]))
+                ).write(writer);
+            }
+            return;
+        }
         Main.LOGGER.setLevel(Level.SEVERE);
         if (args == null || args.length != 3) {
             System.out.println("Call with guide JSON, modules folder, and output file!");
@@ -118,7 +138,7 @@ public class Main {
         return new ModuleGuide(
             metaGuide.subject(),
             metaGuide.degree(),
-            metaGuide.timemodel(),
+            metaGuide.mode(),
             metaGuide.year(),
             metaGuide.generallanguage(),
             metaGuide.pagebreaks(),

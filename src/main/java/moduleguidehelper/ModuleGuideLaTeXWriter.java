@@ -1431,9 +1431,9 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         Main.newLine(writer);
         writer.write("\\Large ");
         writer.write(internationalization.internationalize(InternationalizationKey.MODULE_GUIDE));
-        writer.write(" ");
+        writer.write(" (");
         writer.write(internationalization.internationalize(this.guide.timeModel().internationalizationKey));
-        writer.write("\\\\[1ex]");
+        writer.write(")\\\\[1ex]");
         Main.newLine(writer);
         writer.write("\\Huge \\textbf{");
         writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(this.guide.subject()));

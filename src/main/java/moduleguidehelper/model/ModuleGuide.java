@@ -5,7 +5,7 @@ import java.util.*;
 public record ModuleGuide(
     String subject,
     String degree,
-    TimeModel timeModel,
+    Mode timeModel,
     String year,
     Language generalLanguage,
     List<Integer> pagebreaks,

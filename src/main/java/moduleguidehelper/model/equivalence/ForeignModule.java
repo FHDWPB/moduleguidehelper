@@ -1,14 +1,14 @@
-package moduleguidehelper.model;
+package moduleguidehelper.model.equivalence;
 
 import java.util.*;
 
 public record ForeignModule(
     String id,
-    String name,
-    int hours,
+    String title,
+    int totalHours,
     List<String> competencies,
     String responsible,
     List<Source> sources
-) {
+) implements MatchableModule {
 
 }

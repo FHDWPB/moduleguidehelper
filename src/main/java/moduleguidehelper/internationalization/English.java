@@ -46,6 +46,8 @@ public class English implements Internationalization {
             return "Präsenzveranstaltungen, Eigenstudium, individuelles und kooperatives Lernen, "
                 + "problemorientiertes und integratives Lernen, forschendes Lernen, synchrones und "
                 + "asynchrones Lernen, Übungen, Fallstudien, Expertenvorträge, Projekte, Gruppenarbeit";
+        case DUAL:
+            return "integrated degree";
         case DURATION:
             return "Duration";
         case ECTS:
@@ -85,10 +87,12 @@ public class English implements Internationalization {
                 + "not their combination.";
         case EXAMINATIONS_PREFERRED:
             return "If one examination form is emphasized, it is the preferred form.";
+        case EXTRA_OCCUPATIONAL:
+            return "extra occupational";
         case FREQUENCY:
             return "Frequency";
         case FULLTIME:
-            return "Fulltime";
+            return "fulltime";
         case GENERAL_INFORMATION:
             return "General Information";
         case GREETING_COLLEAGUES:
@@ -121,8 +125,6 @@ public class English implements Internationalization {
             return "p";
         case PAPER_FORM:
             return "The examination is a scientific paper.";
-        case PARTTIME:
-            return "Parttime";
         case PORTFOLIO_FORM:
             return "The examination is a combined form of \\textbf{either} one written exam and one presentation "
                 + "\\textbf{or} two written exams; the combined effort for the examination must match that of a "

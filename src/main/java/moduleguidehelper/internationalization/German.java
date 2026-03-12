@@ -34,6 +34,8 @@ public class German implements Internationalization {
             return "Präsenzveranstaltungen, Eigenstudium, individuelles und kooperatives Lernen, "
                 + "problemorientiertes und integratives Lernen, forschendes Lernen, synchrones und "
                 + "asynchrones Lernen, Übungen, Fallstudien, Expertenvorträge, Projekte, Gruppenarbeit";
+        case DUAL:
+            return "dual";
         case DURATION:
             return "Dauer";
         case ECTS:
@@ -75,6 +77,8 @@ public class German implements Internationalization {
                 + "dar; nicht jedoch die Kombination dieser verschiedenen Prüfungsformen.";
         case EXAMINATIONS_PREFERRED:
             return "Ist bei mehreren Prüfungsformen eine davon hervorgehoben, so wird diese bevorzugt.";
+        case EXTRA_OCCUPATIONAL:
+            return "berufsbegleitend";
         case FREQUENCY:
             return "Häufigkeit";
         case FULLTIME:
@@ -114,8 +118,6 @@ public class German implements Internationalization {
             return "S";
         case PAPER_FORM:
             return "Die Prüfung besteht aus einer Studienarbeit.";
-        case PARTTIME:
-            return "Teilzeit";
         case PORTFOLIO_FORM:
             return "Die Prüfung ist eine kombinierte Prüfung aus \\textbf{entweder} einer Klausur und einem "
                 + "Referat \\textbf{oder} aus zwei Klausuren; der kombinierte Prüfungsumfang muss dabei dem einer "
@@ -182,7 +184,12 @@ public class German implements Internationalization {
 
     @Override
     public String introduction(final String degreeType, final String subject, final String year) {
-        return String.format("Sie erhalten das Modulhandbuch für den %s-Studiengang %s im Studienjahr %s.", degreeType, subject, year);
+        return String.format(
+            "Sie erhalten das Modulhandbuch für den %s-Studiengang %s im Studienjahr %s.",
+            degreeType,
+            subject,
+            year
+        );
     }
 
 }
