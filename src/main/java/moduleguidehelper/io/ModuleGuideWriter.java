@@ -1,4 +1,4 @@
-package moduleguidehelper;
+package moduleguidehelper.io;
 
 import java.io.*;
 
@@ -12,7 +12,7 @@ public abstract class ModuleGuideWriter {
         this.guide = guide;
     }
 
-    public void write(final String modulesFolder, final BufferedWriter writer) throws IOException {
+    public void write(final File modulesFolder, final BufferedWriter writer) throws IOException {
         this.writeDocumentStart(writer);
         this.writeTitlePage(writer);
         this.writeIntro(writer);
@@ -30,7 +30,7 @@ public abstract class ModuleGuideWriter {
 
     protected abstract void writeModules(
         final int weightSum,
-        final String modulesFolder,
+        final File modulesFolder,
         final BufferedWriter writer
     ) throws IOException;
 

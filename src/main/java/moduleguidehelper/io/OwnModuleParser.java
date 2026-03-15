@@ -1,4 +1,4 @@
-package moduleguidehelper.parser;
+package moduleguidehelper.io;
 
 import java.io.*;
 import java.util.*;

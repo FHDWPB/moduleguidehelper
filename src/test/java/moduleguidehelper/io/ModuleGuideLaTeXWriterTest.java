@@ -1,4 +1,4 @@
-package moduleguidehelper;
+package moduleguidehelper.io;
 
 import org.testng.*;
 import org.testng.annotations.*;

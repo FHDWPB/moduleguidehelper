@@ -1,4 +1,4 @@
-package moduleguidehelper;
+package moduleguidehelper.io;
 
 import java.io.*;
 import java.util.*;
@@ -8,6 +8,7 @@ import java.util.stream.*;
 
 import com.google.gson.*;
 
+import moduleguidehelper.*;
 import moduleguidehelper.internationalization.*;
 import moduleguidehelper.model.*;
 import moduleguidehelper.model.Module;
@@ -24,7 +25,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         final String id,
         final RawModule module,
         final int weightSum,
-        final String modulesFolder,
+        final File modulesFolder,
         final BufferedWriter writer
     ) throws IOException {
         ModuleGuideLaTeXWriter.writeDocumentStartStatic(true, writer);
@@ -167,13 +168,13 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
 
     private static String lookupModule(
         final String id,
-        final String modulesFolder,
+        final File modulesFolder,
         final List<String> linkable
     ) {
         if (id.startsWith("!")) {
             return ModuleGuideLaTeXWriter.escapeForLaTeX(id.substring(1));
         }
-        final File json = new File(modulesFolder + "/" + id.toLowerCase() + ".json");
+        final File json = modulesFolder.toPath().resolve(id.toLowerCase() + ".json").toFile();
         if (json.exists()) {
             final RawModule raw;
             try (FileReader reader = new FileReader(json)) {
@@ -194,7 +195,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
 
     private static List<String> lookupModules(
         final List<String> ids,
-        final String modulesFolder,
+        final File modulesFolder,
         final List<String> linkable
     ) {
         if (ids == null) {
@@ -820,7 +821,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
     private static void writeLookupSection(
         final String section,
         final List<String> items,
-        final String modulesFolder,
+        final File modulesFolder,
         final List<String> linkable,
         final String none,
         final BufferedWriter writer
@@ -842,7 +843,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         final Module module,
         final int weightSum,
         final List<String> linkable,
-        final String modulesFolder,
+        final File modulesFolder,
         final BufferedWriter writer
     ) throws IOException {
         try {
@@ -1154,7 +1155,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
     @Override
     protected void writeModules(
         final int weightSum,
-        final String modulesFolder,
+        final File modulesFolder,
         final BufferedWriter writer
     ) throws IOException {
         final Internationalization internationalization = this.guide.generalLanguage().getInternationalization();
