@@ -904,7 +904,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             writer.write("\\clearpage");
             Main.newLine(writer);
             Main.newLine(writer);
-        } catch (RuntimeException | IOException e) {
+        } catch (final Exception e) {
             Main.LOGGER.log(
                 Level.SEVERE,
                 String.format("Exception in module %s: %s", module.meta().module(), e.getMessage())

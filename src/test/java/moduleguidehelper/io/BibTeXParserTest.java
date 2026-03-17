@@ -28,7 +28,7 @@ public class BibTeXParserTest {
                     List.of(
                         new BibTeXString(
                             "xy42z",
-                            new BibTeXConcatenation(new BibTeXIdentifier("y1"), new BibTeXText("bar"))
+                            new BibTeXConcatenation(new BibTeXIdentifier("y1"), new BibTeXText("baz"))
                         )
                     )
                 )

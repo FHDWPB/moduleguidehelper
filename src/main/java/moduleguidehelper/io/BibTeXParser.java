@@ -8,6 +8,8 @@ import moduleguidehelper.model.bibtex.*;
 
 public class BibTeXParser {
 
+    private static record ValueAndPosition(BibTeXValue value, Iterator<BibTeXToken> iterator, BibTeXToken token) {}
+
     public static BibTeXDatabase parse(final Reader reader) throws IOException {
         final List<BibTeXToken> tokens = BibTeXParser.tokenize(new CharacterBuffer(reader));
         final BibTeXDatabase result = new BibTeXDatabase();
@@ -17,7 +19,7 @@ public class BibTeXParser {
             final BibTeXToken token = iterator.next();
             if (token.type() == BibTeXTokenType.AT) {
                 if (!buffer.isEmpty() && buffer.stream().anyMatch(t -> t.type() != BibTeXTokenType.WHITESPACE)) {
-                    result.add(new BibTeXFreeComment(BibTeXParser.toString(buffer)));
+                    result.add(new BibTeXFreeComment(BibTeXParser.toString(buffer, false)));
                 }
                 buffer.clear();
                 result.add(BibTeXParser.parseObject(iterator));
@@ -26,7 +28,7 @@ public class BibTeXParser {
             }
         }
         if (!buffer.isEmpty() && buffer.stream().anyMatch(t -> t.type() != BibTeXTokenType.WHITESPACE)) {
-            result.add(new BibTeXFreeComment(BibTeXParser.toString(buffer)));
+            result.add(new BibTeXFreeComment(BibTeXParser.toString(buffer, false)));
         }
         return result;
     }
@@ -161,13 +163,23 @@ public class BibTeXParser {
                     throw new IOException("String assignment is not defined correctly!");
                 }
                 final List<BibTeXToken> value = BibTeXParser.parseBraceExpression(terminator, iterator);
-                return new BibTeXString(abbreviation.text(), BibTeXParser.parseValue(value));
+                final ValueAndPosition parsedValue = BibTeXParser.parseValue(value);
+                if (parsedValue.iterator().hasNext()) {
+                    BibTeXToken token = parsedValue.iterator().next();
+                    if (token.type() == BibTeXTokenType.WHITESPACE && iterator.hasNext()) {
+                        token = iterator.next();
+                    }
+                    if (token.type() != BibTeXTokenType.WHITESPACE) {
+                        throw new IOException("String value contains content after completion!");
+                    }
+                }
+                return new BibTeXString(abbreviation.text(), parsedValue.value());
             case "preamble":
                 final List<BibTeXToken> preambleText = BibTeXParser.parseBraceExpression(terminator, iterator);
-                return new BibTeXPreamble(BibTeXParser.shrinkSpace(BibTeXParser.toString(preambleText)));
+                return new BibTeXPreamble(BibTeXParser.shrinkSpace(BibTeXParser.toString(preambleText, false)));
             case "comment":
                 final List<BibTeXToken> commentText = BibTeXParser.parseBraceExpression(terminator, iterator);
-                return new BibTeXComment(BibTeXParser.toString(commentText));
+                return new BibTeXComment(BibTeXParser.toString(commentText, false));
             default:
             }
             // fall through
@@ -259,50 +271,60 @@ public class BibTeXParser {
 //        }
     }
 
-    private static BibTeXValue parseValue(final List<BibTeXToken> value) {
-        final BibTeXValue result = null;
-        final StringBuilder text = new StringBuilder();
-        final Iterator<BibTeXToken> iterator = value.iterator();
-        while (iterator.hasNext()) {
-            final BibTeXToken token = iterator.next();
-            switch (token.type()) {
-            case ASSIGN:
-                break;
-            case AT:
-                break;
-            case CLOSE_BRACE:
-                break;
-            case CLOSE_PARENTHESIS:
-                break;
-            case COMMA:
-                break;
-            case CONCAT:
-                break;
-            case CONTENTTEXT:
-                break;
-            case IDENTIFIERTEXT:
-                break;
-            case OPEN_BRACE:
-                break;
-            case OPEN_PARENTHESIS:
-                break;
-            case QUOTE:
-                break;
-            case WHITESPACE:
-                if (!text.isEmpty()) {
-                    text.append(" ");
+    private static ValueAndPosition parseValue(final Iterator<BibTeXToken> iterator) throws IOException {
+        final BibTeXToken start = BibTeXParser.forwardWhiteSpace(iterator, "Value");
+        switch (start.type()) {
+        case IDENTIFIERTEXT:
+            if (iterator.hasNext()) {
+                BibTeXToken next = iterator.next();
+                if (next.type() == BibTeXTokenType.WHITESPACE) {
+                    if (iterator.hasNext()) {
+                        next = iterator.next();
+                    }
                 }
-                break;
-            default:
-                break;
-
+                if (next.type() == BibTeXTokenType.CONCAT) {
+                    final ValueAndPosition parsed = BibTeXParser.parseValue(iterator);
+                    return new ValueAndPosition(
+                        new BibTeXConcatenation(new BibTeXIdentifier(start.text()), parsed.value()),
+                        parsed.iterator(),
+                        parsed.token()
+                    );
+                }
+                return new ValueAndPosition(new BibTeXIdentifier(start.text()), iterator, next);
             }
+            return new ValueAndPosition(new BibTeXIdentifier(start.text()), iterator, null);
+        case OPEN_BRACE:
+            final List<BibTeXToken> braced = BibTeXParser.parseBraceExpression(BibTeXTokenType.CLOSE_BRACE, iterator);
+            return new ValueAndPosition(new BibTeXText(BibTeXParser.toString(braced, true)), iterator, null);
+        case QUOTE:
+            final List<BibTeXToken> quoted = BibTeXParser.parseBraceExpression(BibTeXTokenType.QUOTE, iterator);
+            final BibTeXText text = new BibTeXText(BibTeXParser.toString(quoted, true));
+            if (iterator.hasNext()) {
+                BibTeXToken next = iterator.next();
+                if (next.type() == BibTeXTokenType.WHITESPACE) {
+                    if (iterator.hasNext()) {
+                        next = iterator.next();
+                    }
+                }
+                if (next.type() == BibTeXTokenType.CONCAT) {
+                    final ValueAndPosition parsed = BibTeXParser.parseValue(iterator);
+                    return new ValueAndPosition(
+                        new BibTeXConcatenation(text, parsed.value()),
+                        parsed.iterator(),
+                        parsed.token()
+                    );
+                }
+                return new ValueAndPosition(text, iterator, next);
+            }
+            return new ValueAndPosition(text, iterator, null);
+        default:
+            throw new IOException("Value starts with illegal token!");
         }
-        // TODO Auto-generated method stub
-//      if (!value.stream().allMatch(s -> s.matches("(\"(.|\\s)*\"|\\{(.|\\s)*\\})"))) {//TODO
-//      throw new IOException("String value has illegal form!");
-//  }
-        return result;
+    }
+
+    private static ValueAndPosition parseValue(final List<BibTeXToken> value) throws IOException {
+        final Iterator<BibTeXToken> iterator = value.iterator();
+        return BibTeXParser.parseValue(iterator);
     }
 
     private static String shrinkSpace(final String text) {
@@ -405,8 +427,10 @@ public class BibTeXParser {
         return tokens;
     }
 
-    private static String toString(final List<BibTeXToken> buffer) {
-        return buffer.stream().map(BibTeXToken::text).collect(Collectors.joining());
+    private static String toString(final List<BibTeXToken> buffer, final boolean shrinkWhiteSpace) {
+        return buffer.stream()
+            .map(token -> shrinkWhiteSpace && token.type() == BibTeXTokenType.WHITESPACE ? " " : token.text())
+            .collect(Collectors.joining());
     }
 
 }
