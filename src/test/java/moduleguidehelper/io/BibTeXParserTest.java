@@ -40,6 +40,22 @@ public class BibTeXParserTest {
             {
                 "@comment{@foo{bar,id=\"baz\"}}",
                 new BibTeXDatabase(List.of(new BibTeXComment("@foo{bar,id=\"baz\"}")))
+            },
+            {
+                "@book{Laloux_2014,\n  author = {Laloux, Frederic},\n  title={Reinventing Organizations},\n  year = 2014}",
+                new BibTeXDatabase(
+                    List.of(
+                        new BibTeXEntry(
+                            "book",
+                            "Laloux_2014",
+                            Map.of(
+                                "author", new BibTeXText("Laloux, Frederic"),
+                                "title", new BibTeXText("Reinventing Organizations"),
+                                "year", new BibTeXNumber(2014)
+                            )
+                        )
+                    )
+                )
             }
         };
     }

@@ -23,7 +23,7 @@ public class Store {
     public void generatePDFs(final File directory, final Consumer<Integer> progressListener) throws Exception {
         final String texSuffix = ".tex";
         final String modules = directory.toPath().resolve("modules").toString();
-        Main.main(new String[] {modules});
+        Main.main(new String[] {directory.toPath().toString()});
         final int total = 5 * this.guides.size();
         int current = 0;
         progressListener.accept(0);
@@ -96,11 +96,19 @@ public class Store {
         final File pullFile = directory.toPath().resolve("pull.log").toFile();
         Process process = new ProcessBuilder(
             "git",
+            "config",
+            "protectNTFS",
+            "false"
+        ).inheritIO().directory(directory).start();
+        process.waitFor(60, TimeUnit.SECONDS);
+        progressListener.accept(25);
+        process = new ProcessBuilder(
+            "git",
             "reset",
             "--hard"
         ).inheritIO().directory(directory).redirectOutput(resetFile).redirectError(resetFile).start();
         process.waitFor(60, TimeUnit.SECONDS);
-        progressListener.accept(33);
+        progressListener.accept(50);
         process = new ProcessBuilder(
             "git",
             "clean",
@@ -108,7 +116,7 @@ public class Store {
             "-d"
         ).inheritIO().directory(directory).redirectOutput(cleanFile).redirectError(cleanFile).start();
         process.waitFor(60, TimeUnit.SECONDS);
-        progressListener.accept(66);
+        progressListener.accept(75);
         process = new ProcessBuilder(
             "git",
             "pull",

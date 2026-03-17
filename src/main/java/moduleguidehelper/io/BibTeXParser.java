@@ -8,7 +8,7 @@ import moduleguidehelper.model.bibtex.*;
 
 public class BibTeXParser {
 
-    private static record ValueAndPosition(BibTeXValue value, Iterator<BibTeXToken> iterator, BibTeXToken token) {}
+    private static record ValueAndToken(BibTeXValue value, BibTeXToken token) {}
 
     public static BibTeXDatabase parse(final Reader reader) throws IOException {
         final List<BibTeXToken> tokens = BibTeXParser.tokenize(new CharacterBuffer(reader));
@@ -73,6 +73,10 @@ public class BibTeXParser {
             return BibTeXTokenType.CLOSE_PARENTHESIS;
         case '#':
             return BibTeXTokenType.CONCAT;
+        case '_':
+        case '-':
+        case ':':
+            return BibTeXTokenType.IDENTIFIERTEXT;
         default:
             if (Character.isLetterOrDigit(c)) {
                 return BibTeXTokenType.IDENTIFIERTEXT;
@@ -110,28 +114,6 @@ public class BibTeXParser {
         return result;
     }
 
-    private static boolean parseComma(final CharacterBuffer buffer) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    private static String parseIdentifier(final char terminator, final CharacterBuffer buffer) throws IOException {
-        final StringBuilder identifierText = new StringBuilder();
-        Character c = buffer.getNext(identifierText);
-        while (c != null && !c.equals(terminator)) {
-            c = buffer.getNext(identifierText);
-        }
-        if (c == null) {
-            throw new IOException("Identifier ended before completion!");
-        }
-        buffer.appendReadContent(identifierText);
-        final String identifier = identifierText.toString().trim();
-        if (!identifier.matches("[a-zA-Z][^\",=\\(\\)\\{\\}'%#\\s]*")) {
-            throw new IOException("Identifier contains illegal characters!");
-        }
-        return identifier;
-    }
-
     private static BibTeXObject parseObject(final Iterator<BibTeXToken> iterator) throws IOException {
         if (!iterator.hasNext()) {
             throw new IOException("Command ended before completion!");
@@ -163,11 +145,12 @@ public class BibTeXParser {
                     throw new IOException("String assignment is not defined correctly!");
                 }
                 final List<BibTeXToken> value = BibTeXParser.parseBraceExpression(terminator, iterator);
-                final ValueAndPosition parsedValue = BibTeXParser.parseValue(value);
-                if (parsedValue.iterator().hasNext()) {
-                    BibTeXToken token = parsedValue.iterator().next();
-                    if (token.type() == BibTeXTokenType.WHITESPACE && iterator.hasNext()) {
-                        token = iterator.next();
+                final Iterator<BibTeXToken> valueIterator = value.iterator();
+                final ValueAndToken parsedValue = BibTeXParser.parseValue(valueIterator);
+                if (valueIterator.hasNext()) {
+                    BibTeXToken token = valueIterator.next();
+                    if (token.type() == BibTeXTokenType.WHITESPACE && valueIterator.hasNext()) {
+                        token = valueIterator.next();
                     }
                     if (token.type() != BibTeXTokenType.WHITESPACE) {
                         throw new IOException("String value contains content after completion!");
@@ -200,78 +183,72 @@ public class BibTeXParser {
     }
 
     private static void parseTags(
-        final CharacterBuffer buffer,
-        final Map<String, List<String>> tags
+        final Iterator<BibTeXToken> iterator,
+        final Map<String, BibTeXValue> tags
     ) throws IOException {
-        final String field;
-        try {
-            field = BibTeXParser.parseIdentifier('=', buffer);
-        } catch (final IOException e) {
-            if ("Identifier ended before completion!".equals(e.getMessage())) {
-                final StringBuilder check = new StringBuilder();
-                buffer.appendReadContent(check);
-                if (check.toString().isBlank()) {
-                    return;
+        if (!iterator.hasNext()) {
+            return;
+        }
+        BibTeXToken identifier = iterator.next();
+        if (identifier.type() == BibTeXTokenType.WHITESPACE) {
+            if (!iterator.hasNext()) {
+                return;
+            }
+            identifier = iterator.next();
+        }
+        if (identifier.type() != BibTeXTokenType.IDENTIFIERTEXT) {
+            throw new IOException("Tag identifier contains illegal characters!");
+        }
+        final BibTeXToken assign = BibTeXParser.forwardWhiteSpace(iterator, "Tag");
+        if (assign.type() != BibTeXTokenType.ASSIGN) {
+            throw new IOException("Tag definition is missing assignment!");
+        }
+        final ValueAndToken value = BibTeXParser.parseValue(iterator);
+        tags.put(identifier.text(), value.value());
+        if (iterator.hasNext()) {
+            if (value.token() == null) {
+                BibTeXToken next = iterator.next();
+                if (next.type() == BibTeXTokenType.WHITESPACE && iterator.hasNext()) {
+                    next = iterator.next();
+                }
+                if (next.type() == BibTeXTokenType.COMMA) {
+                    BibTeXParser.parseTags(iterator, tags);
+                } else if (next.type() != BibTeXTokenType.WHITESPACE || iterator.hasNext()) {
+                    throw new IOException("Content after tag not separated by comma!");
+                }
+            } else {
+                switch (value.token().type()) {
+                case COMMA:
+                    BibTeXParser.parseTags(iterator, tags);
+                    break;
+                case WHITESPACE:
+                    if (iterator.hasNext()) {
+                        final BibTeXToken comma = iterator.next();
+                        if (comma.type() == BibTeXTokenType.COMMA) {
+                            BibTeXParser.parseTags(iterator, tags);
+                        } else {
+                            throw new IOException("Content after tag not separated by comma!");
+                        }
+                    }
+                    break;
+                default:
+                    throw new IOException("Content after tag not separated by comma!");
                 }
             }
-            throw e;
-        }
-        final List<String> value = new LinkedList<String>();
-        BibTeXParser.parseValue(buffer, value);
-        tags.put(field, value);
-        if (BibTeXParser.parseComma(buffer)) {
-            BibTeXParser.parseTags(buffer, tags);
         }
     }
 
     private static Map<String, BibTeXValue> parseTags(final List<BibTeXToken> content) throws IOException {
-        if (content.isEmpty()) {
+        if (content.isEmpty() || (content.size() == 1 && content.getFirst().type() == BibTeXTokenType.WHITESPACE)) {
             return Map.of();
         }
         final Map<String, BibTeXValue> tags = new LinkedHashMap<String, BibTeXValue>();
-//        BibTeXParser.parseTags(buffer, tags);
+        final Iterator<BibTeXToken> iterator = content.iterator();
+        BibTeXParser.parseTags(iterator, tags);
         return tags;
     }
 
-    private static void parseValue(final CharacterBuffer buffer, final List<String> value) throws IOException {
-        // TODO Auto-generated method stub
-        final StringBuilder sink = new StringBuilder();
-        Character c = buffer.getNext(sink);
-        while (c != null && Character.isWhitespace(c)) {
-            c = buffer.getNext(sink);
-        }
-        if (c == null) {
-            throw new IOException("Value ended before completion!");
-        }
-        if (c.equals('{')) {
-//            value.add(BibTeXParser.parseBraceExpression('}', buffer));
-            return;
-        }
-//        switch (c.charValue()) {
-//        case '"':
-//            final List<String> quoteText = BibTeXParser.parseBraceExpression('"', buffer);
-//            tags.put(field, quoteText);
-//            break;
-//        case '{':
-//            tags.put(field, List.of(bracedText));
-//            break;
-//        default:
-//            buffer.appendReadContent(sink);
-//            final StringBuilder nude = new StringBuilder();
-//            nude.append(c.charValue());
-//            c = buffer.getNext(nude);
-//            while (c != null && !c.equals(',')) {
-//                c = buffer.getNext(nude);
-//            }
-//            buffer.appendReadContent(nude);
-//            final String nudeText = nude.toString().trim();
-//            if (!nudeText.matches("")) {
-//                throw new IOException("Found unquoted and unbraced non-numeric and non-identifier value!");
-//            }
-//        }
-    }
-
-    private static ValueAndPosition parseValue(final Iterator<BibTeXToken> iterator) throws IOException {
+    private static ValueAndToken parseValue(final Iterator<BibTeXToken> iterator) throws IOException {
         final BibTeXToken start = BibTeXParser.forwardWhiteSpace(iterator, "Value");
         switch (start.type()) {
         case IDENTIFIERTEXT:
@@ -283,19 +260,18 @@ public class BibTeXParser {
                     }
                 }
                 if (next.type() == BibTeXTokenType.CONCAT) {
-                    final ValueAndPosition parsed = BibTeXParser.parseValue(iterator);
-                    return new ValueAndPosition(
+                    final ValueAndToken parsed = BibTeXParser.parseValue(iterator);
+                    return new ValueAndToken(
                         new BibTeXConcatenation(new BibTeXIdentifier(start.text()), parsed.value()),
-                        parsed.iterator(),
                         parsed.token()
                     );
                 }
-                return new ValueAndPosition(new BibTeXIdentifier(start.text()), iterator, next);
+                return new ValueAndToken(new BibTeXIdentifier(start.text()), next);
             }
-            return new ValueAndPosition(new BibTeXIdentifier(start.text()), iterator, null);
+            return new ValueAndToken(new BibTeXIdentifier(start.text()), null);
         case OPEN_BRACE:
             final List<BibTeXToken> braced = BibTeXParser.parseBraceExpression(BibTeXTokenType.CLOSE_BRACE, iterator);
-            return new ValueAndPosition(new BibTeXText(BibTeXParser.toString(braced, true)), iterator, null);
+            return new ValueAndToken(new BibTeXText(BibTeXParser.toString(braced, true)), null);
         case QUOTE:
             final List<BibTeXToken> quoted = BibTeXParser.parseBraceExpression(BibTeXTokenType.QUOTE, iterator);
             final BibTeXText text = new BibTeXText(BibTeXParser.toString(quoted, true));
@@ -307,24 +283,18 @@ public class BibTeXParser {
                     }
                 }
                 if (next.type() == BibTeXTokenType.CONCAT) {
-                    final ValueAndPosition parsed = BibTeXParser.parseValue(iterator);
-                    return new ValueAndPosition(
+                    final ValueAndToken parsed = BibTeXParser.parseValue(iterator);
+                    return new ValueAndToken(
                         new BibTeXConcatenation(text, parsed.value()),
-                        parsed.iterator(),
                         parsed.token()
                     );
                 }
-                return new ValueAndPosition(text, iterator, next);
+                return new ValueAndToken(text, next);
             }
-            return new ValueAndPosition(text, iterator, null);
+            return new ValueAndToken(text, null);
         default:
             throw new IOException("Value starts with illegal token!");
         }
-    }
-
-    private static ValueAndPosition parseValue(final List<BibTeXToken> value) throws IOException {
-        final Iterator<BibTeXToken> iterator = value.iterator();
-        return BibTeXParser.parseValue(iterator);
     }
 
     private static String shrinkSpace(final String text) {

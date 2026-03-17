@@ -11,7 +11,6 @@ import com.google.gson.stream.*;
 import moduleguidehelper.io.*;
 import moduleguidehelper.model.*;
 import moduleguidehelper.model.Module;
-import moduleguidehelper.model.bibtex.*;
 import moduleguidehelper.model.equivalence.*;
 import moduleguidehelper.view.*;
 
@@ -25,7 +24,7 @@ public class Main {
 
     public static final Logger LOGGER = Logger.getLogger("moduleguidehelper");
 
-    private static final String VERSION = "3.1.1";
+    private static final String VERSION = "3.1.2";
 
     public static Process buildAndStartBiberProcess(final String fileName, final File directory) throws IOException {
         return new ProcessBuilder(
@@ -47,7 +46,7 @@ public class Main {
         if (args == null || args.length == 0) {
             new MainFrame(
                 Main.VERSION,
-                new File(System.getProperty("user.dir"))
+                new File("C:\\Daten\\FHDW\\orga\\StudiengangAI\\moduleguides") //System.getProperty("user.dir"))
             ).setVisible(true);
             return;
         }
@@ -60,19 +59,19 @@ public class Main {
                 singleModulesDirectory.mkdir();
             }
             final File modules = root.toPath().resolve("modules").toFile();
-            final File literature = root.toPath().resolve("literature.bib").toFile();
-            final BibTeXDatabase db;
-            try (final FileReader reader = new FileReader(literature)) {
-                db = BibTeXParser.parse(reader);
-            } catch (final IOException e) {
-                Main.LOGGER.log(Level.SEVERE, e.getMessage());
-                throw new IOException(e);
-            }
-            try (final FileWriter writer = new FileWriter(literature)) {
-                final BibTeXFormatter formatter = new BibTeXFormatter();
-                formatter.setIndent("  ");
-                formatter.format(db, writer);
-            }
+//            final File literature = root.toPath().resolve("literature.bib").toFile();
+//            final BibTeXDatabase db;
+//            try (final FileReader reader = new FileReader(literature)) {
+//                db = BibTeXParser.parse(reader);
+//            } catch (final IOException e) {
+//                Main.LOGGER.log(Level.SEVERE, e.getMessage());
+//                throw new IOException(e);
+//            }
+//            try (final FileWriter writer = new FileWriter(literature)) {
+//                final BibTeXFormatter formatter = new BibTeXFormatter();
+//                formatter.setIndent("  ");
+//                formatter.format(db, writer);
+//            }
             for (final File json : modules.listFiles()) {
                 final String id = json.getName().substring(0, json.getName().length() - 5);
                 final RawModule module;
@@ -86,7 +85,8 @@ public class Main {
                     Main.prettyPrint(json, module);
                     continue;
                 }
-                try (BufferedWriter writer = new BufferedWriter(new FileWriter(singleModules + "/" + id + ".tex"))) {
+                final File moduleTeXFile = singleModulesDirectory.toPath().resolve(id + ".tex").toFile();
+                try (BufferedWriter writer = new BufferedWriter(new FileWriter(moduleTeXFile))) {
                     ModuleGuideLaTeXWriter.writeModule(id.toUpperCase(), module, 180, modules, writer);
                 }
                 Main.prettyPrint(json, module);
