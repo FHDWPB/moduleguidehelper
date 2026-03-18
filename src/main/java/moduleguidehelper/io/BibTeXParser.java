@@ -10,6 +10,8 @@ public class BibTeXParser {
 
     private static record ValueAndToken(BibTeXValue value, BibTeXToken token) {}
 
+    private static final String NUMBER_REGEX = "\\d+";
+
     public static BibTeXDatabase parse(final Reader reader) throws IOException {
         final List<BibTeXToken> tokens = BibTeXParser.tokenize(new CharacterBuffer(reader));
         final BibTeXDatabase result = new BibTeXDatabase();
@@ -137,7 +139,10 @@ public class BibTeXParser {
             switch (command.text().toLowerCase()) {
             case "string":
                 final BibTeXToken abbreviation = BibTeXParser.forwardWhiteSpace(iterator, "String");
-                if (abbreviation.type() != BibTeXTokenType.IDENTIFIERTEXT) {
+                if (
+                    abbreviation.type() != BibTeXTokenType.IDENTIFIERTEXT
+                    || !Character.isLetter(abbreviation.text().charAt(0))
+                ) {
                     throw new IOException("String identifier contains illegal characters!");
                 }
                 final BibTeXToken assign = BibTeXParser.forwardWhiteSpace(iterator, "String");
@@ -260,21 +265,40 @@ public class BibTeXParser {
                     }
                 }
                 if (next.type() == BibTeXTokenType.CONCAT) {
+                    if (!Character.isLetter(start.text().charAt(0))) {
+                        throw new IOException("Identifier does not start with a letter!");
+                    }
                     final ValueAndToken parsed = BibTeXParser.parseValue(iterator);
                     return new ValueAndToken(
                         new BibTeXConcatenation(new BibTeXIdentifier(start.text()), parsed.value()),
                         parsed.token()
                     );
                 }
-                return new ValueAndToken(new BibTeXIdentifier(start.text()), next);
+                final String text = start.text();
+                if (text.matches(BibTeXParser.NUMBER_REGEX)) {
+                    return new ValueAndToken(new BibTeXNumber(Integer.parseInt(text)), next);
+                }
+                return new ValueAndToken(new BibTeXIdentifier(text), next);
             }
-            return new ValueAndToken(new BibTeXIdentifier(start.text()), null);
+            final String startText = start.text();
+            if (startText.matches(BibTeXParser.NUMBER_REGEX)) {
+                return new ValueAndToken(new BibTeXNumber(Integer.parseInt(startText)), null);
+            }
+            return new ValueAndToken(new BibTeXIdentifier(startText), null);
         case OPEN_BRACE:
             final List<BibTeXToken> braced = BibTeXParser.parseBraceExpression(BibTeXTokenType.CLOSE_BRACE, iterator);
-            return new ValueAndToken(new BibTeXText(BibTeXParser.toString(braced, true)), null);
+            final String bracedText = BibTeXParser.toString(braced, true);
+            if (bracedText.matches(BibTeXParser.NUMBER_REGEX)) {
+                return new ValueAndToken(new BibTeXNumber(Integer.parseInt(bracedText)), null);
+            }
+            return new ValueAndToken(new BibTeXText(bracedText), null);
         case QUOTE:
             final List<BibTeXToken> quoted = BibTeXParser.parseBraceExpression(BibTeXTokenType.QUOTE, iterator);
-            final BibTeXText text = new BibTeXText(BibTeXParser.toString(quoted, true));
+            final String content = BibTeXParser.toString(quoted, true);
+            final BibTeXValue value =
+                content.matches(BibTeXParser.NUMBER_REGEX) ?
+                    new BibTeXNumber(Integer.parseInt(content)) :
+                        new BibTeXText(content);
             if (iterator.hasNext()) {
                 BibTeXToken next = iterator.next();
                 if (next.type() == BibTeXTokenType.WHITESPACE) {
@@ -285,13 +309,13 @@ public class BibTeXParser {
                 if (next.type() == BibTeXTokenType.CONCAT) {
                     final ValueAndToken parsed = BibTeXParser.parseValue(iterator);
                     return new ValueAndToken(
-                        new BibTeXConcatenation(text, parsed.value()),
+                        new BibTeXConcatenation(new BibTeXText(content), parsed.value()),
                         parsed.token()
                     );
                 }
-                return new ValueAndToken(text, next);
+                return new ValueAndToken(value, next);
             }
-            return new ValueAndToken(text, null);
+            return new ValueAndToken(value, null);
         default:
             throw new IOException("Value starts with illegal token!");
         }

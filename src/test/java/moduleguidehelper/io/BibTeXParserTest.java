@@ -60,6 +60,26 @@ public class BibTeXParserTest {
         };
     }
 
+    @DataProvider
+    public Object[][] parseExceptionData() {
+        return new Object[][] {
+            {"@string{1x=\"foo\"}"},
+            {"@stri@ng(x={foo})"},
+            {"@string{x:{foo}}"},
+            {"@string{y1={foo{ bar}}"},
+            {"@string( y1  = \"foo \n  bar} )"},
+            {"@string{xy 42z= y1 # \"baz\"}"},
+            {"@ preamble{\\newcommand{\\foo}{}}"},
+            {"@comment {@foo{bar,id=\"baz\"}}"},
+            {"@book{Laloux_2014,\nauthor = {Laloux, Frederic}\ntitle={Reinventing Organizations},\nyear = 2014}"}
+        };
+    }
+
+    @Test(dataProvider="parseExceptionData")
+    public void parseExceptionTest(final String fileText) throws IOException {
+        Assert.assertThrows(IOException.class, () -> BibTeXParser.parse(new StringReader(fileText)));
+    }
+
     @Test(dataProvider="parseData")
     public void parseTest(final String fileText, final BibTeXDatabase expected) throws IOException {
         Assert.assertEquals(BibTeXParser.parse(new StringReader(fileText)), expected);

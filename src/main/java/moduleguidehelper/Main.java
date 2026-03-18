@@ -24,7 +24,7 @@ public class Main {
 
     public static final Logger LOGGER = Logger.getLogger("moduleguidehelper");
 
-    private static final String VERSION = "3.1.2";
+    private static final String VERSION = "3.1.3";
 
     public static Process buildAndStartBiberProcess(final String fileName, final File directory) throws IOException {
         return new ProcessBuilder(
@@ -46,7 +46,7 @@ public class Main {
         if (args == null || args.length == 0) {
             new MainFrame(
                 Main.VERSION,
-                new File("C:\\Daten\\FHDW\\orga\\StudiengangAI\\moduleguides") //System.getProperty("user.dir"))
+                new File(System.getProperty("user.dir"))
             ).setVisible(true);
             return;
         }

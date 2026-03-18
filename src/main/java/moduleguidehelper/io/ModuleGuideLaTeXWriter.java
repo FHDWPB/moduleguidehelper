@@ -921,11 +921,9 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             Main.newLine(writer);
             Main.newLine(writer);
         } catch (final Exception e) {
-            Main.LOGGER.log(
-                Level.SEVERE,
-                String.format("Exception in module %s: %s", module.meta().module(), e.getMessage())
-            );
-            throw e;
+            final String message = String.format("Exception in module %s: %s", module.meta().module(), e.getMessage());
+            Main.LOGGER.log(Level.SEVERE, message);
+            throw new IOException(message, e);
         }
     }
 
