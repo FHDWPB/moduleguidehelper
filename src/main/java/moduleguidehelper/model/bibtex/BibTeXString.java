@@ -1,5 +1,9 @@
 package moduleguidehelper.model.bibtex;
 
+import java.io.*;
+
+import moduleguidehelper.io.*;
+
 public record BibTeXString(String identifier, BibTeXValue value) implements BibTeXObject {
 
     @Override
@@ -14,9 +18,14 @@ public record BibTeXString(String identifier, BibTeXValue value) implements BibT
             return 0;
         }
         if (o instanceof final BibTeXString s) {
-            return this.identifier().compareTo(s.identifier());
+            return this.identifier().toLowerCase().compareTo(s.identifier().toLowerCase());
         }
         return -1;
+    }
+
+    @Override
+    public void format(final BibTeXFormatter formatter, final Writer writer) throws IOException {
+        formatter.format(this, writer);
     }
 
 }

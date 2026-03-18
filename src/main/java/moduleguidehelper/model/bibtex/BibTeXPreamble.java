@@ -1,6 +1,10 @@
 package moduleguidehelper.model.bibtex;
 
-public record BibTeXPreamble(String comment) implements BibTeXObject {
+import java.io.*;
+
+import moduleguidehelper.io.*;
+
+public record BibTeXPreamble(String content) implements BibTeXObject {
 
     @Override
     public int compareTo(final BibTeXObject o) {
@@ -14,6 +18,11 @@ public record BibTeXPreamble(String comment) implements BibTeXObject {
             return 0;
         }
         return -1;
+    }
+
+    @Override
+    public void format(final BibTeXFormatter formatter, final Writer writer) throws IOException {
+        formatter.format(this,  writer);
     }
 
 }

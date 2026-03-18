@@ -11,6 +11,7 @@ import com.google.gson.stream.*;
 import moduleguidehelper.io.*;
 import moduleguidehelper.model.*;
 import moduleguidehelper.model.Module;
+import moduleguidehelper.model.bibtex.*;
 import moduleguidehelper.model.equivalence.*;
 import moduleguidehelper.view.*;
 
@@ -24,7 +25,7 @@ public class Main {
 
     public static final Logger LOGGER = Logger.getLogger("moduleguidehelper");
 
-    private static final String VERSION = "3.1.3";
+    private static final String VERSION = "3.2.0";
 
     public static Process buildAndStartBiberProcess(final String fileName, final File directory) throws IOException {
         return new ProcessBuilder(
@@ -59,19 +60,18 @@ public class Main {
                 singleModulesDirectory.mkdir();
             }
             final File modules = root.toPath().resolve("modules").toFile();
-//            final File literature = root.toPath().resolve("literature.bib").toFile();
-//            final BibTeXDatabase db;
-//            try (final FileReader reader = new FileReader(literature)) {
-//                db = BibTeXParser.parse(reader);
-//            } catch (final IOException e) {
-//                Main.LOGGER.log(Level.SEVERE, e.getMessage());
-//                throw new IOException(e);
-//            }
-//            try (final FileWriter writer = new FileWriter(literature)) {
-//                final BibTeXFormatter formatter = new BibTeXFormatter();
-//                formatter.setIndent("  ");
-//                formatter.format(db, writer);
-//            }
+            final File literature = root.toPath().resolve("literature.bib").toFile();
+            final BibTeXDatabase db;
+            try (final FileReader reader = new FileReader(literature)) {
+                db = BibTeXParser.parse(reader);
+            } catch (final IOException e) {
+                Main.LOGGER.log(Level.SEVERE, e.getMessage());
+                throw new IOException(e);
+            }
+            try (final FileWriter writer = new FileWriter(literature)) {
+                final BibTeXFormatter formatter = new BibTeXFormatter();
+                formatter.format(db, writer);
+            }
             for (final File json : modules.listFiles()) {
                 final String id = json.getName().substring(0, json.getName().length() - 5);
                 final RawModule module;

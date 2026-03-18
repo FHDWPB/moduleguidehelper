@@ -1,6 +1,7 @@
 package moduleguidehelper.io;
 
 import java.io.*;
+import java.math.*;
 import java.util.*;
 
 import org.testng.*;
@@ -51,10 +52,28 @@ public class BibTeXParserTest {
                             Map.of(
                                 "author", new BibTeXText("Laloux, Frederic"),
                                 "title", new BibTeXText("Reinventing Organizations"),
-                                "year", new BibTeXNumber(2014)
+                                "year", new BibTeXNumber(BigInteger.valueOf(2014))
                             )
                         )
                     )
+                )
+            },
+            {
+                "@misc{test,isbn=9783031862120}",
+                new BibTeXDatabase(
+                    List.of(
+                        new BibTeXEntry(
+                            "misc",
+                            "test",
+                            Map.of("isbn", new BibTeXNumber(new BigInteger("9783031862120")))
+                        )
+                    )
+                )
+            },
+            {
+                "@misc{test,number={007}}",
+                new BibTeXDatabase(
+                    List.of(new BibTeXEntry("misc", "test", Map.of("number", new BibTeXText("007"))))
                 )
             }
         };

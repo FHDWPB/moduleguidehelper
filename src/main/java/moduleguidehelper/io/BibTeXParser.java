@@ -1,6 +1,7 @@
 package moduleguidehelper.io;
 
 import java.io.*;
+import java.math.*;
 import java.util.*;
 import java.util.stream.*;
 
@@ -10,7 +11,7 @@ public class BibTeXParser {
 
     private static record ValueAndToken(BibTeXValue value, BibTeXToken token) {}
 
-    private static final String NUMBER_REGEX = "\\d+";
+    private static final String NUMBER_REGEX = "[1-9]\\d*";
 
     public static BibTeXDatabase parse(final Reader reader) throws IOException {
         final List<BibTeXToken> tokens = BibTeXParser.tokenize(new CharacterBuffer(reader));
@@ -276,20 +277,20 @@ public class BibTeXParser {
                 }
                 final String text = start.text();
                 if (text.matches(BibTeXParser.NUMBER_REGEX)) {
-                    return new ValueAndToken(new BibTeXNumber(Integer.parseInt(text)), next);
+                    return new ValueAndToken(new BibTeXNumber(new BigInteger(text)), next);
                 }
                 return new ValueAndToken(new BibTeXIdentifier(text), next);
             }
             final String startText = start.text();
             if (startText.matches(BibTeXParser.NUMBER_REGEX)) {
-                return new ValueAndToken(new BibTeXNumber(Integer.parseInt(startText)), null);
+                return new ValueAndToken(new BibTeXNumber(new BigInteger(startText)), null);
             }
             return new ValueAndToken(new BibTeXIdentifier(startText), null);
         case OPEN_BRACE:
             final List<BibTeXToken> braced = BibTeXParser.parseBraceExpression(BibTeXTokenType.CLOSE_BRACE, iterator);
             final String bracedText = BibTeXParser.toString(braced, true);
             if (bracedText.matches(BibTeXParser.NUMBER_REGEX)) {
-                return new ValueAndToken(new BibTeXNumber(Integer.parseInt(bracedText)), null);
+                return new ValueAndToken(new BibTeXNumber(new BigInteger(bracedText)), null);
             }
             return new ValueAndToken(new BibTeXText(bracedText), null);
         case QUOTE:
@@ -297,7 +298,7 @@ public class BibTeXParser {
             final String content = BibTeXParser.toString(quoted, true);
             final BibTeXValue value =
                 content.matches(BibTeXParser.NUMBER_REGEX) ?
-                    new BibTeXNumber(Integer.parseInt(content)) :
+                    new BibTeXNumber(new BigInteger(content)) :
                         new BibTeXText(content);
             if (iterator.hasNext()) {
                 BibTeXToken next = iterator.next();
