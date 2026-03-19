@@ -28,7 +28,7 @@ public class Documentation {
         final int lowestNode,
         final int unused,
         final boolean big,
-        final BufferedWriter writer
+        final Writer writer
     ) throws IOException {
         writer.write("\\coordinate (lh) at (n");
         writer.write(String.valueOf(lowestNode));
@@ -77,8 +77,6 @@ public class Documentation {
 
     private final Map<String, Integer> covered;
 
-    private final DecisionList decisions;
-
     private final List<ForeignModule> foreignModules;
 
     private final String major;
@@ -89,6 +87,8 @@ public class Documentation {
 
     private final String qualification;
 
+    private final List<String> requirements;
+
     private final Map<String, Integer> taken;
 
     public Documentation(
@@ -98,7 +98,7 @@ public class Documentation {
         final List<OwnModule> ownModules,
         final List<ForeignModule> foreignModules,
         final List<Match> matches,
-        final DecisionList decisions
+        final List<String> requriements
     ) {
         this.qualification = qualification;
         this.major = major;
@@ -108,14 +108,14 @@ public class Documentation {
         this.comments = comments;
         this.covered = new LinkedHashMap<String, Integer>();
         this.taken = new LinkedHashMap<String, Integer>();
-        this.decisions = decisions;
+        this.requirements = requriements;
         for (final Match match : matches) {
             this.covered.merge(match.ownID(), match.hours(), Integer::sum);
             this.taken.merge(match.otherID(), match.hours(), Integer::sum);
         }
     }
 
-    public void write(final BufferedWriter writer) throws IOException {
+    public void write(final Writer writer) throws IOException {
         this.writePreamble(writer);
         this.writeComments(writer);
         this.writeOverview(writer);
@@ -140,7 +140,7 @@ public class Documentation {
         return result;
     }
 
-    private void writeComments(final BufferedWriter writer) throws IOException {
+    private void writeComments(final Writer writer) throws IOException {
         writer.write("\\section{Vorbemerkungen}\n\n");
         writer.write("Dieses Dokument beschreibt die Äquivalenzprüfung der \\textit{");
         writer.write(this.qualification);
@@ -178,7 +178,7 @@ public class Documentation {
         writer.write("\n");
     }
 
-    private void writeDecision(final BufferedWriter writer) throws IOException {
+    private void writeDecision(final Writer writer) throws IOException {
         writer.write("\\pagebreak\n\n");
         writer.write("\\section{Entscheidung des Pr\\\"ufungsausschusses}\n\n");
         writer.write("Der erfolgreiche Abschluss der ");
@@ -193,11 +193,11 @@ public class Documentation {
         );
         final Collection<String> recognized = new ArrayList<String>();
         final Map<String, Integer> needsRequirements = new LinkedHashMap<String, Integer>();
-        for (final Decision decision : this.decisions.decisions()) {
-            if (decision.decision()) {
-                recognized.add(decision.module());
-                if (decision.requirements() > 0) {
-                    needsRequirements.put(decision.module(), decision.requirements());
+        for (final OwnModule module : this.ownModules) {
+            if (module.meta().decision()) {
+                recognized.add(module.meta().module());
+                if (module.meta().requirements() > 0) {
+                    needsRequirements.put(module.meta().module(), module.meta().requirements());
                 }
             }
         }
@@ -225,12 +225,12 @@ public class Documentation {
         writer.write("\\noindent aus unserem Studiengang ");
         writer.write(this.major);
         writer.write(" unter den folgenden Auflagen:\n\n");
-        if (this.decisions.requirements().isEmpty()) {
+        if (this.requirements.isEmpty()) {
             writer.write("\\vspace*{1ex}\n\n");
             writer.write("keine\n\n");
         } else {
             writer.write("\\begin{itemize}\n");
-            for (final String requirement : this.decisions.requirements()) {
+            for (final String requirement : this.requirements) {
                 writer.write("\\item ");
                 writer.write(requirement);
                 writer.write("\n");
@@ -254,7 +254,7 @@ public class Documentation {
         final String right,
         final boolean own,
         final int width,
-        final BufferedWriter writer
+        final Writer writer
     ) throws IOException {
         writer.write("\\coordinate ");
         if (node == 1) {
@@ -311,9 +311,9 @@ public class Documentation {
     private void writeModuleDetails(
         final OwnModule ownModule,
         final int covered,
-        final BufferedWriter writer
+        final Writer writer
     ) throws IOException {
-        final boolean isChecked = ownModule.checked() != null && !ownModule.checked().isBlank();
+        final boolean isChecked = ownModule.meta().checked() != null && !ownModule.meta().checked().isBlank();
         writer.write("\\pagebreak\n\n");
         writer.write("\\section{");
         writer.write(ownModule.data().title());
@@ -329,7 +329,7 @@ public class Documentation {
             writer.write("Geprüft durch ");
             writer.write(ownModule.data().responsible());
             writer.write(" (modulverantwortlich) am ");
-            writer.write(ownModule.checked());
+            writer.write(ownModule.meta().checked());
             writer.write(".");
         } else {
             writer.write("modulverantwortlich: ");
@@ -370,7 +370,7 @@ public class Documentation {
         }
     }
 
-    private void writeOverview(final BufferedWriter writer) throws IOException {
+    private void writeOverview(final Writer writer) throws IOException {
         final Map<String, Integer> idToNode = new LinkedHashMap<String, Integer>();
         final Map<Integer, Integer> maxNodeConnections = new LinkedHashMap<Integer, Integer>();
         final List<Interval> verticalConnections = new ArrayList<Interval>();
@@ -422,7 +422,7 @@ public class Documentation {
         writer.write("\\end{center}\n\n");
     }
 
-    private void writePreamble(final BufferedWriter writer) throws IOException {
+    private void writePreamble(final Writer writer) throws IOException {
         writer.write("\\documentclass{article}\n\n");
         writer.write("\\usepackage[ngerman]{babel}\n");
         writer.write("\\usepackage[T1]{fontenc}\n");

@@ -25,7 +25,7 @@ public class Main {
 
     public static final Logger LOGGER = Logger.getLogger("moduleguidehelper");
 
-    private static final String VERSION = "3.2.0";
+    private static final String VERSION = "3.3.0";
 
     public static Process buildAndStartBiberProcess(final String fileName, final File directory) throws IOException {
         return new ProcessBuilder(
@@ -93,19 +93,27 @@ public class Main {
             }
             return;
         }
-        if (args == null || args.length == 9) {
-            System.out.println(
-                "Expected input: qualification, major, comments, ownModules, numberOfSemesters, foreignModules, matches, decision, output"
-            );
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(args[8])))) {
+        if (args == null || args.length == 2) {
+            System.out.println("Expected input: check, ownModules");
+            final File checkFile = new File(args[0]);
+            EquivalenceCheck check;
+            try (Reader reader = new FileReader(checkFile)) {
+                check = Main.GSON.fromJson(reader, EquivalenceCheck.class);
+            }
+            final File outputFile =
+                checkFile.toPath()
+                .getParent()
+                .resolve(checkFile.getName().substring(0, checkFile.getName().length() - 4) + "tex")
+                .toFile();
+            try (Writer writer = new BufferedWriter(new FileWriter(outputFile))) {
                 new Documentation(
-                    args[0],
-                    args[1],
-                    Files.readAllLines(new File(args[2]).toPath()),
-                    new OwnModuleParser(Integer.parseInt(args[4])).apply(new File(args[3])),
-                    new ForeignModuleParser().apply(new File(args[5])),
-                    new MatchesParser().apply(new File(args[6])),
-                    new DecisionParser().apply(new File(args[7]))
+                    check.theirqualification(),
+                    check.ourqualification(),
+                    Files.readAllLines(new File(check.comments()).toPath()),
+                    new OwnModuleParser().apply(check, new File(args[1])),
+                    check.theirmodules(),
+                    check.matches(),
+                    check.requirements()
                 ).write(writer);
             }
             return;
@@ -115,7 +123,7 @@ public class Main {
             System.out.println("Call with guide JSON, modules folder, and output file!");
             return;
         }
-        final ModuleGuide guide = Main.parseModuleGuide(args[0], args[1]);
+        final ModuleGuide guide = Main.parseModuleGuide(new File(args[0]), new File(args[1]));
         try (
             BufferedWriter writer = new BufferedWriter(new FileWriter(args[2]))
         ) {
@@ -127,7 +135,7 @@ public class Main {
         writer.write(Main.lineSeparator);
     }
 
-    private static ModuleGuide parseModuleGuide(final String guide, final String modulesFolder) throws IOException {
+    public static ModuleGuide parseModuleGuide(final File guide, final File modulesFolder) throws IOException {
         final MetaModuleGuide metaGuide;
         try (FileReader guideReader = new FileReader(guide)) {
             metaGuide = Main.GSON.fromJson(guideReader, MetaModuleGuide.class);
@@ -136,7 +144,7 @@ public class Main {
         }
         final List<Module> modules = new ArrayList<Module>();
         for (final MetaModule meta : metaGuide.modules()) {
-            final File moduleJson = new File(modulesFolder + "/" + meta.module().toLowerCase() + ".json");
+            final File moduleJson = modulesFolder.toPath().resolve(meta.module().toLowerCase() + ".json").toFile();
             if (!moduleJson.exists()) {
                 Main.LOGGER.log(Level.SEVERE, meta.module() + " is missing!");
                 continue;

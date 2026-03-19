@@ -4,7 +4,7 @@ import java.util.*;
 
 import moduleguidehelper.model.*;
 
-public record OwnModule(String id, String checked, List<Source> sources, RawModule data) implements MatchableModule {
+public record OwnModule(ModuleCheck meta, RawModule data) implements MatchableModule {
 
     @Override
     public int totalHours() {
@@ -24,6 +24,16 @@ public record OwnModule(String id, String checked, List<Source> sources, RawModu
     @Override
     public String title() {
         return this.data().title();
+    }
+
+    @Override
+    public String id() {
+        return this.meta().module();
+    }
+
+    @Override
+    public List<Source> sources() {
+        return this.meta().sources();
     }
 
 }

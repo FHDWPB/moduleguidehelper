@@ -53,7 +53,7 @@ public class ConnectionSlots extends LinkedHashMap<Integer, List<Interval>> {
         this.maxSlot = this.keySet().stream().max(Integer::compare).get();
     }
 
-    public void drawConnections(final BufferedWriter writer) throws IOException {
+    public void drawConnections(final Writer writer) throws IOException {
         final Map<Integer, Integer> currentNodeConnections = new LinkedHashMap<Integer, Integer>();
         for (final Map.Entry<Integer, List<Interval>> entry : this.entrySet()) {
             final int slot = entry.getKey();
@@ -72,7 +72,7 @@ public class ConnectionSlots extends LinkedHashMap<Integer, List<Interval>> {
         final Interval connection,
         final int slot,
         final Map<Integer, Integer> currentNodeConnections,
-        final BufferedWriter writer
+        final Writer writer
     ) throws IOException {
         final int leftNode = connection.start();
         final int rightNode = connection.end() + this.numOfOwnModules;
