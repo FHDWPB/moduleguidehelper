@@ -13,7 +13,7 @@ public class MainFrame extends JFrame {
 
     private static final long serialVersionUID = 1L;
 
-    private boolean guideSelected;
+    private boolean fileSelected;
 
     public MainFrame(final String version, final File directory) {
         super(String.format("Module Guide Helper (Version %s)", version));
@@ -60,11 +60,11 @@ public class MainFrame extends JFrame {
         });
         constraints.fill = GridBagConstraints.BOTH;
         buttons.add(pullButton, constraints);
-        final JButton generateButton = new JButton("Modulhandbücher erzeugen");
-        Store.INSTANCE.registerGuideObserver(
-            guides -> {
-                this.guideSelected = !guides.isEmpty();
-                generateButton.setEnabled(this.guideSelected);
+        final JButton generateButton = new JButton("PDFs erzeugen");
+        Store.INSTANCE.registerFileObserver(
+            files -> {
+                this.fileSelected = !files.isEmpty();
+                generateButton.setEnabled(this.fileSelected);
             }
         );
         generateButton.addActionListener(new ActionListener() {
@@ -94,22 +94,38 @@ public class MainFrame extends JFrame {
         constraints.gridy = 0;
         constraints.ipadx = 10;
         constraints.ipady = 10;
-        constraints.gridwidth = 4;
+        constraints.gridwidth = 5;
         constraints.fill = GridBagConstraints.NONE;
         content.add(new JLabel(), constraints);
         constraints.gridy = 1;
         constraints.gridwidth = 1;
         content.add(new JLabel(), constraints);
         constraints.gridx = 1;
-        content.add(new GuideChooserPanel(directory.listFiles(file -> file.getName().endsWith(".json"))), constraints);
+        content.add(
+            new FileChooserPanel(
+                "Auswahl der Modulhandbücher:",
+                directory.listFiles(file -> file.getName().endsWith(".json")),
+                Store.INSTANCE::setGuides
+            ),
+            constraints
+        );
         constraints.gridx = 2;
-        content.add(buttons, constraints);
+        content.add(
+            new FileChooserPanel(
+                "Auswahl einzelner Module:",
+                directory.toPath().resolve("modules").toFile().listFiles(file -> file.getName().endsWith(".json")),
+                Store.INSTANCE::setModules
+            ),
+            constraints
+        );
         constraints.gridx = 3;
+        content.add(buttons, constraints);
+        constraints.gridx = 4;
         content.add(new JLabel(), constraints);
         constraints.gridx = 0;
         constraints.gridy = 2;
         constraints.gridheight = 1;
-        constraints.gridwidth = 4;
+        constraints.gridwidth = 5;
         content.add(new JLabel(), constraints);
         constraints.gridy = 3;
         content.add(progress, constraints);

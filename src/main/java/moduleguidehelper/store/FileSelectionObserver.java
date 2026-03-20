@@ -4,8 +4,8 @@ import java.io.*;
 import java.util.*;
 
 @FunctionalInterface
-public interface GuideObserver {
+public interface FileSelectionObserver {
 
-    void notify(Set<File> guides);
+    void notify(Set<File> selection);
 
 }

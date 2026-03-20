@@ -25,6 +25,8 @@ public class Main {
 
     public static final Logger LOGGER = Logger.getLogger("moduleguidehelper");
 
+    public static final String SINGLE_PDFS = "singlepdfs";
+
     private static final String VERSION = "3.3.0";
 
     public static Process buildAndStartBiberProcess(final String fileName, final File directory) throws IOException {
@@ -54,8 +56,7 @@ public class Main {
         if (args != null && args.length == 1) {
             Main.LOGGER.setLevel(Level.FINE);
             final File root = new File(args[0]);
-            final String singleModules = "singlepdfs";
-            final File singleModulesDirectory = root.toPath().resolve(singleModules).toFile();
+            final File singleModulesDirectory = root.toPath().resolve(Main.SINGLE_PDFS).toFile();
             if (!singleModulesDirectory.exists()) {
                 singleModulesDirectory.mkdir();
             }

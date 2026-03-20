@@ -4,27 +4,64 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.*;
+import java.util.logging.*;
+
+import com.google.gson.*;
+import com.google.gson.stream.*;
 
 import moduleguidehelper.*;
+import moduleguidehelper.io.*;
+import moduleguidehelper.model.*;
 
 public class Store {
 
     public static final Store INSTANCE = new Store();
 
-    private final List<GuideObserver> guideObservers;
+    private static int buildPDF(
+        final int initial,
+        final int total,
+        final String fileName,
+        final String texFile,
+        final File directory,
+        final Consumer<Integer> progressListener
+    ) throws IOException, InterruptedException {
+        int current = initial;
+        Process pdfProcess = Main.buildAndStartPDFLaTeXProcess(texFile, directory);
+        pdfProcess.waitFor(60, TimeUnit.SECONDS);
+        current++;
+        progressListener.accept(current * 100 / total);
+        final Process biberProcess = Main.buildAndStartBiberProcess(fileName, directory);
+        biberProcess.waitFor(60, TimeUnit.SECONDS);
+        current++;
+        progressListener.accept(current * 100 / total);
+        for (int i = 0; i < 3; i++) {
+            pdfProcess = Main.buildAndStartPDFLaTeXProcess(texFile, directory);
+            pdfProcess.waitFor(60, TimeUnit.SECONDS);
+            current++;
+            progressListener.accept(current * 100 / total);
+        }
+        return current;
+    }
+
+    private final List<FileSelectionObserver> fileObservers;
 
     private Set<File> guides;
 
+    private Set<File> modules;
+
     private Store() {
         this.guides = new LinkedHashSet<File>();
-        this.guideObservers = new LinkedList<GuideObserver>();
+        this.modules = new LinkedHashSet<File>();
+        this.fileObservers = new LinkedList<FileSelectionObserver>();
     }
 
     public void generatePDFs(final File directory, final Consumer<Integer> progressListener) throws Exception {
         final String texSuffix = ".tex";
-        final String modules = directory.toPath().resolve("modules").toString();
+        final File modules = directory.toPath().resolve("modules").toFile();
+        final File singlePDFsDirectory = directory.toPath().resolve(Main.SINGLE_PDFS).toFile();
         Main.main(new String[] {directory.toPath().toString()});
-        final int total = 5 * this.guides.size();
+        final Set<File> files = this.getAllSelectedFiles();
+        final int total = 5 * files.size();
         int current = 0;
         progressListener.accept(0);
         for (final File guide : this.guides) {
@@ -33,24 +70,30 @@ public class Store {
             Main.main(
                 new String[] {
                     guide.getPath(),
-                    modules,
+                    modules.toString(),
                     directory.toPath().resolve(texFile).toString()
                 }
             );
-            Process pdfProcess = Main.buildAndStartPDFLaTeXProcess(texFile, directory);
-            pdfProcess.waitFor(60, TimeUnit.SECONDS);
-            current++;
-            progressListener.accept(current * 100 / total);
-            final Process biberProcess = Main.buildAndStartBiberProcess(fileName, directory);
-            biberProcess.waitFor(60, TimeUnit.SECONDS);
-            current++;
-            progressListener.accept(current * 100 / total);
-            for (int i = 0; i < 3; i++) {
-                pdfProcess = Main.buildAndStartPDFLaTeXProcess(texFile, directory);
-                pdfProcess.waitFor(60, TimeUnit.SECONDS);
-                current++;
-                progressListener.accept(current * 100 / total);
+            current = Store.buildPDF(current, total, fileName, texFile, directory, progressListener);
+        }
+        for (final File module : this.modules) {
+            if ("schema.json".equals(module.getName())) {
+                continue;
             }
+            final String fileName = module.getName().substring(0, module.getName().length() - 5);
+            final String texFile = fileName + texSuffix;
+            final RawModule raw;
+            try (FileReader moduleReader = new FileReader(module)) {
+                raw = Main.GSON.fromJson(moduleReader, RawModule.class);
+            } catch (final MalformedJsonException | JsonSyntaxException e) {
+                Main.LOGGER.log(Level.SEVERE, module.getAbsolutePath());
+                throw new IOException(String.format("%s: %s", module.getAbsolutePath(), e.getMessage()), e);
+            }
+            final File moduleTeXFile = singlePDFsDirectory.toPath().resolve(texFile).toFile();
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(moduleTeXFile))) {
+                ModuleGuideLaTeXWriter.writeModule(fileName.toUpperCase(), raw, 180, modules, writer);
+            }
+            current = Store.buildPDF(current, total, fileName, texFile, singlePDFsDirectory, progressListener);
         }
         Process process = new ProcessBuilder(
             "git",
@@ -72,16 +115,27 @@ public class Store {
         process.waitFor(60, TimeUnit.SECONDS);
     }
 
-    public void registerGuideObserver(final GuideObserver observer) {
-        this.guideObservers.add(observer);
-        observer.notify(this.guides);
+    public void registerFileObserver(final FileSelectionObserver observer) {
+        this.fileObservers.add(observer);
+        observer.notify(this.getAllSelectedFiles());
     }
 
     public void setGuides(final Collection<File> guides) {
         if (!guides.containsAll(this.guides) || !this.guides.containsAll(guides)) {
             this.guides = new LinkedHashSet<File>(guides);
-            for (final GuideObserver observer : this.guideObservers) {
-                observer.notify(this.guides);
+            final Set<File> files = this.getAllSelectedFiles();
+            for (final FileSelectionObserver observer : this.fileObservers) {
+                observer.notify(files);
+            }
+        }
+    }
+
+    public void setModules(final Collection<File> modules) {
+        if (!modules.containsAll(this.modules) || !this.modules.containsAll(modules)) {
+            this.modules = new LinkedHashSet<File>(modules);
+            final Set<File> files = this.getAllSelectedFiles();
+            for (final FileSelectionObserver observer : this.fileObservers) {
+                observer.notify(files);
             }
         }
     }
@@ -143,6 +197,12 @@ public class Store {
                 throw new IllegalStateException("Fehler beim Pull: " + line);
             }
         }
+    }
+
+    private Set<File> getAllSelectedFiles() {
+        final Set<File> result = new LinkedHashSet<File>(this.guides);
+        result.addAll(this.modules);
+        return result;
     }
 
 }
