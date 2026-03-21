@@ -27,7 +27,7 @@ public class Main {
 
     public static final String SINGLE_PDFS = "singlepdfs";
 
-    private static final String VERSION = "3.4.0";
+    private static final String VERSION = "3.4.2";
 
     public static Process buildAndStartBiberProcess(final String fileName, final File directory) throws IOException {
         return new ProcessBuilder(
@@ -103,9 +103,11 @@ public class Main {
         try (Reader reader = new FileReader(checkFile)) {
             check = Main.GSON.fromJson(reader, EquivalenceCheck.class);
         }
-        final File directory = checkFile.toPath().getParent().toFile();
+        Main.prettyPrint(checkFile, check);
+        final File directory = checkFile.toPath().toAbsolutePath().getParent().toFile();
         final File outputFile =
             directory.toPath()
+            .toAbsolutePath()
             .resolve(checkFile.getName().substring(0, checkFile.getName().length() - 4) + "tex")
             .toFile();
         try (Writer writer = new BufferedWriter(new FileWriter(outputFile))) {
@@ -190,11 +192,11 @@ public class Main {
         ).setVisible(true);
     }
 
-    private static void prettyPrint(final File json, final RawModule module) throws IOException {
+    private static void prettyPrint(final File json, final Object object) throws IOException {
         try (JsonWriter writer = new JsonWriter(new FileWriter(json))) {
             writer.setIndent("    ");
             writer.setSerializeNulls(false);
-            Main.GSON.toJson(module, RawModule.class, writer);
+            Main.GSON.toJson(object, object.getClass(), writer);
         }
     }
 

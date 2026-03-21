@@ -21,33 +21,11 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
 
     private static final String OVERVIEW_FIRST_COL_SIZE_ELECTIVE = "5.7cm";
 
-    public static void writeModule(
-        final String id,
-        final RawModule module,
-        final int weightSum,
-        final File modulesFolder,
-        final BufferedWriter writer
-    ) throws IOException {
-        ModuleGuideLaTeXWriter.writeDocumentStartStatic(true, writer);
-        writer.write("\\pagestyle{fancy}");
-        Main.newLine(writer);
-        Main.newLine(writer);
-        final ModuleMap modules = new ModuleMap();
-        modules.put(id, module);
-        ModuleGuideLaTeXWriter.writeModule(
-            new Module(
-                new MetaModule(id, 1, 1, "Pflicht", "jedes Jahr", 5, 1, "", "", "", "", "", null),
-                module
-            ),
-            weightSum,
-            List.of(),
-            modulesFolder,
-            writer
-        );
-        ModuleGuideLaTeXWriter.writeDocumentEndStatic(writer);
+    public static String escapeForLaTeX(final String text) {
+        return ModuleGuideLaTeXWriter.escapeForLaTeX(text, true);
     }
 
-    static String escapeForLaTeX(final String text) {
+    public static String escapeForLaTeX(final String text, final boolean considerLaTeXCode) {
         if (text == null) {
             return "";
         }
@@ -74,13 +52,39 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
                     .replaceAll("([^\\\\])\"", "$1''")
                     .replaceAll("^\"", "''")
                 );
-            } else {
+            } else if (considerLaTeXCode) {
                 result.append(text.substring(from + 2, index - 2));
             }
             from = index;
             escape = !escape;
         }
         return result.toString();
+    }
+
+    public static void writeModule(
+        final String id,
+        final RawModule module,
+        final int weightSum,
+        final File modulesFolder,
+        final BufferedWriter writer
+    ) throws IOException {
+        ModuleGuideLaTeXWriter.writeDocumentStartStatic(true, writer);
+        writer.write("\\pagestyle{fancy}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        final ModuleMap modules = new ModuleMap();
+        modules.put(id, module);
+        ModuleGuideLaTeXWriter.writeModule(
+            new Module(
+                new MetaModule(id, 1, 1, "Pflicht", "jedes Jahr", 5, 1, "", "", "", "", "", null),
+                module
+            ),
+            weightSum,
+            List.of(),
+            modulesFolder,
+            writer
+        );
+        ModuleGuideLaTeXWriter.writeDocumentEndStatic(writer);
     }
 
     private static String chapterToItem(final Chapter chapter) {

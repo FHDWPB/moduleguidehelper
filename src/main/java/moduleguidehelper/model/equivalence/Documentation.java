@@ -4,6 +4,8 @@ import java.io.*;
 import java.util.*;
 import java.util.stream.*;
 
+import moduleguidehelper.io.*;
+
 public class Documentation {
 
     static final int CONNECTION_SLOT_PADDING = 5;
@@ -170,7 +172,9 @@ public class Documentation {
         writer.write("Vorgehen \\cite{hrkmodus}, da die genauen Inhalte aufgrund der unterschiedlichen Natur von ");
         writer.write("Lehreinheiten in beispielsweise praktischen Ausbildungen und unseren Modulen häufig nicht ");
         writer.write("direkt miteinander vergleichbar sind. Die Angaben über die jeweiligen Kompetenzen sind ");
-        writer.write("wörtliche Auszüge aus unseren Modulhandbüchern bzw.\\ den jeweils angegebenen Quellen.\n\n");
+        writer.write("(bis auf wiederholte standardisierte Einleitungsteile wie \\glqq{}Die Absolventinnen und ");
+        writer.write("Absolventen\\grqq{}) wörtliche Auszüge aus unseren Modulhandbüchern ");
+        writer.write("bzw.\\ den jeweils angegebenen Quellen.\n\n");
         for (final String line : this.comments) {
             writer.write(line);
             writer.write("\n");
@@ -316,7 +320,7 @@ public class Documentation {
         final boolean isChecked = ownModule.meta().checked() != null && !ownModule.meta().checked().isBlank();
         writer.write("\\pagebreak\n\n");
         writer.write("\\section{");
-        writer.write(ownModule.data().title());
+        writer.write(ownModule.title());
         writer.write("}\n\n");
         writer.write("\\noindent Umfang: ");
         writer.write(String.valueOf(ownModule.totalhours()));
@@ -339,15 +343,21 @@ public class Documentation {
         writer.write(Documentation.toString(ownModule.sources()));
         writer.write("\n\n");
         writer.write("\\subsection*{Kompetenzen}\n\n");
+        writer.write("Nach erfolgreichem Abschluss dieses Moduls sind die Studierenden in der Lage,\n");
+        writer.write("\\begin{itemize}\n");
         for (final String competency : ownModule.data().competencies()) {
-            writer.write(competency);
+            writer.write("\\item ");
+            writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(competency, false));
             writer.write("\n");
         }
-        writer.write("\n\\subsection*{Abdeckung}\n\n");
+        writer.write("\\end{itemize}\n\n");
+        writer.write("\\subsection*{Abdeckung}\n\n");
+        boolean noMatch = true;
         for (final Match match : this.matches) {
             if (!match.ourID().equals(ownModule.id())) {
                 continue;
             }
+            noMatch = false;
             final ForeignModule foreignModule =
                 this.foreignModules.stream().filter(module -> module.id().equals(match.theirID())).findAny().get();
             writer.write("\\subsubsection*{");
@@ -361,12 +371,17 @@ public class Documentation {
             writer.write("Quelle: ");
             writer.write(Documentation.toString(foreignModule.sources()));
             writer.write("\\\\\n\n");
-            writer.write("\\noindent \\textit{Kompetenzen:}\\\\\n");
+            writer.write("\\noindent \\textit{Kompetenzen:}\n");
+            writer.write("\\begin{itemize}\n");
             for (final String competency : foreignModule.competencies()) {
+                writer.write("\\item ");
                 writer.write(competency);
                 writer.write("\n");
             }
-            writer.write("\n");
+            writer.write("\\end{itemize}\n\n");
+        }
+        if (noMatch) {
+            writer.write("\\noindent Keine.\n\n");
         }
     }
 
@@ -424,6 +439,9 @@ public class Documentation {
 
     private void writePreamble(final Writer writer) throws IOException {
         writer.write("\\documentclass{article}\n\n");
+        writer.write("\\pdfinfoomitdate 1\n");
+        writer.write("\\pdftrailerid{}\n");
+        writer.write("\\pdfsuppressptexinfo=-1\n\n");
         writer.write("\\usepackage[ngerman]{babel}\n");
         writer.write("\\usepackage[T1]{fontenc}\n");
         writer.write("\\usepackage[a4paper,margin=2cm]{geometry}\n");
