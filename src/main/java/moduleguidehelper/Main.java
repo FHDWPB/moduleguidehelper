@@ -27,7 +27,7 @@ public class Main {
 
     public static final String SINGLE_PDFS = "singlepdfs";
 
-    private static final String VERSION = "3.3.0";
+    private static final String VERSION = "3.4.0";
 
     public static Process buildAndStartBiberProcess(final String fileName, final File directory) throws IOException {
         return new ProcessBuilder(
@@ -45,78 +45,93 @@ public class Main {
         ).inheritIO().directory(directory).start();
     }
 
+    public static void compileAllModules(final File root) throws IOException {
+        Main.LOGGER.setLevel(Level.FINE);
+        final File singleModulesDirectory = root.toPath().resolve(Main.SINGLE_PDFS).toFile();
+        if (!singleModulesDirectory.exists()) {
+            singleModulesDirectory.mkdir();
+        }
+        final File modules = root.toPath().resolve("modules").toFile();
+        final File literature = root.toPath().resolve("literature.bib").toFile();
+        final BibTeXDatabase db;
+        try (final FileReader reader = new FileReader(literature)) {
+            db = BibTeXParser.parse(reader);
+        } catch (final IOException e) {
+            Main.LOGGER.log(Level.SEVERE, e.getMessage());
+            throw new IOException(e);
+        }
+        try (final FileWriter writer = new FileWriter(literature)) {
+            final BibTeXFormatter formatter = new BibTeXFormatter();
+            formatter.format(db, writer);
+        }
+        for (final File json : modules.listFiles()) {
+            final String id = json.getName().substring(0, json.getName().length() - 5);
+            final RawModule module;
+            try (FileReader moduleReader = new FileReader(json)) {
+                module = Main.GSON.fromJson(moduleReader, RawModule.class);
+            } catch (final MalformedJsonException | JsonSyntaxException e) {
+                Main.LOGGER.log(Level.SEVERE, json.getAbsolutePath());
+                throw new IOException(String.format("%s: %s", json.getAbsolutePath(), e.getMessage()), e);
+            }
+            if ("schema.json".equals(json.getName())) {
+                Main.prettyPrint(json, module);
+                continue;
+            }
+            final File moduleTeXFile = singleModulesDirectory.toPath().resolve(id + ".tex").toFile();
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(moduleTeXFile))) {
+                ModuleGuideLaTeXWriter.writeModule(id.toUpperCase(), module, 180, modules, writer);
+            }
+            Main.prettyPrint(json, module);
+        }
+    }
+
+    public static void compileModuleGuide(
+        final File guideFile,
+        final File modulesFolder,
+        final File outputFile
+    ) throws IOException {
+        final ModuleGuide guide = Main.parseModuleGuide(guideFile, modulesFolder);
+        try (
+            BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))
+        ) {
+            new ModuleGuideLaTeXWriter(guide).write(modulesFolder, writer);
+        }
+    }
+
+    public static void equivalenceCheck(final File checkFile, final File moduleFolder) throws IOException {
+        EquivalenceCheck check;
+        try (Reader reader = new FileReader(checkFile)) {
+            check = Main.GSON.fromJson(reader, EquivalenceCheck.class);
+        }
+        final File directory = checkFile.toPath().getParent().toFile();
+        final File outputFile =
+            directory.toPath()
+            .resolve(checkFile.getName().substring(0, checkFile.getName().length() - 4) + "tex")
+            .toFile();
+        try (Writer writer = new BufferedWriter(new FileWriter(outputFile))) {
+            new Documentation(
+                check.theirqualification(),
+                check.ourqualification(),
+                Files.readAllLines(directory.toPath().resolve(check.comments())),
+                new OwnModuleParser().apply(check, moduleFolder),
+                check.theirmodules(),
+                check.matches(),
+                check.requirements()
+            ).write(writer);
+        }
+    }
+
     public static void main(final String[] args) throws IOException {
         if (args == null || args.length == 0) {
-            new MainFrame(
-                Main.VERSION,
-                new File(System.getProperty("user.dir"))
-            ).setVisible(true);
+            Main.showGUI();
             return;
         }
         if (args != null && args.length == 1) {
-            Main.LOGGER.setLevel(Level.FINE);
-            final File root = new File(args[0]);
-            final File singleModulesDirectory = root.toPath().resolve(Main.SINGLE_PDFS).toFile();
-            if (!singleModulesDirectory.exists()) {
-                singleModulesDirectory.mkdir();
-            }
-            final File modules = root.toPath().resolve("modules").toFile();
-            final File literature = root.toPath().resolve("literature.bib").toFile();
-            final BibTeXDatabase db;
-            try (final FileReader reader = new FileReader(literature)) {
-                db = BibTeXParser.parse(reader);
-            } catch (final IOException e) {
-                Main.LOGGER.log(Level.SEVERE, e.getMessage());
-                throw new IOException(e);
-            }
-            try (final FileWriter writer = new FileWriter(literature)) {
-                final BibTeXFormatter formatter = new BibTeXFormatter();
-                formatter.format(db, writer);
-            }
-            for (final File json : modules.listFiles()) {
-                final String id = json.getName().substring(0, json.getName().length() - 5);
-                final RawModule module;
-                try (FileReader moduleReader = new FileReader(json)) {
-                    module = Main.GSON.fromJson(moduleReader, RawModule.class);
-                } catch (final MalformedJsonException | JsonSyntaxException e) {
-                    Main.LOGGER.log(Level.SEVERE, json.getAbsolutePath());
-                    throw new IOException(String.format("%s: %s", json.getAbsolutePath(), e.getMessage()), e);
-                }
-                if ("schema.json".equals(json.getName())) {
-                    Main.prettyPrint(json, module);
-                    continue;
-                }
-                final File moduleTeXFile = singleModulesDirectory.toPath().resolve(id + ".tex").toFile();
-                try (BufferedWriter writer = new BufferedWriter(new FileWriter(moduleTeXFile))) {
-                    ModuleGuideLaTeXWriter.writeModule(id.toUpperCase(), module, 180, modules, writer);
-                }
-                Main.prettyPrint(json, module);
-            }
+            Main.compileAllModules(new File(args[0]));
             return;
         }
         if (args == null || args.length == 2) {
-            System.out.println("Expected input: check, ownModules");
-            final File checkFile = new File(args[0]);
-            EquivalenceCheck check;
-            try (Reader reader = new FileReader(checkFile)) {
-                check = Main.GSON.fromJson(reader, EquivalenceCheck.class);
-            }
-            final File outputFile =
-                checkFile.toPath()
-                .getParent()
-                .resolve(checkFile.getName().substring(0, checkFile.getName().length() - 4) + "tex")
-                .toFile();
-            try (Writer writer = new BufferedWriter(new FileWriter(outputFile))) {
-                new Documentation(
-                    check.theirqualification(),
-                    check.ourqualification(),
-                    Files.readAllLines(new File(check.comments()).toPath()),
-                    new OwnModuleParser().apply(check, new File(args[1])),
-                    check.theirmodules(),
-                    check.matches(),
-                    check.requirements()
-                ).write(writer);
-            }
+            Main.equivalenceCheck(new File(args[0]), new File(args[1]));
             return;
         }
         Main.LOGGER.setLevel(Level.SEVERE);
@@ -124,12 +139,7 @@ public class Main {
             System.out.println("Call with guide JSON, modules folder, and output file!");
             return;
         }
-        final ModuleGuide guide = Main.parseModuleGuide(new File(args[0]), new File(args[1]));
-        try (
-            BufferedWriter writer = new BufferedWriter(new FileWriter(args[2]))
-        ) {
-            new ModuleGuideLaTeXWriter(guide).write(new File(args[1]), writer);
-        }
+        Main.compileModuleGuide(new File(args[0]), new File(args[1]), new File(args[2]));
     }
 
     public static void newLine(final BufferedWriter writer) throws IOException {
@@ -171,6 +181,13 @@ public class Main {
             metaGuide.specializationorder(),
             modules
         );
+    }
+
+    public static void showGUI() {
+        new MainFrame(
+            Main.VERSION,
+            new File(System.getProperty("user.dir"))
+        ).setVisible(true);
     }
 
     private static void prettyPrint(final File json, final RawModule module) throws IOException {

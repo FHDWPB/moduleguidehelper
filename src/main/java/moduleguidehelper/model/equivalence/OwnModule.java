@@ -7,7 +7,7 @@ import moduleguidehelper.model.*;
 public record OwnModule(ModuleCheck meta, RawModule data) implements MatchableModule {
 
     @Override
-    public int totalHours() {
+    public int totalhours() {
         return this.data().homehours() + this.data().contacthours();
     }
 

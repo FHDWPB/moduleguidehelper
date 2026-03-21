@@ -5,7 +5,7 @@ import java.util.*;
 public record ForeignModule(
     String id,
     String title,
-    int totalHours,
+    int totalhours,
     List<String> competencies,
     String responsible,
     List<Source> sources

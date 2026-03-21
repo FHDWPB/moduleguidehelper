@@ -110,8 +110,8 @@ public class Documentation {
         this.taken = new LinkedHashMap<String, Integer>();
         this.requirements = requriements;
         for (final Match match : matches) {
-            this.covered.merge(match.ownID(), match.hours(), Integer::sum);
-            this.taken.merge(match.otherID(), match.hours(), Integer::sum);
+            this.covered.merge(match.ourID(), match.hours(), Integer::sum);
+            this.taken.merge(match.theirID(), match.hours(), Integer::sum);
         }
     }
 
@@ -135,7 +135,7 @@ public class Documentation {
     private int computeUnusedHours() {
         int result = 0;
         for (final ForeignModule module : this.foreignModules) {
-            result += module.totalHours() - this.taken.getOrDefault(module.id(), 0);
+            result += module.totalhours() - this.taken.getOrDefault(module.id(), 0);
         }
         return result;
     }
@@ -206,7 +206,7 @@ public class Documentation {
             writer.write(" & ");
             final int covered =
                 this.covered.getOrDefault(module.id(), 0) + needsRequirements.getOrDefault(module.id(), 0);
-            writer.write(String.valueOf(Math.min(covered * 100 / module.totalHours(), 100)));
+            writer.write(String.valueOf(Math.min(covered * 100 / module.totalhours(), 100)));
             writer.write("\\% & ");
             if (recognized.contains(module.id())) {
                 writer.write("X & ");
@@ -278,7 +278,7 @@ public class Documentation {
             writer.write("\\filldraw[draw=black,fill=");
             writer.write(
                 CoverDegree.forCoverPercentage(
-                    this.covered.getOrDefault(module.id(), 0) * 100 / module.totalHours()
+                    this.covered.getOrDefault(module.id(), 0) * 100 / module.totalhours()
                 ).color
             );
         } else {
@@ -304,7 +304,7 @@ public class Documentation {
             writer.write(String.valueOf(this.taken.getOrDefault(module.id(), 0)));
             writer.write(" / ");
         }
-        writer.write(String.valueOf(module.totalHours()));
+        writer.write(String.valueOf(module.totalhours()));
         writer.write(" Stunden}\\end{minipage}};\n");
     }
 
@@ -319,11 +319,11 @@ public class Documentation {
         writer.write(ownModule.data().title());
         writer.write("}\n\n");
         writer.write("\\noindent Umfang: ");
-        writer.write(String.valueOf(ownModule.totalHours()));
+        writer.write(String.valueOf(ownModule.totalhours()));
         writer.write(" Stunden, abgedeckt: ");
         writer.write(String.valueOf(covered));
         writer.write(" Stunden (");
-        writer.write(String.valueOf(covered * 100 / ownModule.totalHours()));
+        writer.write(String.valueOf(covered * 100 / ownModule.totalhours()));
         writer.write("\\%)\\\\\n");
         if (isChecked) {
             writer.write("Geprüft durch ");
@@ -345,18 +345,18 @@ public class Documentation {
         }
         writer.write("\n\\subsection*{Abdeckung}\n\n");
         for (final Match match : this.matches) {
-            if (!match.ownID().equals(ownModule.id())) {
+            if (!match.ourID().equals(ownModule.id())) {
                 continue;
             }
             final ForeignModule foreignModule =
-                this.foreignModules.stream().filter(module -> module.id().equals(match.otherID())).findAny().get();
+                this.foreignModules.stream().filter(module -> module.id().equals(match.theirID())).findAny().get();
             writer.write("\\subsubsection*{");
             writer.write(foreignModule.title());
             writer.write("}\n\n");
             writer.write("\\noindent Umfang: ");
             writer.write(String.valueOf(match.hours()));
             writer.write(" von ");
-            writer.write(String.valueOf(foreignModule.totalHours()));
+            writer.write(String.valueOf(foreignModule.totalhours()));
             writer.write(" Stunden\\\\\n");
             writer.write("Quelle: ");
             writer.write(Documentation.toString(foreignModule.sources()));
@@ -402,8 +402,8 @@ public class Documentation {
             node++;
         }
         for (final Match match : this.matches) {
-            final int ownNode = idToNode.get(match.ownID());
-            final int otherNode = idToNode.get(match.otherID());
+            final int ownNode = idToNode.get(match.ourID());
+            final int otherNode = idToNode.get(match.theirID());
             maxNodeConnections.merge(ownNode, 1, Integer::sum);
             maxNodeConnections.merge(otherNode - numOfOwnModules, 1, Integer::sum);
             verticalConnections.add(new Interval(ownNode, otherNode - numOfOwnModules));
@@ -433,7 +433,7 @@ public class Documentation {
         writer.write("\\usepackage{biblatex}\n");
         writer.write("\\setcounter{biburllcpenalty}{7000}\n");
         writer.write("\\setcounter{biburlucpenalty}{8000}\n");
-        writer.write("\\addbibresource{references.bib}\n");
+        writer.write("\\addbibresource{../literature.bib}\n");
         writer.write("\\usepackage{tikz}\n");
         writer.write("\\usetikzlibrary{calc,positioning}\n\n");
         writer.write("\\colorlet{fhdwdarkgreen}{green!80!black}\n");

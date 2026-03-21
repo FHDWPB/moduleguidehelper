@@ -59,7 +59,7 @@ public class Store {
         final String texSuffix = ".tex";
         final File modules = directory.toPath().resolve("modules").toFile();
         final File singlePDFsDirectory = directory.toPath().resolve(Main.SINGLE_PDFS).toFile();
-        Main.main(new String[] {directory.toPath().toString()});
+        Main.compileAllModules(directory);
         final Set<File> files = this.getAllSelectedFiles();
         final int total = 5 * files.size();
         int current = 0;
@@ -67,13 +67,7 @@ public class Store {
         for (final File guide : this.guides) {
             final String fileName = guide.getName().substring(0, guide.getName().length() - 5);
             final String texFile = fileName + texSuffix;
-            Main.main(
-                new String[] {
-                    guide.getPath(),
-                    modules.toString(),
-                    directory.toPath().resolve(texFile).toString()
-                }
-            );
+            Main.compileModuleGuide(guide, modules, directory.toPath().resolve(texFile).toFile());
             current = Store.buildPDF(current, total, fileName, texFile, directory, progressListener);
         }
         for (final File module : this.modules) {

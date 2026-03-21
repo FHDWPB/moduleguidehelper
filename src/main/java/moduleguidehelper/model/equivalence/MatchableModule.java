@@ -14,6 +14,6 @@ public interface MatchableModule {
 
     String title();
 
-    int totalHours();
+    int totalhours();
 
 }
