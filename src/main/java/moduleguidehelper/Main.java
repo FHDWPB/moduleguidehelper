@@ -27,7 +27,7 @@ public class Main {
 
     public static final String SINGLE_PDFS = "singlepdfs";
 
-    private static final String VERSION = "3.4.5";
+    private static final String VERSION = "3.4.6";
 
     public static Process buildAndStartBiberProcess(final String fileName, final File directory) throws IOException {
         return new ProcessBuilder(
@@ -99,12 +99,13 @@ public class Main {
     }
 
     public static void equivalenceCheck(final File checkFile, final File moduleFolder) throws IOException {
-        EquivalenceCheck check;
+        EquivalenceCheckRaw checkRaw;
         try (Reader reader = new FileReader(checkFile)) {
-            check = Main.GSON.fromJson(reader, EquivalenceCheck.class);
+            checkRaw = Main.GSON.fromJson(reader, EquivalenceCheckRaw.class);
         }
-        Main.prettyPrint(checkFile, check);
+        Main.prettyPrint(checkFile, checkRaw);
         final File directory = checkFile.toPath().toAbsolutePath().getParent().toFile();
+        final EquivalenceCheck check = checkRaw.read(directory);
         final File outputFile =
             directory.toPath()
             .toAbsolutePath()
@@ -186,19 +187,19 @@ public class Main {
         );
     }
 
-    public static void showGUI() {
-        new MainFrame(
-            Main.VERSION,
-            new File(System.getProperty("user.dir"))
-        ).setVisible(true);
-    }
-
-    private static void prettyPrint(final File json, final Object object) throws IOException {
+    public static void prettyPrint(final File json, final Object object) throws IOException {
         try (JsonWriter writer = new JsonWriter(new FileWriter(json))) {
             writer.setIndent("    ");
             writer.setSerializeNulls(false);
             Main.GSON.toJson(object, object.getClass(), writer);
         }
+    }
+
+    public static void showGUI() {
+        new MainFrame(
+            Main.VERSION,
+            new File(System.getProperty("user.dir"))
+        ).setVisible(true);
     }
 
 }
