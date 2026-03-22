@@ -79,6 +79,8 @@ public class Documentation {
 
     private final Map<String, Integer> covered;
 
+    private final String date;
+
     private final List<ForeignModule> foreignModules;
 
     private final String major;
@@ -94,6 +96,7 @@ public class Documentation {
     private final Map<String, Integer> taken;
 
     public Documentation(
+        final String date,
         final String qualification,
         final String major,
         final List<String> comments,
@@ -102,6 +105,7 @@ public class Documentation {
         final List<Match> matches,
         final List<String> requriements
     ) {
+        this.date = date;
         this.qualification = qualification;
         this.major = major;
         this.matches = matches;
@@ -463,6 +467,9 @@ public class Documentation {
         writer.write(this.qualification);
         writer.write(" und ");
         writer.write(this.major);
+        writer.write("}\n");
+        writer.write("\\date{");
+        writer.write(this.date);
         writer.write("}\n\n");
         writer.write("\\begin{document}\n\n");
         writer.write("\\maketitle\n\n");
