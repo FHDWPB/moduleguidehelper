@@ -2,8 +2,10 @@ package moduleguidehelper.model.equivalence;
 
 import java.io.*;
 import java.util.*;
+import java.util.logging.*;
 import java.util.stream.*;
 
+import moduleguidehelper.*;
 import moduleguidehelper.io.*;
 
 public class Documentation {
@@ -309,8 +311,15 @@ public class Documentation {
         writer.write(module.title());
         writer.write("\\\\{\\scriptsize ");
         if (!own) {
-            writer.write(String.valueOf(this.taken.getOrDefault(module.id(), 0)));
+            final int taken = this.taken.getOrDefault(module.id(), 0);
+            writer.write(String.valueOf(taken));
             writer.write(" / ");
+            if (taken > module.totalhours()) {
+                Main.LOGGER.log(
+                    Level.SEVERE,
+                    String.format("Module %s is overused (%d of %d hours)!", module.title(), taken, module.totalhours())
+                );
+            }
         }
         writer.write(String.valueOf(module.totalhours()));
         writer.write(" Stunden}\\end{minipage}};\n");
