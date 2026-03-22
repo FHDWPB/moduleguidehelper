@@ -335,13 +335,13 @@ public class Documentation {
         writer.write("\\%)\\\\\n");
         if (isChecked) {
             writer.write("Geprüft durch ");
-            writer.write(ownModule.data().responsible());
+            writer.write(ownModule.responsible());
             writer.write(" (modulverantwortlich) am ");
             writer.write(ownModule.meta().checked());
             writer.write(".");
         } else {
             writer.write("modulverantwortlich: ");
-            writer.write(ownModule.data().responsible());
+            writer.write(ownModule.responsible());
         }
         writer.write("\\\\Quelle: ");
         writer.write(Documentation.toString(ownModule.sources()));

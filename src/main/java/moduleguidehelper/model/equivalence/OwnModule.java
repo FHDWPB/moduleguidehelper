@@ -18,7 +18,9 @@ public record OwnModule(ModuleCheck meta, RawModule data) implements MatchableMo
 
     @Override
     public String responsible() {
-        return this.data().responsible();
+        return this.meta().responsible() != null && !this.meta().responsible().isBlank() ?
+            this.meta().responsible() :
+                this.data().responsible();
     }
 
     @Override
