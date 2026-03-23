@@ -1263,8 +1263,10 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write("};");
         Main.newLine(writer);
         writer.write("\\node[fhdwblue] (time) [below=0.5 of degree.west, anchor=west] {\\large ");
-        writer.write(internationalization.internationalize(this.guide.timeModel().internationalizationKey));
-        writer.write("studium};");
+        final String study = internationalization.study(this.guide.mode());
+        writer.write(study.substring(0, 1).toUpperCase());
+        writer.write(study.substring(1));
+        writer.write("};");
         Main.newLine(writer);
         writer.write("\\draw[fhdwblue,thick] ($(subject.west)+(-0.1,0.2)$) -- ($(time.west)+(-0.1,-0.2)$);");
         Main.newLine(writer);
@@ -1451,7 +1453,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write("\\Large ");
         writer.write(internationalization.internationalize(InternationalizationKey.MODULE_GUIDE));
         writer.write(" (");
-        writer.write(internationalization.internationalize(this.guide.timeModel().internationalizationKey));
+        writer.write(internationalization.internationalize(this.guide.mode().internationalizationKey));
         writer.write(")\\\\[1ex]");
         Main.newLine(writer);
         writer.write("\\Huge \\textbf{");

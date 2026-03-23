@@ -1,5 +1,7 @@
 package moduleguidehelper.internationalization;
 
+import moduleguidehelper.model.*;
+
 public interface Internationalization {
 
     String electiveHeader(int maxNumber);
@@ -9,5 +11,7 @@ public interface Internationalization {
     String internationalize(InternationalizationKey key);
 
     String introduction(String degreeType, String subject, String year);
+
+    String study(Mode mode);
 
 }

@@ -5,7 +5,7 @@ import java.util.*;
 public record ModuleGuide(
     String subject,
     String degree,
-    Mode timeModel,
+    Mode mode,
     String year,
     Language generalLanguage,
     List<Integer> pagebreaks,
@@ -20,7 +20,7 @@ public record ModuleGuide(
             "%s (%s, %s, %s)",
             this.subject(),
             this.degree(),
-            this.generalLanguage().getInternationalization().internationalize(this.timeModel().internationalizationKey),
+            this.generalLanguage().getInternationalization().internationalize(this.mode().internationalizationKey),
             this.year()
         );
     }

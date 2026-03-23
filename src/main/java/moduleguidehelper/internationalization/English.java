@@ -194,4 +194,14 @@ public class English implements Internationalization {
         return null;
     }
 
+    @Override
+    public String study(final Mode mode) {
+        return switch (mode) {
+        case DUAL -> "dual study program";
+        case EXTRA_OCCUPATIONAL -> "extra occupational study program";
+        case FULLTIME -> "full-time study program";
+        default -> throw new IllegalStateException("Unexpected Mode value!");
+        };
+    }
+
 }

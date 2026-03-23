@@ -192,4 +192,14 @@ public class German implements Internationalization {
         );
     }
 
+    @Override
+    public String study(final Mode mode) {
+        return switch (mode) {
+        case DUAL -> "Dualstudium";
+        case EXTRA_OCCUPATIONAL -> "berufsbegleitendes Studium";
+        case FULLTIME -> "Vollzeitstudium";
+        default -> throw new IllegalStateException("Unexpected Mode value!");
+        };
+    }
+
 }
