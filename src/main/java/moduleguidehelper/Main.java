@@ -27,7 +27,7 @@ public class Main {
 
     public static final String SINGLE_PDFS = "singlepdfs";
 
-    private static final String VERSION = "3.4.7";
+    private static final String VERSION = "3.4.8";
 
     public static Process buildAndStartBiberProcess(final String fileName, final File directory) throws IOException {
         return new ProcessBuilder(
@@ -112,7 +112,7 @@ public class Main {
             .resolve(checkFile.getName().substring(0, checkFile.getName().length() - 4) + "tex")
             .toFile();
         try (Writer writer = new BufferedWriter(new FileWriter(outputFile))) {
-            new Documentation(
+            new EquivalenceCheckWriter(
                 check.date(),
                 check.theirqualification(),
                 check.ourqualification(),

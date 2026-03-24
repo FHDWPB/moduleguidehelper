@@ -1,7 +1,9 @@
-package moduleguidehelper.model.equivalence;
+package moduleguidehelper.io;
 
 import java.io.*;
 import java.util.*;
+
+import moduleguidehelper.model.equivalence.*;
 
 public class ConnectionSlots extends LinkedHashMap<Integer, List<Interval>> {
 
@@ -76,7 +78,7 @@ public class ConnectionSlots extends LinkedHashMap<Integer, List<Interval>> {
     ) throws IOException {
         final int leftNode = connection.start();
         final int rightNode = connection.end() + this.numOfOwnModules;
-        final int width = Math.max(this.slotWidth / this.maxSlot, 1) * slot + Documentation.CONNECTION_SLOT_PADDING;
+        final int width = Math.max(this.slotWidth / this.maxSlot, 1) * slot + EquivalenceCheckWriter.CONNECTION_SLOT_PADDING;
         currentNodeConnections.merge(leftNode, 1, Integer::sum);
         currentNodeConnections.merge(connection.end(), 1, Integer::sum);
         final int leftConnectionCount = currentNodeConnections.get(leftNode);
@@ -84,13 +86,13 @@ public class ConnectionSlots extends LinkedHashMap<Integer, List<Interval>> {
         final int leftMaxCount = this.maxNodeConnections.get(leftNode);
         final int rightMaxCount = this.maxNodeConnections.get(connection.end());
         final int leftVerticalPadding =
-            -Math.max(1, Documentation.MODULE_INNER_HEIGHT / leftMaxCount) * leftConnectionCount;
+            -Math.max(1, EquivalenceCheckWriter.MODULE_INNER_HEIGHT / leftMaxCount) * leftConnectionCount;
         final int rightVerticalPadding =
-            -Math.max(1, Documentation.MODULE_INNER_HEIGHT / rightMaxCount) * rightConnectionCount;
+            -Math.max(1, EquivalenceCheckWriter.MODULE_INNER_HEIGHT / rightMaxCount) * rightConnectionCount;
         writer.write("\\draw[->,thick] ($(n");
         writer.write(String.valueOf(leftNode));
         writer.write(")+(");
-        writer.write(String.valueOf(Documentation.OWN_MODULE_WIDTH));
+        writer.write(String.valueOf(EquivalenceCheckWriter.OWN_MODULE_WIDTH));
         writer.write("mm,");
         writer.write(String.valueOf(leftVerticalPadding));
         writer.write("mm)$) -- ++(");

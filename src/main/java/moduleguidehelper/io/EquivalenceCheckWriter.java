@@ -1,4 +1,4 @@
-package moduleguidehelper.model.equivalence;
+package moduleguidehelper.io;
 
 import java.io.*;
 import java.util.*;
@@ -6,9 +6,10 @@ import java.util.logging.*;
 import java.util.stream.*;
 
 import moduleguidehelper.*;
-import moduleguidehelper.io.*;
+import moduleguidehelper.internationalization.*;
+import moduleguidehelper.model.equivalence.*;
 
-public class Documentation {
+public class EquivalenceCheckWriter {
 
     static final int CONNECTION_SLOT_PADDING = 5;
 
@@ -97,7 +98,7 @@ public class Documentation {
 
     private final Map<String, Integer> taken;
 
-    public Documentation(
+    public EquivalenceCheckWriter(
         final String date,
         final String qualification,
         final String major,
@@ -276,7 +277,7 @@ public class Documentation {
                 writer.write(" of n1");
             } else {
                 writer.write("[below=");
-                writer.write(Documentation.MODULE_OUTER_HEIGHT);
+                writer.write(EquivalenceCheckWriter.MODULE_OUTER_HEIGHT);
                 writer.write(" of n");
                 writer.write(String.valueOf(node - 1));
             }
@@ -299,7 +300,7 @@ public class Documentation {
         writer.write(") rectangle ++(");
         writer.write(String.valueOf(width));
         writer.write("mm, -");
-        writer.write(String.valueOf(Documentation.MODULE_INNER_HEIGHT));
+        writer.write(String.valueOf(EquivalenceCheckWriter.MODULE_INNER_HEIGHT));
         writer.write("mm);\n");
         writer.write("\\node (t");
         writer.write(String.valueOf(node));
@@ -353,11 +354,13 @@ public class Documentation {
             writer.write(ownModule.responsible());
         }
         writer.write("\\\\Quelle: ");
-        writer.write(Documentation.toString(ownModule.sources()));
+        writer.write(EquivalenceCheckWriter.toString(ownModule.sources()));
         writer.write("\n\n");
         writer.write("\\subsection*{Kompetenzen}\n\n");
-        writer.write("Nach erfolgreichem Abschluss dieses Moduls sind die Studierenden in der Lage,\n");
-        writer.write("\\begin{itemize}\n");
+        final Internationalization internationalization =
+            ownModule.data().descriptionlanguage().getInternationalization();
+        writer.write(internationalization.internationalize(InternationalizationKey.QUALIFICATION_START));
+        writer.write("\n\\begin{itemize}\n");
         for (final String competency : ownModule.data().competencies()) {
             writer.write("\\item ");
             writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(competency, false));
@@ -382,7 +385,7 @@ public class Documentation {
             writer.write(String.valueOf(foreignModule.totalhours()));
             writer.write(" Stunden\\\\\n");
             writer.write("Quelle: ");
-            writer.write(Documentation.toString(foreignModule.sources()));
+            writer.write(EquivalenceCheckWriter.toString(foreignModule.sources()));
             writer.write("\\\\\n\n");
             writer.write("\\noindent \\textit{Kompetenzen:}\n");
             writer.write("\\begin{itemize}\n");
@@ -412,14 +415,14 @@ public class Documentation {
         writer.write("\\begin{tikzpicture}\n");
         int node = 1;
         for (final OwnModule module : this.ownModules) {
-            this.writeModule(node, module, null, true, Documentation.OWN_MODULE_WIDTH, writer);
+            this.writeModule(node, module, null, true, EquivalenceCheckWriter.OWN_MODULE_WIDTH, writer);
             idToNode.put(module.id(), node);
             maxNodeConnections.put(node, 1);
             node++;
         }
         boolean first = true;
-        final int width = big ? Documentation.FOREIGN_MODULE_WIDTH : Documentation.OWN_MODULE_WIDTH;
-        final int right = big ? Documentation.MODULE_RIGHT_SEP_BIG : Documentation.MODULE_RIGHT_SEP_SMALL;
+        final int width = big ? EquivalenceCheckWriter.FOREIGN_MODULE_WIDTH : EquivalenceCheckWriter.OWN_MODULE_WIDTH;
+        final int right = big ? EquivalenceCheckWriter.MODULE_RIGHT_SEP_BIG : EquivalenceCheckWriter.MODULE_RIGHT_SEP_SMALL;
         for (final ForeignModule module : this.foreignModules) {
             this.writeModule(node, module, first ? String.valueOf(right) : null, false, width, writer);
             if (first) {
@@ -436,13 +439,13 @@ public class Documentation {
             maxNodeConnections.merge(otherNode - numOfOwnModules, 1, Integer::sum);
             verticalConnections.add(new Interval(ownNode, otherNode - numOfOwnModules));
         }
-        final int slotWidth = right * 10 - 2 * Documentation.CONNECTION_SLOT_PADDING - Documentation.OWN_MODULE_WIDTH;
+        final int slotWidth = right * 10 - 2 * EquivalenceCheckWriter.CONNECTION_SLOT_PADDING - EquivalenceCheckWriter.OWN_MODULE_WIDTH;
         final ConnectionSlots slots =
             new ConnectionSlots(numOfOwnModules, slotWidth, maxNodeConnections, verticalConnections);
         slots.drawConnections(writer);
         final int lowestNode = numOfOwnModules > node - 1 - numOfOwnModules ? numOfOwnModules : node - 1;
         final int unused = this.computeUnusedHours();
-        Documentation.writeLegend(lowestNode, unused, big, writer);
+        EquivalenceCheckWriter.writeLegend(lowestNode, unused, big, writer);
         writer.write("\\end{tikzpicture}\n");
         if (big) {
             writer.write("}\n");
@@ -458,6 +461,7 @@ public class Documentation {
         writer.write("\\usepackage[ngerman]{babel}\n");
         writer.write("\\usepackage[T1]{fontenc}\n");
         writer.write("\\usepackage[a4paper,margin=2cm]{geometry}\n");
+        writer.write("\\usepackage{uarial}\n");
         writer.write("\\usepackage{xcolor}\n");
         writer.write("\\usepackage[hyphens]{url}\n");
         writer.write("\\usepackage{hyperref}\n");
@@ -467,6 +471,7 @@ public class Documentation {
         writer.write("\\addbibresource{../literature.bib}\n");
         writer.write("\\usepackage{tikz}\n");
         writer.write("\\usetikzlibrary{calc,positioning}\n\n");
+        writer.write("\\renewcommand{\\familydefault}{\\sfdefault}\n\n");
         writer.write("\\colorlet{fhdwdarkgreen}{green!80!black}\n");
         writer.write("\\colorlet{fhdwlightgreen}{green!50!white}\n");
         writer.write("\\colorlet{fhdwyellow}{yellow}\n");
