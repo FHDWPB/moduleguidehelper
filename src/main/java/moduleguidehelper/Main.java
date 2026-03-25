@@ -27,7 +27,7 @@ public class Main {
 
     public static final String SINGLE_PDFS = "singlepdfs";
 
-    private static final String VERSION = "3.4.8";
+    private static final String VERSION = "3.4.10";
 
     public static Process buildAndStartBiberProcess(final String fileName, final File directory) throws IOException {
         return new ProcessBuilder(

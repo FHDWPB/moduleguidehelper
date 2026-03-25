@@ -238,7 +238,7 @@ public class EquivalenceCheckWriter {
         writer.write(" unter den folgenden Auflagen:\n\n");
         if (this.requirements.isEmpty()) {
             writer.write("\\vspace*{1ex}\n\n");
-            writer.write("keine\n\n");
+            writer.write("keine\\\\[2ex]\n\n");
         } else {
             writer.write("\\begin{itemize}\n");
             for (final String requirement : this.requirements) {

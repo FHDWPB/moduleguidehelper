@@ -174,7 +174,7 @@ public class German implements Internationalization {
         case TEACHING_METHODS:
             return "Lehr- und Lernmethoden";
         case THESIS_FORM:
-            return "Die Prüfung besteht aus einer wissenschaftlichen Arbeit (Thesis).";
+            return "Die Prüfung besteht aus einer wissenschaftlichen Arbeit (Thesis bzw. Praxisarbeit).";
         case VOLUME:
             return "Ausgabe";
         default:
