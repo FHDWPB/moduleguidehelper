@@ -7,6 +7,7 @@ public record RawModule(
     String responsible,
     List<String> teachers,
     Language teachinglanguage,
+    List<Language> additionalteachinglanguages,
     Language descriptionlanguage,
     int ects,
     int contacthours,

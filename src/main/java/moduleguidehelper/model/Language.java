@@ -4,8 +4,11 @@ import moduleguidehelper.internationalization.*;
 
 public enum Language {
 
+    CHINESE("Chinesisch", "Chinese"),
     ENGLISH("Englisch", "English"),
-    GERMAN("Deutsch", "German");
+    FRENCH("Französisch", "French"),
+    GERMAN("Deutsch", "German"),
+    SPANISH("Spanisch", "Spanish");
 
     private final String english;
 
