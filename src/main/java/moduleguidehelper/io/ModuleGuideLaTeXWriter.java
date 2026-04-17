@@ -1156,6 +1156,11 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             Main.newLine(writer);
             writer.write(internationalization.internationalize(InternationalizationKey.DEAN_BA));
             break;
+        case THOMAS:
+            writer.write("Thomas Mertens\\\\");
+            //Main.newLine(writer);
+            //writer.write(internationalization.internationalize(InternationalizationKey.DEAN_BA));
+            break;
         }
         Main.newLine(writer);
         Main.newLine(writer);
