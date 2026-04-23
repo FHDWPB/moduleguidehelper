@@ -43,9 +43,9 @@ public class English implements Internationalization {
         case DEAN_CS:
             return "Dean of the faculty Computer Science";
         case DEFAULT_TEACHING:
-            return "Präsenzveranstaltungen, Eigenstudium, individuelles und kooperatives Lernen, "
-                + "problemorientiertes und integratives Lernen, forschendes Lernen, synchrones und "
-                + "asynchrones Lernen, Übungen, Fallstudien, Expertenvorträge, Projekte, Gruppenarbeit";
+            return "in-person sessions, self-study, individual and cooperative learning, "
+                + "problem-oriented and integrative learning, learning by research, synchrone and "
+                + "asynchrone learning, exercises, case studies, expert presentations, projects, group work";
         case DUAL:
             return "integrated degree";
         case DURATION:
@@ -81,7 +81,8 @@ public class English implements Internationalization {
         case EXAMINATIONS_HEADER2:
             return "FORM";
         case EXAMINATIONS_INTRO:
-            return "";
+            return "The following legend is part of attachment 1, detailing type and size of our examination "
+            + "procedures";
         case EXAMINATIONS_MULTIPLE:
             return "If multiple examination forms are listed, this means a choice between these alternative forms; "
                 + "not their combination.";
@@ -96,15 +97,17 @@ public class English implements Internationalization {
         case GENERAL_INFORMATION:
             return "General Information";
         case GREETING_COLLEAGUES:
-            return "";
+            return "dear colleagues";
         case GREETING_PARTNERS:
-            return "";
+            return "dear partner companies";
         case GREETING_STUDENTS:
-            return "";
+            return "Dear students";
         case ID:
             return "ID";
         case INTRO:
-            return "";
+            return "This module guide is on the one hand an information for students on the contents of their course. "
+            + "On the other hand, it might also be useful for partner companies in supporting practical contributions. "
+            + "Finally, it is an orientation for our teachers to align teaching contents across different modules.";
         case KEYWORDS:
             return "Keywords";
         case MODULE_GUIDE:
@@ -142,7 +145,7 @@ public class English implements Internationalization {
         case RECOMMENDED_LITERATURE:
             return "Recommended Additional Literature";
         case REGARDS:
-            return "";
+            return "Yours sincerely,";
         case REQUIRED_LITERATURE:
             return "Required Literature";
         case REQUIREMENTS:
@@ -190,8 +193,12 @@ public class English implements Internationalization {
 
     @Override
     public String introduction(final String degreeType, final String subject, final String year) {
-        // TODO Auto-generated method stub
-        return null;
+        return String.format(
+            "We hereby present the module guide for the %s course %s in season %s.",
+            degreeType,
+            subject,
+            year
+        );
     }
 
     @Override
