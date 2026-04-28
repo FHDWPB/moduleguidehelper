@@ -1142,26 +1142,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write(internationalization.internationalize(InternationalizationKey.REGARDS));
         Main.newLine(writer);
         Main.newLine(writer);
-        switch (this.guide.signature()) {
-        case GREGOR:
-            writer.write("\\includegraphics{signature.png}");
-            Main.newLine(writer);
-            Main.newLine(writer);
-            writer.write("Prof. Dr. Gregor Sandhaus\\\\");
-            Main.newLine(writer);
-            writer.write(internationalization.internationalize(InternationalizationKey.DEAN_CS));
-            break;
-        case ANGELIKA:
-            writer.write("Prof. Dr. ANGELIKA RÖCHTER\\\\");
-            Main.newLine(writer);
-            writer.write(internationalization.internationalize(InternationalizationKey.DEAN_BA));
-            break;
-        case THOMAS:
-            writer.write("Thomas Mertens\\\\");
-            //Main.newLine(writer);
-            //writer.write(internationalization.internationalize(InternationalizationKey.DEAN_BA));
-            break;
-        }
+        this.guide.signature().toLaTeX.apply(internationalization, writer);
         Main.newLine(writer);
         Main.newLine(writer);
         writer.write("\\vfill");
