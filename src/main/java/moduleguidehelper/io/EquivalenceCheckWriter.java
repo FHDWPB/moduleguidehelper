@@ -433,6 +433,9 @@ public class EquivalenceCheckWriter {
             node++;
         }
         for (final Match match : this.matches) {
+            if (!idToNode.containsKey(match.ourID())) {
+                continue;
+            }
             final int ownNode = idToNode.get(match.ourID());
             final int otherNode = idToNode.get(match.theirID());
             maxNodeConnections.merge(ownNode, 1, Integer::sum);
