@@ -1132,15 +1132,14 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
                 this.guide.year()
             )
         );
-        writer.write("\\\\[2ex]");
-        Main.newLine(writer);
+        writer.write("\\\\[1.5ex]");
         Main.newLine(writer);
         writer.write(internationalization.internationalize(InternationalizationKey.INTRO));
         writer.write("\\\\[2ex]");
         Main.newLine(writer);
         Main.newLine(writer);
         writer.write(internationalization.internationalize(InternationalizationKey.REGARDS));
-        Main.newLine(writer);
+        writer.write("\\\\[1.5ex]");
         Main.newLine(writer);
         this.guide.signature().toLaTeX.apply(internationalization, writer);
         Main.newLine(writer);
