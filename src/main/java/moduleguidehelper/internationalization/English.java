@@ -38,6 +38,8 @@ public class English implements Internationalization {
             return "CONTACT HOURS";
         case CONTENTS:
             return "Contents";
+        case COURSE_DIRECTOR:
+            return "Course Director";
         case DEAN_BA:
             return "Dean of the faculty Business Administration";
         case DEAN_CS:
@@ -110,6 +112,8 @@ public class English implements Internationalization {
             + "Finally, it is an orientation for our teachers to align teaching contents across different modules.";
         case KEYWORDS:
             return "Keywords";
+        case MBA:
+            return "Master of Business Administration";
         case MODULE_GUIDE:
             return "Module Guide";
         case MODULE_HEADER:

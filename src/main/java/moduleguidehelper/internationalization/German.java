@@ -26,6 +26,8 @@ public class German implements Internationalization {
             return "KONTAKT\\-STUNDEN";
         case CONTENTS:
             return "Inhalte";
+        case COURSE_DIRECTOR:
+            return "Studiengangsleiter";
         case DEAN_BA:
             return "Dekanin Betriebswirtschaft";
         case DEAN_CS:
@@ -100,6 +102,8 @@ public class German implements Internationalization {
                 + "Dozentinnen und Dozenten zur modulübergreifenden Abstimmung der Lehrinhalte.";
         case KEYWORDS:
             return "Stichwörter";
+        case MBA:
+            return "Master of Business Administration";
         case MODULE_GUIDE:
             return "Modulhandbuch";
         case MODULE_HEADER:

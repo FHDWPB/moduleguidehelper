@@ -9,18 +9,12 @@ import moduleguidehelper.io.*;
 public enum Signature {
 
     ANGELIKA((internationalization, writer) -> {
-        writer.write("\\includegraphics{signature_angelika.jpg}");
-        Main.newLine(writer);
-        Main.newLine(writer);
         writer.write("Prof. Dr. Angelika Röchter\\\\");
         Main.newLine(writer);
         writer.write(internationalization.internationalize(InternationalizationKey.DEAN_BA));
     }),
 
     GREGOR((internationalization, writer) -> {
-        writer.write("\\includegraphics{signature_gregor.png}");
-        Main.newLine(writer);
-        Main.newLine(writer);
         writer.write("Prof. Dr. Gregor Sandhaus\\\\");
         Main.newLine(writer);
         writer.write(internationalization.internationalize(InternationalizationKey.DEAN_CS));
@@ -28,6 +22,10 @@ public enum Signature {
 
     THOMAS((internationalization, writer) -> {
         writer.write("Thomas Mertens\\\\");
+        Main.newLine(writer);
+        writer.write(internationalization.internationalize(InternationalizationKey.COURSE_DIRECTOR));
+        writer.write(" ");
+        writer.write(internationalization.internationalize(InternationalizationKey.MBA));
     });
 
     public final CheckedBiConsumer<Internationalization, BufferedWriter, IOException> toLaTeX;
