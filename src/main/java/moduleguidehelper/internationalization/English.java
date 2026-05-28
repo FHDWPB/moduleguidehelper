@@ -47,7 +47,8 @@ public class English implements Internationalization {
         case DEFAULT_TEACHING:
             return "in-person sessions, self-study, individual and cooperative learning, "
                 + "problem-oriented and integrative learning, learning by research, synchrone and "
-                + "asynchrone learning, exercises, case studies, expert presentations, projects, group work";
+                + "asynchrone learning, exercises, case studies, expert presentations, projects, group work, "
+                + "literature review";
         case DUAL:
             return "integrated degree";
         case DURATION:

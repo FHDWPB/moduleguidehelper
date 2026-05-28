@@ -35,7 +35,8 @@ public class German implements Internationalization {
         case DEFAULT_TEACHING:
             return "Präsenzveranstaltungen, Eigenstudium, individuelles und kooperatives Lernen, "
                 + "problemorientiertes und integratives Lernen, forschendes Lernen, synchrones und "
-                + "asynchrones Lernen, Übungen, Fallstudien, Expertenvorträge, Projekte, Gruppenarbeit";
+                + "asynchrones Lernen, Übungen, Fallstudien, Expertenvorträge, Projekte, Gruppenarbeit, "
+                + "Literaturrecherche";
         case DUAL:
             return "dual";
         case DURATION:
