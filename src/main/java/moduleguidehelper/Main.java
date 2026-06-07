@@ -1,6 +1,7 @@
 package moduleguidehelper;
 
 import java.io.*;
+import java.lang.reflect.*;
 import java.nio.file.*;
 import java.util.*;
 import java.util.logging.*;
@@ -8,6 +9,7 @@ import java.util.logging.*;
 import com.google.gson.*;
 import com.google.gson.stream.*;
 
+import clit.*;
 import moduleguidehelper.io.*;
 import moduleguidehelper.model.*;
 import moduleguidehelper.model.Module;
@@ -27,7 +29,7 @@ public class Main {
 
     public static final String SINGLE_PDFS = "singlepdfs";
 
-    private static final String VERSION = "3.4.17";
+    private static final String VERSION = "4.0.0";
 
     public static Process buildAndStartBiberProcess(final String fileName, final File directory) throws IOException {
         return new ProcessBuilder(
@@ -52,18 +54,6 @@ public class Main {
             singleModulesDirectory.mkdir();
         }
         final File modules = root.toPath().resolve("modules").toFile();
-        final File literature = root.toPath().resolve("literature.bib").toFile();
-        final BibTeXDatabase db;
-        try (final FileReader reader = new FileReader(literature)) {
-            db = BibTeXParser.parse(reader);
-        } catch (final IOException e) {
-            Main.LOGGER.log(Level.SEVERE, e.getMessage());
-            throw new IOException(e);
-        }
-        try (final FileWriter writer = new FileWriter(literature)) {
-            final BibTeXFormatter formatter = new BibTeXFormatter();
-            formatter.format(db, writer);
-        }
         for (final File json : modules.listFiles()) {
             final String id = json.getName().substring(0, json.getName().length() - 5);
             final RawModule module;
@@ -74,14 +64,12 @@ public class Main {
                 throw new IOException(String.format("%s: %s", json.getAbsolutePath(), e.getMessage()), e);
             }
             if ("schema.json".equals(json.getName())) {
-                Main.prettyPrint(json, module);
                 continue;
             }
             final File moduleTeXFile = singleModulesDirectory.toPath().resolve(id + ".tex").toFile();
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(moduleTeXFile))) {
                 ModuleGuideLaTeXWriter.writeModule(id.toUpperCase(), module, 180, modules, writer);
             }
-            Main.prettyPrint(json, module);
         }
     }
 
@@ -125,25 +113,53 @@ public class Main {
         }
     }
 
-    public static void main(final String[] args) throws IOException {
+    public static void main(final String[] args)
+    throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         if (args == null || args.length == 0) {
             Main.showGUI();
             return;
         }
-        if (args != null && args.length == 1) {
-            Main.compileAllModules(new File(args[0]));
+        final CLITamer<Flag> tamer = new CLITamer<Flag>(Flag.class, Set.of(Flag.EXECUTION_MODE));
+        if (args.length == 1 && "-h".equals(args[0])) {
+            System.out.println(tamer.getParameterDescriptions());
             return;
         }
-        if (args == null || args.length == 2) {
-            Main.equivalenceCheck(new File(args[0]), new File(args[1]));
+        final Parameters<Flag> options = tamer.parse(args);
+        final ExecutionMode mode = ExecutionMode.valueOf(options.get(Flag.EXECUTION_MODE));
+        if (!options.keySet().containsAll(mode.parameters)) {
+            System.out.println(String.format("Execution mode %s requires the following parameters:", mode));
+            System.out.println(mode.parameters);
             return;
         }
-        Main.LOGGER.setLevel(Level.SEVERE);
-        if (args == null || args.length != 3) {
-            System.out.println("Call with guide JSON, modules folder, and output file!");
-            return;
+        switch (mode) {
+        case EQUIVALENCE_CHECK:
+            Main.equivalenceCheck(new File(options.get(Flag.EQUIVALENCE_CHECK)), new File(options.get(Flag.MODULES)));
+            break;
+        case MODULE_GUIDE:
+            Main.LOGGER.setLevel(Level.SEVERE);
+            Main.compileModuleGuide(
+                new File(options.get(Flag.GUIDE)),
+                new File(options.get(Flag.MODULES)),
+                new File(options.get(Flag.OUTPUT))
+            );
+            break;
+        case PRETTY:
+            Main.prettyPrintJSONsAndBIBs(new File(options.get(Flag.ROOT)));
+            break;
+        case QUARTERLY_OVERVIEW:
+            Main.compileQuarterlyOverview(
+                new File(options.get(Flag.GUIDE)),
+                new File(options.get(Flag.MODULES)),
+                new File(options.get(Flag.OUTPUT))
+            );
+            break;
+        case SINGLE_MODULES:
+            Main.compileAllModules(new File(options.get(Flag.ROOT)));
+            break;
+        default:
+            System.out.println(ExecutionMode.descriptions());
+            break;
         }
-        Main.compileModuleGuide(new File(args[0]), new File(args[1]), new File(args[2]));
     }
 
     public static void newLine(final BufferedWriter writer) throws IOException {
@@ -159,6 +175,9 @@ public class Main {
         }
         final List<Module> modules = new ArrayList<Module>();
         for (final MetaModule meta : metaGuide.modules()) {
+            if (meta == null) {
+                continue;
+            }
             final File moduleJson = modulesFolder.toPath().resolve(meta.module().toLowerCase() + ".json").toFile();
             if (!moduleJson.exists()) {
                 Main.LOGGER.log(Level.SEVERE, meta.module() + " is missing!");
@@ -195,11 +214,57 @@ public class Main {
         }
     }
 
+    public static void prettyPrintJSONsAndBIBs(final File root) throws IOException {
+        Main.LOGGER.setLevel(Level.FINE);
+        final File modules = root.toPath().resolve("modules").toFile();
+        final File literature = root.toPath().resolve("literature.bib").toFile();
+        final BibTeXDatabase db;
+        try (final FileReader reader = new FileReader(literature)) {
+            db = BibTeXParser.parse(reader);
+        } catch (final IOException e) {
+            Main.LOGGER.log(Level.SEVERE, e.getMessage());
+            throw new IOException(e);
+        }
+        try (final FileWriter writer = new FileWriter(literature)) {
+            final BibTeXFormatter formatter = new BibTeXFormatter();
+            formatter.format(db, writer);
+        }
+        for (final File json : modules.listFiles()) {
+            final RawModule module;
+            try (FileReader moduleReader = new FileReader(json)) {
+                module = Main.GSON.fromJson(moduleReader, RawModule.class);
+            } catch (final MalformedJsonException | JsonSyntaxException e) {
+                Main.LOGGER.log(Level.SEVERE, json.getAbsolutePath());
+                throw new IOException(String.format("%s: %s", json.getAbsolutePath(), e.getMessage()), e);
+            }
+            Main.prettyPrint(json, module);
+        }
+        for (final File json : root.listFiles()) {
+            if (!json.getName().endsWith(".json")) {
+                continue;
+            }
+            final ModuleGuide guide = Main.parseModuleGuide(json, modules);
+            try (Writer writer = new BufferedWriter(new FileWriter(json))) {
+                guide.prettyPrint(writer);
+            }
+        }
+    }
+
     public static void showGUI() {
         new MainFrame(
             Main.VERSION,
             new File(System.getProperty("user.dir"))
         ).setVisible(true);
+    }
+
+    private static void compileQuarterlyOverview(
+        final File guideFile,
+        final File modulesFolder,
+        final File outputFile
+    ) throws IOException {
+//        final ModuleGuide guide = Main.parseModuleGuide(guideFile, modulesFolder);
+        // TODO Auto-generated method stub
+
     }
 
 }

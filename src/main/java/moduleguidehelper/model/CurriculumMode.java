@@ -2,7 +2,7 @@ package moduleguidehelper.model;
 
 import moduleguidehelper.internationalization.*;
 
-public enum Mode {
+public enum CurriculumMode {
 
     DUAL(InternationalizationKey.DUAL),
     EXTRA_OCCUPATIONAL(InternationalizationKey.EXTRA_OCCUPATIONAL),
@@ -10,7 +10,7 @@ public enum Mode {
 
     public final InternationalizationKey internationalizationKey;
 
-    private Mode(final InternationalizationKey internationalizationKey) {
+    private CurriculumMode(final InternationalizationKey internationalizationKey) {
         this.internationalizationKey = internationalizationKey;
     }
 

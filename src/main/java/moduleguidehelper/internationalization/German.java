@@ -198,7 +198,7 @@ public class German implements Internationalization {
     }
 
     @Override
-    public String study(final Mode mode) {
+    public String study(final CurriculumMode mode) {
         return switch (mode) {
         case DUAL -> "Dualstudium";
         case EXTRA_OCCUPATIONAL -> "berufsbegleitendes Studium";

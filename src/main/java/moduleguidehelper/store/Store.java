@@ -59,7 +59,6 @@ public class Store {
         final String texSuffix = ".tex";
         final File modules = directory.toPath().resolve("modules").toFile();
         final File singlePDFsDirectory = directory.toPath().resolve(Main.SINGLE_PDFS).toFile();
-        Main.compileAllModules(directory);
         final Set<File> files = this.getAllSelectedFiles();
         final int total = 5 * files.size();
         int current = 0;

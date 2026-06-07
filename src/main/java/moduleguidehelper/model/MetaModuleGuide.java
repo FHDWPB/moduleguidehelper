@@ -5,7 +5,7 @@ import java.util.*;
 public record MetaModuleGuide(
     String subject,
     String degree,
-    Mode mode,
+    CurriculumMode mode,
     String year,
     Language generallanguage,
     List<Integer> pagebreaks,

@@ -12,6 +12,6 @@ public interface Internationalization {
 
     String introduction(String degreeType, String subject, String year);
 
-    String study(Mode mode);
+    String study(CurriculumMode mode);
 
 }
