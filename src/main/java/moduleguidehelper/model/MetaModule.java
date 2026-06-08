@@ -3,6 +3,7 @@ package moduleguidehelper.model;
 public record MetaModule(
     String module,
     int semester,
+    String semestername,
     Integer sempos,
     String type,
     String frequency,

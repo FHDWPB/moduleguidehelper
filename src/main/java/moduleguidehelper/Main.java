@@ -29,7 +29,7 @@ public class Main {
 
     public static final String SINGLE_PDFS = "singlepdfs";
 
-    private static final String VERSION = "4.0.0";
+    private static final String VERSION = "4.1.0";
 
     public static Process buildAndStartBiberProcess(final String fileName, final File directory) throws IOException {
         return new ProcessBuilder(
@@ -148,8 +148,7 @@ public class Main {
             break;
         case QUARTERLY_OVERVIEW:
             Main.compileQuarterlyOverview(
-                new File(options.get(Flag.GUIDE)),
-                new File(options.get(Flag.MODULES)),
+                new File(options.get(Flag.ROOT)),
                 new File(options.get(Flag.OUTPUT))
             );
             break;
@@ -196,7 +195,10 @@ public class Main {
             metaGuide.subject(),
             metaGuide.degree(),
             metaGuide.mode(),
+            metaGuide.semestertype(),
             metaGuide.year(),
+            metaGuide.startquarter(),
+            metaGuide.workphaseswitch(),
             metaGuide.generallanguage(),
             metaGuide.pagebreaks(),
             metaGuide.pagebreaksspecialization(),
@@ -245,7 +247,7 @@ public class Main {
             }
             final ModuleGuide guide = Main.parseModuleGuide(json, modules);
             try (Writer writer = new BufferedWriter(new FileWriter(json))) {
-                guide.prettyPrint(writer);
+                ModuleGuidePrettyPrinter.prettyPrint(guide, writer);
             }
         }
     }
@@ -258,8 +260,7 @@ public class Main {
     }
 
     private static void compileQuarterlyOverview(
-        final File guideFile,
-        final File modulesFolder,
+        final File root,
         final File outputFile
     ) throws IOException {
 //        final ModuleGuide guide = Main.parseModuleGuide(guideFile, modulesFolder);

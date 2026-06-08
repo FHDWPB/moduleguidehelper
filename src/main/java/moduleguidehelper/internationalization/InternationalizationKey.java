@@ -75,7 +75,9 @@ public enum InternationalizationKey {
     TEACHING_EVENTS,
     TEACHING_LANGUAGE,
     TEACHING_METHODS,
+    THEORY_PHASE,
     THESIS_FORM,
+    TRIMESTER,
     VOLUME
 
 }

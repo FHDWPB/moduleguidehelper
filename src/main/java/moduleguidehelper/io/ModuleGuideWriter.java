@@ -16,7 +16,7 @@ public abstract class ModuleGuideWriter {
         this.writeDocumentStart(writer);
         this.writeTitlePage(writer);
         this.writeIntro(writer);
-        final ModuleOverview overview = ModuleOverview.create(this.guide);
+        final ModuleOverview overview = ModuleOverviewBuilder.create(this.guide);
         this.writeOverview(overview, writer);
         this.writeModules(overview.weightSum(), modulesFolder, writer);
         this.writeDocumentEnd(writer);

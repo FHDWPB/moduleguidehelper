@@ -1,6 +1,7 @@
 package moduleguidehelper.io;
 
 import java.io.*;
+import java.time.*;
 import java.util.*;
 import java.util.logging.*;
 import java.util.regex.*;
@@ -76,7 +77,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         modules.put(id, module);
         ModuleGuideLaTeXWriter.writeModule(
             new Module(
-                new MetaModule(id, 1, 1, "Pflicht", "jedes Jahr", 5, 1, "", "", "", "", "", null),
+                new MetaModule(id, 1, null, 1, "Pflicht", "jedes Jahr", 5, 1, "", "", "", "", "", null),
                 module
             ),
             weightSum,
@@ -1270,6 +1271,8 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         Main.newLine(writer);
         Main.newLine(writer);
         ModuleGuideLaTeXWriter.writeLongtableHeader(true, internationalization, writer);
+        final YearMonth start =
+            YearMonth.of(Integer.parseInt(this.guide.year().substring(0, 4)), this.guide.startQuarter() * 3 - 2);
         int semester = 1;
         int groupsOnPage = 0;
         int pagebreakIndex = 0;
@@ -1289,8 +1292,21 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             writer.write("\\rowcolor{fhdwblue}\\multicolumn{6}{c}{\\textcolor{white}{");
             writer.write(internationalization.enumerate(semester));
             writer.write(" ");
-            writer.write(internationalization.internationalize(InternationalizationKey.SEMESTER));
-            writer.write("}}\\\\\\hline");
+            writer.write(internationalization.internationalize(this.guide.semesterType().internationalizationKey));
+            writer.write(" (");
+            final TheoryPhase phase = this.computeTheoryPhase(start, semester);
+            if (this.guide.mode() == CurriculumMode.DUAL) {
+                writer.write(internationalization.internationalize(InternationalizationKey.THEORY_PHASE));
+                writer.write(" ");
+            }
+            if (phase.sameYear()) {
+                writer.write(internationalization.month(phase.start()));
+            } else {
+                writer.write(internationalization.monthYear(phase.start()));
+            }
+            writer.write(" -- ");
+            writer.write(internationalization.monthYear(phase.end()));
+            writer.write(")}}\\\\\\hline");
             Main.newLine(writer);
             for (final ModuleStats stats : modules) {
                 ModuleGuideLaTeXWriter.writeStats(stats, internationalization, writer);
@@ -1466,6 +1482,21 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write("\\clearpage");
         Main.newLine(writer);
         Main.newLine(writer);
+    }
+
+    private TheoryPhase computeTheoryPhase(final YearMonth start, final int semester) {
+        switch (this.guide.mode()) {
+        case DUAL:
+            if (this.guide.workPhaseSwitch() == null || semester < this.guide.workPhaseSwitch()) {
+                return new TheoryPhase(start.plusMonths(semester * 6 - 6), start.plusMonths(semester * 6 - 4));
+            } else if (semester >= 5) {
+                return new TheoryPhase(start.plusMonths(5 * 6 - 3), start.plusMonths(5 * 6));
+            } else {
+                return new TheoryPhase(start.plusMonths(semester * 6 - 3), start.plusMonths(semester * 6 - 1));
+            }
+        default:
+            return new TheoryPhase(start.plusMonths(semester * 6 - 6), start.plusMonths(semester * 6 - 1));
+        }
     }
 
 }

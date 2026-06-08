@@ -1,8 +1,17 @@
 package moduleguidehelper.internationalization;
 
+import java.time.*;
+import java.time.format.*;
+import java.util.*;
+
 import moduleguidehelper.model.*;
 
 public class German implements Internationalization {
+
+    private static final DateTimeFormatter MONTH_FORMATTER = DateTimeFormatter.ofPattern("MMM", Locale.GERMAN);
+
+    private static final DateTimeFormatter YEAR_MONTH_FORMATTER =
+        DateTimeFormatter.ofPattern("MMM uuuu", Locale.GERMAN);
 
     @Override
     public String electiveHeader(final int maxNumber) {
@@ -178,8 +187,12 @@ public class German implements Internationalization {
             return "Lehrveranstaltungen";
         case TEACHING_METHODS:
             return "Lehr- und Lernmethoden";
+        case THEORY_PHASE:
+            return "Theoriephase";
         case THESIS_FORM:
             return "Die Prüfung besteht aus einer wissenschaftlichen Arbeit (Thesis bzw. Praxisarbeit).";
+        case TRIMESTER:
+            return "Trimester";
         case VOLUME:
             return "Ausgabe";
         default:
@@ -195,6 +208,16 @@ public class German implements Internationalization {
             subject,
             year
         );
+    }
+
+    @Override
+    public String month(final YearMonth date) {
+        return date.format(German.MONTH_FORMATTER);
+    }
+
+    @Override
+    public String monthYear(final YearMonth date) {
+        return date.format(German.YEAR_MONTH_FORMATTER);
     }
 
     @Override
