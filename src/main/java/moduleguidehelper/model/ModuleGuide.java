@@ -1,5 +1,6 @@
 package moduleguidehelper.model;
 
+import java.time.*;
 import java.util.*;
 
 public record ModuleGuide(
@@ -17,6 +18,10 @@ public record ModuleGuide(
     List<String> specializationOrder,
     List<Module> modules
 ) {
+
+    public YearMonth start() {
+        return YearMonth.of(Integer.parseInt(this.year().substring(0, 4)), this.startQuarter() * 3 - 2);
+    }
 
     public String title() {
         return String.format(

@@ -11,7 +11,7 @@ public enum ExecutionMode {
 
     PRETTY("Pretty print JSON and BIB files.", Set.of(Flag.ROOT)),
 
-    QUARTERLY_OVERVIEW("Compile a quarterly overview of modules.", Set.of(Flag.GUIDE, Flag.MODULES, Flag.OUTPUT)),
+    QUARTERLY_OVERVIEW("Compile a quarterly overview of modules.", Set.of(Flag.ROOT, Flag.OUTPUT)),
 
     SINGLE_MODULES("Compile all modules in isolation.", Set.of(Flag.ROOT));
 

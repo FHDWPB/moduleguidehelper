@@ -29,7 +29,7 @@ public class Main {
 
     public static final String SINGLE_PDFS = "singlepdfs";
 
-    private static final String VERSION = "4.1.0";
+    private static final String VERSION = "4.2.0";
 
     public static Process buildAndStartBiberProcess(final String fileName, final File directory) throws IOException {
         return new ProcessBuilder(
@@ -147,7 +147,7 @@ public class Main {
             Main.prettyPrintJSONsAndBIBs(new File(options.get(Flag.ROOT)));
             break;
         case QUARTERLY_OVERVIEW:
-            Main.compileQuarterlyOverview(
+            QuarterlyOverviewWriter.compileQuarterlyOverview(
                 new File(options.get(Flag.ROOT)),
                 new File(options.get(Flag.OUTPUT))
             );
@@ -161,7 +161,7 @@ public class Main {
         }
     }
 
-    public static void newLine(final BufferedWriter writer) throws IOException {
+    public static void newLine(final Writer writer) throws IOException {
         writer.write(Main.lineSeparator);
     }
 
@@ -257,15 +257,6 @@ public class Main {
             Main.VERSION,
             new File(System.getProperty("user.dir"))
         ).setVisible(true);
-    }
-
-    private static void compileQuarterlyOverview(
-        final File root,
-        final File outputFile
-    ) throws IOException {
-//        final ModuleGuide guide = Main.parseModuleGuide(guideFile, modulesFolder);
-        // TODO Auto-generated method stub
-
     }
 
 }

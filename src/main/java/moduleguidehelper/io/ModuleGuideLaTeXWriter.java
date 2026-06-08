@@ -1271,8 +1271,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         Main.newLine(writer);
         Main.newLine(writer);
         ModuleGuideLaTeXWriter.writeLongtableHeader(true, internationalization, writer);
-        final YearMonth start =
-            YearMonth.of(Integer.parseInt(this.guide.year().substring(0, 4)), this.guide.startQuarter() * 3 - 2);
+        final YearMonth start = this.guide.start();
         int semester = 1;
         int groupsOnPage = 0;
         int pagebreakIndex = 0;
@@ -1294,7 +1293,8 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             writer.write(" ");
             writer.write(internationalization.internationalize(this.guide.semesterType().internationalizationKey));
             writer.write(" (");
-            final TheoryPhase phase = this.computeTheoryPhase(start, semester);
+            final TheoryPhase phase =
+                TheoryPhase.create(this.guide.mode(), this.guide.workPhaseSwitch(), semester, start);
             if (this.guide.mode() == CurriculumMode.DUAL) {
                 writer.write(internationalization.internationalize(InternationalizationKey.THEORY_PHASE));
                 writer.write(" ");
@@ -1482,21 +1482,6 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write("\\clearpage");
         Main.newLine(writer);
         Main.newLine(writer);
-    }
-
-    private TheoryPhase computeTheoryPhase(final YearMonth start, final int semester) {
-        switch (this.guide.mode()) {
-        case DUAL:
-            if (this.guide.workPhaseSwitch() == null || semester < this.guide.workPhaseSwitch()) {
-                return new TheoryPhase(start.plusMonths(semester * 6 - 6), start.plusMonths(semester * 6 - 4));
-            } else if (semester >= 5) {
-                return new TheoryPhase(start.plusMonths(5 * 6 - 3), start.plusMonths(5 * 6));
-            } else {
-                return new TheoryPhase(start.plusMonths(semester * 6 - 3), start.plusMonths(semester * 6 - 1));
-            }
-        default:
-            return new TheoryPhase(start.plusMonths(semester * 6 - 6), start.plusMonths(semester * 6 - 1));
-        }
     }
 
 }
