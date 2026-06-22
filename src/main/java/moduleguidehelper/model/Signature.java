@@ -21,7 +21,7 @@ public enum Signature {
     }),
 
     THOMAS((internationalization, writer) -> {
-        writer.write("Thomas Mertens\\\\");
+        writer.write("Prof. Dr. Thomas Mertens\\\\");
         Main.newLine(writer);
         writer.write(internationalization.internationalize(InternationalizationKey.COURSE_DIRECTOR));
         writer.write(" ");
