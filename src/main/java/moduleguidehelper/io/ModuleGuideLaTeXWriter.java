@@ -52,6 +52,8 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
                     .replaceAll("\\\\textbackslash", "\\\\textbackslash{}")
                     .replaceAll("([^\\\\])\"", "$1''")
                     .replaceAll("^\"", "''")
+                    .replaceAll("\u00a0", "~")
+                    .replaceAll("\u202f", "\\,")
                 );
             } else if (considerLaTeXCode) {
                 result.append(text.substring(from + 2, index - 2));
