@@ -12,6 +12,10 @@ public enum Flag implements Parameter {
 
     GUIDE("g", "guide", "Module guide file."),
 
+    INPUT("i", "input", "Input file."),
+
+    KEYVALUES("k", "keyvalues", "Mapping from keys to values."),
+
     MODULES("m", "modules", "Directory containing the modules."),
 
     OUTPUT("o", "output", "Output file."),

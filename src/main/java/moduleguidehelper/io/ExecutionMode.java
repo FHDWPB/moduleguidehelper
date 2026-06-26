@@ -13,6 +13,8 @@ public enum ExecutionMode {
 
     QUARTERLY_OVERVIEW("Compile a quarterly overview of modules.", Set.of(Flag.ROOT, Flag.OUTPUT)),
 
+    SINGLE_MODULE("Compile a single module in isolation.", Set.of(Flag.INPUT, Flag.OUTPUT)),
+
     SINGLE_MODULES("Compile all modules in isolation.", Set.of(Flag.ROOT));
 
     public static String descriptions() {

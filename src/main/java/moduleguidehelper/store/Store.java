@@ -84,7 +84,7 @@ public class Store {
             }
             final File moduleTeXFile = singlePDFsDirectory.toPath().resolve(texFile).toFile();
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(moduleTeXFile))) {
-                ModuleGuideLaTeXWriter.writeModule(fileName.toUpperCase(), raw, 180, modules, writer);
+                ModuleGuideLaTeXWriter.writeModule(fileName.toUpperCase(), raw, Optional.empty(), 180, modules, writer);
             }
             current = Store.buildPDF(current, total, fileName, texFile, singlePDFsDirectory, progressListener);
         }

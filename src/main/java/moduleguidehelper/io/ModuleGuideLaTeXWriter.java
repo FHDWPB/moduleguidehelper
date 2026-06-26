@@ -67,6 +67,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
     public static void writeModule(
         final String id,
         final RawModule module,
+        final Optional<String> optionalResponsible,
         final int weightSum,
         final File modulesFolder,
         final BufferedWriter writer
@@ -82,6 +83,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
                 new MetaModule(id, 1, null, 1, "Pflicht", "jedes Jahr", 5, 1, "", "", "", "", "", null),
                 module
             ),
+            optionalResponsible,
             weightSum,
             List.of(),
             modulesFolder,
@@ -581,6 +583,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
     private static void writeGeneralModuleInformationSection(
         final Module module,
         final Internationalization internationalization,
+        final Optional<String> optionalResponsible,
         final BufferedWriter writer
     ) throws IOException {
         final List<String[]> table = new LinkedList<String[]>();
@@ -593,9 +596,12 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         table.add(
             new String[] {
                 internationalization.internationalize(InternationalizationKey.RESPONSIBLE),
-                ModuleGuideLaTeXWriter.isSet(module.meta().responsible()) ?
-                    module.meta().responsible() :
-                        module.module().responsible()
+                optionalResponsible.isEmpty() ?
+                    (
+                        ModuleGuideLaTeXWriter.isSet(module.meta().responsible()) ?
+                            module.meta().responsible() :
+                                module.module().responsible()
+                    ) : optionalResponsible.get()
             }
         );
         table.add(
@@ -864,6 +870,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
 
     private static void writeModule(
         final Module module,
+        final Optional<String> optionalResponsible,
         final int weightSum,
         final List<String> linkable,
         final File modulesFolder,
@@ -885,7 +892,12 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
                 module.module().descriptionlanguage().getInternationalization();
             final String none = internationalization.internationalize(InternationalizationKey.NONE);
             ModuleGuideLaTeXWriter.writeModuleTitle(module, writer);
-            ModuleGuideLaTeXWriter.writeGeneralModuleInformationSection(module, internationalization, writer);
+            ModuleGuideLaTeXWriter.writeGeneralModuleInformationSection(
+                module,
+                internationalization,
+                optionalResponsible,
+                writer
+            );
             ModuleGuideLaTeXWriter.writeItemizeSection(
                 internationalization.internationalize(InternationalizationKey.KEYWORDS),
                 module.module().keywords(),
@@ -1210,7 +1222,14 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
                     Main.newLine(writer);
                     Main.newLine(writer);
                 }
-                ModuleGuideLaTeXWriter.writeModule(module, weightSum, linkable, modulesFolder, writer);
+                ModuleGuideLaTeXWriter.writeModule(
+                    module,
+                    Optional.empty(),
+                    weightSum,
+                    linkable,
+                    modulesFolder,
+                    writer
+                );
             } catch (final Exception e) {
                 throw new IOException(
                     String.format("Exception in module %s: %s", module.meta().module(), e.getMessage()),

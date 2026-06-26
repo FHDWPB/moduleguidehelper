@@ -29,7 +29,7 @@ public class Main {
 
     public static final String SINGLE_PDFS = "singlepdfs";
 
-    private static final String VERSION = "4.2.2";
+    private static final String VERSION = "4.3.0";
 
     public static Process buildAndStartBiberProcess(final String fileName, final File directory) throws IOException {
         return new ProcessBuilder(
@@ -55,21 +55,12 @@ public class Main {
         }
         final File modules = root.toPath().resolve("modules").toFile();
         for (final File json : modules.listFiles()) {
-            final String id = json.getName().substring(0, json.getName().length() - 5);
-            final RawModule module;
-            try (FileReader moduleReader = new FileReader(json)) {
-                module = Main.GSON.fromJson(moduleReader, RawModule.class);
-            } catch (final MalformedJsonException | JsonSyntaxException e) {
-                Main.LOGGER.log(Level.SEVERE, json.getAbsolutePath());
-                throw new IOException(String.format("%s: %s", json.getAbsolutePath(), e.getMessage()), e);
-            }
             if ("schema.json".equals(json.getName())) {
                 continue;
             }
+            final String id = json.getName().substring(0, json.getName().length() - 5);
             final File moduleTeXFile = singleModulesDirectory.toPath().resolve(id + ".tex").toFile();
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(moduleTeXFile))) {
-                ModuleGuideLaTeXWriter.writeModule(id.toUpperCase(), module, 180, modules, writer);
-            }
+            Main.compileSingleModule(id, json, Optional.empty(), modules, moduleTeXFile);
         }
     }
 
@@ -83,6 +74,25 @@ public class Main {
             BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))
         ) {
             new ModuleGuideLaTeXWriter(guide).write(modulesFolder, writer);
+        }
+    }
+
+    public static void compileSingleModule(
+        final String id,
+        final File json,
+        final Optional<String> optionalResponsible,
+        final File modules,
+        final File moduleTeXFile
+    ) throws IOException {
+        final RawModule module;
+        try (FileReader moduleReader = new FileReader(json)) {
+            module = Main.GSON.fromJson(moduleReader, RawModule.class);
+        } catch (final MalformedJsonException | JsonSyntaxException e) {
+            Main.LOGGER.log(Level.SEVERE, json.getAbsolutePath());
+            throw new IOException(String.format("%s: %s", json.getAbsolutePath(), e.getMessage()), e);
+        }
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(moduleTeXFile))) {
+            ModuleGuideLaTeXWriter.writeModule(id.toUpperCase(), module, optionalResponsible, 180, modules, writer);
         }
     }
 
@@ -151,6 +161,13 @@ public class Main {
                 new File(options.get(Flag.ROOT)),
                 new File(options.get(Flag.OUTPUT))
             );
+            break;
+        case SINGLE_MODULE:
+            final Optional<String> responsible = Main.parseResponsible(options);
+            final File module = new File(options.get(Flag.INPUT));
+            final String id = module.getName().substring(0, module.getName().length() - 5);
+            final File modules = module.getAbsoluteFile().getParentFile();
+            Main.compileSingleModule(id, module, responsible, modules, new File(options.get(Flag.OUTPUT)));
             break;
         case SINGLE_MODULES:
             Main.compileAllModules(new File(options.get(Flag.ROOT)));
@@ -257,6 +274,18 @@ public class Main {
             Main.VERSION,
             new File(System.getProperty("user.dir"))
         ).setVisible(true);
+    }
+
+    private static Optional<String> parseResponsible(final Parameters<Flag> options) {
+        if (options.containsKey(Flag.KEYVALUES)) {
+            final String[] split = options.get(Flag.KEYVALUES).split(";");
+            for (int i = 0; i < split.length; i += 2) {
+                if ("r".equals(split[i].toLowerCase())) {
+                    return Optional.of(split[i + 1]);
+                }
+            }
+        }
+        return Optional.empty();
     }
 
 }
