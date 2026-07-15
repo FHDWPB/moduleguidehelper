@@ -120,8 +120,14 @@ public class English implements Internationalization {
             return "This module guide is on the one hand an information for students on the contents of their course. "
             + "On the other hand, it might also be useful for partner companies in supporting practical contributions. "
             + "Finally, it is an orientation for our teachers to align teaching contents across different modules.";
+        case INTRO_WITHOUT_PARTNERS:
+            return "This module guide is on the one hand an information for students on the contents of their course. "
+                + "On the other hand, it is an orientation for our teachers to align teaching contents across "
+                + "different modules.";
         case KEYWORDS:
             return "Keywords";
+        case LANGUAGE:
+            return "English";
         case MBA:
             return "Master of Business Administration";
         case MODULE_GUIDE:
@@ -212,7 +218,7 @@ public class English implements Internationalization {
     @Override
     public String introduction(final String degreeType, final String subject, final String year) {
         return String.format(
-            "We hereby present the module guide for the %s course %s in season %s.",
+            "We hereby present the module guide for the English %s course %s in season %s.",
             degreeType,
             subject,
             year

@@ -5,6 +5,7 @@ import java.util.*;
 public record MetaModuleGuide(
     String subject,
     String degree,
+    String degreeshort,
     CurriculumMode mode,
     SemesterType semestertype,
     String year,

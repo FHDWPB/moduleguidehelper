@@ -18,6 +18,8 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
 
     private static final Pattern ESCAPE_PATTERN = Pattern.compile("\\$\\$([^\\$]|\\$[^\\$])+\\$\\$");
 
+    private static final Pattern LOOKUP_ESCAPE_PATTERN = Pattern.compile("##([^#]|#[^#])+##");
+
     private static final String OVERVIEW_FIRST_COL_SIZE = "7.2cm";
 
     private static final String OVERVIEW_FIRST_COL_SIZE_ELECTIVE = "5.7cm";
@@ -27,41 +29,12 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
     }
 
     public static String escapeForLaTeX(final String text, final boolean considerLaTeXCode) {
-        if (text == null) {
-            return "";
-        }
-        final Matcher matcher = ModuleGuideLaTeXWriter.ESCAPE_PATTERN.matcher(text);
-        final List<Integer> indices = new LinkedList<Integer>();
-        while (matcher.find()) {
-            indices.add(matcher.start());
-            indices.add(matcher.end());
-        }
-        indices.add(text.length());
-        final StringBuilder result = new StringBuilder();
-        boolean escape = true;
-        int from = 0;
-        for (final Integer index : indices) {
-            if (escape) {
-                result.append(
-                    text
-                    .substring(from, index)
-                    .replaceAll("\\\\", "\\\\textbackslash")
-                    .replaceAll("([&\\$%\\{\\}_#])", "\\\\$1")
-                    .replaceAll("~", "\\\\textasciitilde{}")
-                    .replaceAll("\\^", "\\\\textasciicircum{}")
-                    .replaceAll("\\\\textbackslash", "\\\\textbackslash{}")
-                    .replaceAll("([^\\\\])\"", "$1''")
-                    .replaceAll("^\"", "''")
-                    .replaceAll("\u00a0", "~")
-                    .replaceAll("\u202f", "\\,")
-                );
-            } else if (considerLaTeXCode) {
-                result.append(text.substring(from + 2, index - 2));
-            }
-            from = index;
-            escape = !escape;
-        }
-        return result.toString();
+        return ModuleGuideLaTeXWriter.escape(
+            ModuleGuideLaTeXWriter.ESCAPE_PATTERN,
+            ModuleGuideLaTeXWriter::escapeForLaTeX,
+            (from, to, t) -> considerLaTeXCode ? t.substring(from + 2, to - 2) : "",
+            text
+        );
     }
 
     public static void writeModule(
@@ -72,7 +45,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         final File modulesFolder,
         final BufferedWriter writer
     ) throws IOException {
-        ModuleGuideLaTeXWriter.writeDocumentStartStatic(true, writer);
+        ModuleGuideLaTeXWriter.writeDocumentStartStatic(true, module.descriptionlanguage(), writer);
         writer.write("\\pagestyle{fancy}");
         Main.newLine(writer);
         Main.newLine(writer);
@@ -147,6 +120,62 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         return numbers.stream().map(ModuleStats::toRomanNumeral).collect(Collectors.joining(", "));
     }
 
+    private static String escape(
+        final Pattern pattern,
+        final Escaper transformerNormal,
+        final Escaper transformerEscaped,
+        final String text
+    ) {
+        if (text == null) {
+            return "";
+        }
+        final Matcher matcher = pattern.matcher(text);
+        final List<Integer> indices = new LinkedList<Integer>();
+        while (matcher.find()) {
+            indices.add(matcher.start());
+            indices.add(matcher.end());
+        }
+        indices.add(text.length());
+        final StringBuilder result = new StringBuilder();
+        boolean escape = true;
+        int from = 0;
+        for (final Integer index : indices) {
+            if (escape) {
+                result.append(transformerNormal.escape(from, index, text));
+            } else {
+                result.append(transformerEscaped.escape(from, index, text));
+            }
+            from = index;
+            escape = !escape;
+        }
+        return result.toString();
+    }
+
+    private static String escapeForLaTeX(final int from, final int to, final String text) {
+        return
+            text
+            .substring(from, to)
+            .replaceAll("\\\\", "\\\\textbackslash")
+            .replaceAll("([&\\$%\\{\\}_#])", "\\\\$1")
+            .replaceAll("~", "\\\\textasciitilde{}")
+            .replaceAll("\\^", "\\\\textasciicircum{}")
+            .replaceAll("\\\\textbackslash", "\\\\textbackslash{}")
+            .replaceAll("([^\\\\])\"", "$1''")
+            .replaceAll("^\"", "''")
+            .replaceAll("\u00a0", "~")
+            .replaceAll("\u202f", "\\,");
+    }
+
+    private static String escapeForLookup(final String text, final File modulesFolder, final List<String> linkable) {
+        return ModuleGuideLaTeXWriter.escape(
+            ModuleGuideLaTeXWriter.LOOKUP_ESCAPE_PATTERN,
+            ModuleGuideLaTeXWriter::escapeForLaTeX,
+            (from, to, t) ->
+                ModuleGuideLaTeXWriter.lookupModule(t.substring(from + 2, to - 2), modulesFolder, linkable),
+            text
+        );
+    }
+
     private static String formatExamination(final String examination, final Internationalization internationalization) {
         if (examination == null || examination.isBlank()) {
             return "\\textbf{\\textcolor{red}{ANGABEN FEHLEN!}}";
@@ -181,7 +210,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         final List<String> linkable
     ) {
         if (id.startsWith("!")) {
-            return ModuleGuideLaTeXWriter.escapeForLaTeX(id.substring(1));
+            return ModuleGuideLaTeXWriter.escapeForLookup(id.substring(1), modulesFolder, linkable);
         }
         final File json = modulesFolder.toPath().resolve(id.toLowerCase() + ".json").toFile();
         if (json.exists()) {
@@ -264,6 +293,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
 
     private static void writeDocumentStartStatic(
         final boolean innerDirectory,
+        final Language language,
         final BufferedWriter writer
     ) throws IOException {
         writer.write("\\documentclass[11pt]{book}");
@@ -441,7 +471,11 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write("\\begin{document}");
         Main.newLine(writer);
         Main.newLine(writer);
-        writer.write("\\selectlanguage{ngerman}");
+        if (language == Language.GERMAN) {
+            writer.write("\\selectlanguage{ngerman}");
+        } else {
+            writer.write("\\selectlanguage{english}");
+        }
         Main.newLine(writer);
         Main.newLine(writer);
     }
@@ -1120,12 +1154,12 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
     }
 
     @Override
-    protected void writeDocumentStart(final BufferedWriter writer) throws IOException {
-        ModuleGuideLaTeXWriter.writeDocumentStartStatic(false, writer);
+    protected void writeDocumentStart(final Language language, final BufferedWriter writer) throws IOException {
+        ModuleGuideLaTeXWriter.writeDocumentStartStatic(false, language, writer);
     }
 
     @Override
-    protected void writeIntro(final BufferedWriter writer) throws IOException {
+    protected void writeIntro(final boolean partners, final BufferedWriter writer) throws IOException {
         writer.write("\\pagestyle{fancy}");
         Main.newLine(writer);
         Main.newLine(writer);
@@ -1133,23 +1167,31 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write(internationalization.internationalize(InternationalizationKey.GREETING_STUDENTS));
         writer.write(",\\\\");
         Main.newLine(writer);
-        writer.write(internationalization.internationalize(InternationalizationKey.GREETING_PARTNERS));
-        writer.write(",\\\\");
-        Main.newLine(writer);
+        if (partners) {
+            writer.write(internationalization.internationalize(InternationalizationKey.GREETING_PARTNERS));
+            writer.write(",\\\\");
+            Main.newLine(writer);
+        }
         writer.write(internationalization.internationalize(InternationalizationKey.GREETING_COLLEAGUES));
         writer.write(",\\\\[2ex]");
         Main.newLine(writer);
         Main.newLine(writer);
         writer.write(
             internationalization.introduction(
-                this.guide.degree().substring(0, this.guide.degree().indexOf(' ')),
+                this.guide.degreeshort() == null || this.guide.degreeshort().isBlank() ?
+                    this.guide.degree().substring(0, this.guide.degree().indexOf(' ')) :
+                        this.guide.degreeshort(),
                 ModuleGuideLaTeXWriter.escapeForLaTeX(this.guide.subject()),
                 this.guide.year()
             )
         );
         writer.write("\\\\[1.5ex]");
         Main.newLine(writer);
-        writer.write(internationalization.internationalize(InternationalizationKey.INTRO));
+        writer.write(
+            internationalization.internationalize(
+                partners ? InternationalizationKey.INTRO : InternationalizationKey.INTRO_WITHOUT_PARTNERS
+            )
+        );
         writer.write("\\\\[2ex]");
         Main.newLine(writer);
         Main.newLine(writer);
@@ -1490,7 +1532,8 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write(internationalization.internationalize(InternationalizationKey.STUDY_YEAR));
         writer.write(" ");
         writer.write(this.guide.year());
-        Main.newLine(writer);
+        writer.write(", ");
+        writer.write(internationalization.internationalize(InternationalizationKey.LANGUAGE));
         writer.write("}");
         Main.newLine(writer);
         Main.newLine(writer);

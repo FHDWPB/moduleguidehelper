@@ -18,6 +18,10 @@ public class ModuleGuidePrettyPrinter {
         writer.write(",\n");
         ModuleGuidePrettyPrinter.printStringField("degree", guide.degree(), writer);
         writer.write(",\n");
+        if (guide.degreeshort() != null) {
+            ModuleGuidePrettyPrinter.printStringField("degreeshort", guide.degreeshort(), writer);
+            writer.write(",\n");
+        }
         ModuleGuidePrettyPrinter.printStringField("mode", guide.mode().name(), writer);
         writer.write(",\n");
         ModuleGuidePrettyPrinter.printStringField("semestertype", guide.semesterType().name(), writer);

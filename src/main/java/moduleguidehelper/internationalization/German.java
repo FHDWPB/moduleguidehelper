@@ -107,11 +107,17 @@ public class German implements Internationalization {
             return "Kürzel";
         case INTRO:
             return "Dieses Modulhandbuch stellt zum einen für die Studierenden eine Information über die "
-                + "Studieninhalte dar, zum Zweiten dient es den Partnerunternehmen als Hilfe zur inhaltlichen "
+                + "Studieninhalte dar, zum anderen dient es den Partnerunternehmen als Hilfe zur inhaltlichen "
                 + "Vorbereitung der Praxisphasen. Daneben ist diese Übersicht ein Leitfaden für die "
+                + "Dozentinnen und Dozenten zur modulübergreifenden Abstimmung der Lehrinhalte.";
+        case INTRO_WITHOUT_PARTNERS:
+            return "Dieses Modulhandbuch stellt zum einen für die Studierenden eine Information über die "
+                + "Studieninhalte dar, zum anderen ist diese Übersicht ein Leitfaden für die "
                 + "Dozentinnen und Dozenten zur modulübergreifenden Abstimmung der Lehrinhalte.";
         case KEYWORDS:
             return "Stichwörter";
+        case LANGUAGE:
+            return "Deutsch";
         case MBA:
             return "Master of Business Administration";
         case MODULE_GUIDE:
@@ -203,7 +209,7 @@ public class German implements Internationalization {
     @Override
     public String introduction(final String degreeType, final String subject, final String year) {
         return String.format(
-            "Sie erhalten das Modulhandbuch für den %s-Studiengang %s im Studienjahr %s.",
+            "Sie erhalten das Modulhandbuch für den deutschsprachigen %s-Studiengang %s im Studienjahr %s.",
             degreeType,
             subject,
             year

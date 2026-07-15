@@ -9,19 +9,19 @@ import moduleguidehelper.io.*;
 public enum Signature {
 
     ANGELIKA((internationalization, writer) -> {
-        writer.write("Prof. Dr. Angelika Röchter\\\\");
+        writer.write("\\textbf{Prof. Dr. Angelika R\\\"ochter}\\\\");
         Main.newLine(writer);
         writer.write(internationalization.internationalize(InternationalizationKey.DEAN_BA));
     }),
 
     GREGOR((internationalization, writer) -> {
-        writer.write("Prof. Dr. Gregor Sandhaus\\\\");
+        writer.write("\\textbf{Prof. Dr. Gregor Sandhaus}\\\\");
         Main.newLine(writer);
         writer.write(internationalization.internationalize(InternationalizationKey.DEAN_CS));
     }),
 
     THOMAS((internationalization, writer) -> {
-        writer.write("Prof. Dr. Thomas Mertens\\\\");
+        writer.write("\\textbf{Prof. Dr. Thomas Mertens}\\\\");
         Main.newLine(writer);
         writer.write(internationalization.internationalize(InternationalizationKey.COURSE_DIRECTOR));
         writer.write(" ");

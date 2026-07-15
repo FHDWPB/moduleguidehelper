@@ -29,7 +29,7 @@ public class Main {
 
     public static final String SINGLE_PDFS = "singlepdfs";
 
-    private static final String VERSION = "4.3.0";
+    private static final String VERSION = "4.4.0";
 
     public static Process buildAndStartBiberProcess(final String fileName, final File directory) throws IOException {
         return new ProcessBuilder(
@@ -73,7 +73,7 @@ public class Main {
         try (
             BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))
         ) {
-            new ModuleGuideLaTeXWriter(guide).write(modulesFolder, writer);
+            new ModuleGuideLaTeXWriter(guide).write(guide, modulesFolder, writer);
         }
     }
 
@@ -211,6 +211,7 @@ public class Main {
         return new ModuleGuide(
             metaGuide.subject(),
             metaGuide.degree(),
+            metaGuide.degreeshort(),
             metaGuide.mode(),
             metaGuide.semestertype(),
             metaGuide.year(),
