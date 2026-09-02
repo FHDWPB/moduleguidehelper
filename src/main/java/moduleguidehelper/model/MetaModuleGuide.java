@@ -12,6 +12,7 @@ public record MetaModuleGuide(
     int startquarter,
     Integer workphaseswitch,
     Language generallanguage,
+    List<String> generalinformation,
     List<Integer> pagebreaks,
     List<Integer> pagebreaksspecialization,
     Signature signature,

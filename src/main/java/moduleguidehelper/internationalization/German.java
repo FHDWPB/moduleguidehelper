@@ -95,6 +95,8 @@ public class German implements Internationalization {
             return "Häufigkeit";
         case FULLTIME:
             return "Vollzeit";
+        case GENERAL_COURSE_INFORMATION:
+            return "Allgemeine Informationen zum Studiengang";
         case GENERAL_INFORMATION:
             return "Allgemeine Angaben";
         case GREETING_COLLEAGUES:

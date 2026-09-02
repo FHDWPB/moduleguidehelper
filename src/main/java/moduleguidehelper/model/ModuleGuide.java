@@ -13,6 +13,7 @@ public record ModuleGuide(
     int startQuarter,
     Integer workPhaseSwitch,
     Language generalLanguage,
+    List<String> generalInformation,
     List<Integer> pagebreaks,
     List<Integer> pagebreaksSpecialization,
     Signature signature,

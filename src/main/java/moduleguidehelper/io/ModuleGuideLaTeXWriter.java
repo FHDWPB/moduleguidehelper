@@ -120,6 +120,15 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         return numbers.stream().map(ModuleStats::toRomanNumeral).collect(Collectors.joining(", "));
     }
 
+    private static String doubleEscapeForLaTeX(final int from, final int to, final String text) {
+        return ModuleGuideLaTeXWriter.escape(
+            ModuleGuideLaTeXWriter.ESCAPE_PATTERN,
+            ModuleGuideLaTeXWriter::escapeForLaTeX,
+            (innerFrom, innerTo, innerText) -> innerText.substring(innerFrom + 2, innerTo - 2),
+            text.substring(from, to)
+        );
+    }
+
     private static String escape(
         final Pattern pattern,
         final Escaper transformerNormal,
@@ -169,7 +178,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
     private static String escapeForLookup(final String text, final File modulesFolder, final List<String> linkable) {
         return ModuleGuideLaTeXWriter.escape(
             ModuleGuideLaTeXWriter.LOOKUP_ESCAPE_PATTERN,
-            ModuleGuideLaTeXWriter::escapeForLaTeX,
+            ModuleGuideLaTeXWriter::doubleEscapeForLaTeX,
             (from, to, t) ->
                 ModuleGuideLaTeXWriter.lookupModule(t.substring(from + 2, to - 2), modulesFolder, linkable),
             text
@@ -1201,6 +1210,21 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         this.guide.signature().toLaTeX.apply(internationalization, writer);
         Main.newLine(writer);
         Main.newLine(writer);
+        if (this.guide.generalInformation() != null && !this.guide.generalInformation().isEmpty()) {
+            writer.write("\\vspace*{4cm}");
+            Main.newLine(writer);
+            Main.newLine(writer);
+            writer.write("\\noindent");
+            Main.newLine(writer);
+            writer.write(internationalization.internationalize(InternationalizationKey.GENERAL_COURSE_INFORMATION));
+            writer.write(":\\\\[2ex]");
+            Main.newLine(writer);
+            for (final String line : this.guide.generalInformation()) {
+                writer.write(line);
+                Main.newLine(writer);
+            }
+            Main.newLine(writer);
+        }
         writer.write("\\vfill");
         Main.newLine(writer);
         Main.newLine(writer);

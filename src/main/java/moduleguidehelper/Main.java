@@ -218,6 +218,7 @@ public class Main {
             metaGuide.startquarter(),
             metaGuide.workphaseswitch(),
             metaGuide.generallanguage(),
+            metaGuide.generalinformation(),
             metaGuide.pagebreaks(),
             metaGuide.pagebreaksspecialization(),
             metaGuide.signature(),

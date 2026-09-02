@@ -36,6 +36,11 @@ public class ModuleGuidePrettyPrinter {
         }
         ModuleGuidePrettyPrinter.printStringField("generallanguage", guide.generalLanguage().name(), writer);
         writer.write(",\n");
+        ModuleGuidePrettyPrinter.printInfixStringArrayIfExists(
+            "generalinformation",
+            guide.generalInformation(),
+            writer
+        );
         ModuleGuidePrettyPrinter.printInfixIntArrayIfExists("pagebreaks", guide.pagebreaks(), writer);
         ModuleGuidePrettyPrinter.printInfixIntArrayIfExists(
             "pagebreaksspecialization",
