@@ -106,6 +106,8 @@ public class English implements Internationalization {
             return "Frequency";
         case FULLTIME:
             return "fulltime";
+        case FURTHER_INFORMATION:
+            return "Further Information";
         case GENERAL_COURSE_INFORMATION:
             return "General Information About the Program";
         case GENERAL_INFORMATION:

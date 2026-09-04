@@ -66,7 +66,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
     }
 
     private static String chapterToItem(final Chapter chapter) {
-        if (chapter.sections() == null || chapter.sections().isEmpty()) {
+        if (!ModuleGuideLaTeXWriter.isSet(chapter.sections())) {
             return ModuleGuideLaTeXWriter.escapeForLaTeX(chapter.chapter());
         }
         final StringWriter stringWriter = new StringWriter();
@@ -207,6 +207,10 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
                 ).collect(Collectors.joining());
         }
         return examination;
+    }
+
+    private static boolean isSet(final List<String> text) {
+        return text != null && !text.isEmpty();
     }
 
     private static boolean isSet(final String text) {
@@ -623,6 +627,26 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         Main.newLine(writer);
     }
 
+    private static void writeFurtherInformationSection(
+        final Module module,
+        final Internationalization internationalization,
+        final BufferedWriter writer
+    ) throws IOException {
+        if (!ModuleGuideLaTeXWriter.isSet(module.module().furtherinformation())) {
+            return;
+        }
+        writer.write("\\subsection*{");
+        writer.write(internationalization.internationalize(InternationalizationKey.FURTHER_INFORMATION));
+        writer.write("}");
+        Main.newLine(writer);
+        Main.newLine(writer);
+        for (final String line : module.module().furtherinformation()) {
+            writer.write(line);
+            Main.newLine(writer);
+        }
+        Main.newLine(writer);
+    }
+
     private static void writeGeneralModuleInformationSection(
         final Module module,
         final Internationalization internationalization,
@@ -743,7 +767,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         writer.write(label);
         writer.write("}]");
         Main.newLine(writer);
-        if (items == null || items.isEmpty()) {
+        if (!ModuleGuideLaTeXWriter.isSet(items)) {
             writer.write("\\item ");
             writer.write(noItems);
             Main.newLine(writer);
@@ -770,7 +794,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         final boolean twoColumns,
         final BufferedWriter writer
     ) throws IOException {
-        if (items != null && !items.isEmpty()) {
+        if (ModuleGuideLaTeXWriter.isSet(items)) {
             writer.write("\\subsection*{");
             writer.write(section);
             writer.write("}");
@@ -799,7 +823,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         final Internationalization internationalization,
         final BufferedWriter writer
     ) throws IOException {
-        if (literature != null && !literature.isEmpty()) {
+        if (ModuleGuideLaTeXWriter.isSet(literature)) {
             writer.write("\\subsection*{");
             writer.write(title);
             writer.write("}");
@@ -941,6 +965,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
                 optionalResponsible,
                 writer
             );
+            ModuleGuideLaTeXWriter.writeFurtherInformationSection(module, internationalization, writer);
             ModuleGuideLaTeXWriter.writeItemizeSection(
                 internationalization.internationalize(InternationalizationKey.KEYWORDS),
                 module.module().keywords(),
@@ -1046,8 +1071,8 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         final BufferedWriter writer
     ) throws IOException {
         if (
-            (module.module().teachingmethods() == null || module.module().teachingmethods().isEmpty())
-            && (module.module().teachingpostface() == null || module.module().teachingpostface().isEmpty())
+            !ModuleGuideLaTeXWriter.isSet(module.module().teachingmethods())
+            && !ModuleGuideLaTeXWriter.isSet(module.module().teachingpostface())
         ) {
             return;
         }
@@ -1210,7 +1235,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         this.guide.signature().toLaTeX.apply(internationalization, writer);
         Main.newLine(writer);
         Main.newLine(writer);
-        if (this.guide.generalInformation() != null && !this.guide.generalInformation().isEmpty()) {
+        if (ModuleGuideLaTeXWriter.isSet(this.guide.generalInformation())) {
             writer.write("\\vspace*{4cm}");
             Main.newLine(writer);
             Main.newLine(writer);

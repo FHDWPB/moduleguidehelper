@@ -13,6 +13,7 @@ public record RawModule(
     int contacthours,
     int homehours,
     String examination,
+    List<String> furtherinformation,
     List<String> keywords,
     List<String> preconditions,
     List<String> recommendations,
