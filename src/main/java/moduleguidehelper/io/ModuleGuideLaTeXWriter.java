@@ -1245,7 +1245,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             writer.write(":\\\\[2ex]");
             Main.newLine(writer);
             for (final String line : this.guide.generalInformation()) {
-                writer.write(line);
+                writer.write(ModuleGuideLaTeXWriter.escapeForLaTeX(line));
                 Main.newLine(writer);
             }
             Main.newLine(writer);
