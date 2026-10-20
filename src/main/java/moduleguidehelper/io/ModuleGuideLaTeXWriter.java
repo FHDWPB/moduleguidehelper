@@ -41,11 +41,10 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         final String id,
         final RawModule module,
         final Optional<String> optionalResponsible,
-        final int weightSum,
         final File modulesFolder,
         final BufferedWriter writer
     ) throws IOException {
-        ModuleGuideLaTeXWriter.writeDocumentStartStatic(true, module.descriptionlanguage(), writer);
+        ModuleGuideLaTeXWriter.writeDocumentStartStatic(module.descriptionlanguage(), writer);
         writer.write("\\pagestyle{fancy}");
         Main.newLine(writer);
         Main.newLine(writer);
@@ -57,7 +56,6 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
                 module
             ),
             optionalResponsible,
-            weightSum,
             List.of(),
             modulesFolder,
             writer
@@ -305,7 +303,6 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
     }
 
     private static void writeDocumentStartStatic(
-        final boolean innerDirectory,
         final Language language,
         final BufferedWriter writer
     ) throws IOException {
@@ -368,11 +365,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         Main.newLine(writer);
         writer.write("\\setcounter{biburlucpenalty}{8000}");
         Main.newLine(writer);
-        writer.write("\\addbibresource{");
-        if (innerDirectory) {
-            writer.write("../");
-        }
-        writer.write("literature.bib}");
+        writer.write("\\addbibresource{../literature.bib}");
         Main.newLine(writer);
         Main.newLine(writer);
         writer.write(
@@ -820,7 +813,6 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
     private static void writeLiteratureSection(
         final String title,
         final List<String> literature,
-        final Internationalization internationalization,
         final BufferedWriter writer
     ) throws IOException {
         if (ModuleGuideLaTeXWriter.isSet(literature)) {
@@ -938,7 +930,6 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
     private static void writeModule(
         final Module module,
         final Optional<String> optionalResponsible,
-        final int weightSum,
         final List<String> linkable,
         final File modulesFolder,
         final BufferedWriter writer
@@ -995,13 +986,11 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
             ModuleGuideLaTeXWriter.writeLiteratureSection(
                 internationalization.internationalize(InternationalizationKey.REQUIRED_LITERATURE),
                 module.module().requiredliterature(),
-                internationalization,
                 writer
             );
             ModuleGuideLaTeXWriter.writeLiteratureSection(
                 internationalization.internationalize(InternationalizationKey.RECOMMENDED_LITERATURE),
                 module.module().optionalliterature(),
-                internationalization,
                 writer
             );
             writer.write("\\clearpage");
@@ -1189,7 +1178,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
 
     @Override
     protected void writeDocumentStart(final Language language, final BufferedWriter writer) throws IOException {
-        ModuleGuideLaTeXWriter.writeDocumentStartStatic(false, language, writer);
+        ModuleGuideLaTeXWriter.writeDocumentStartStatic(language, writer);
     }
 
     @Override
@@ -1316,7 +1305,6 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
                 ModuleGuideLaTeXWriter.writeModule(
                     module,
                     Optional.empty(),
-                    weightSum,
                     linkable,
                     modulesFolder,
                     writer
@@ -1553,7 +1541,9 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
         Main.newLine(writer);
         writer.write("\\begin{tikzpicture}[overlay,remember picture]");
         Main.newLine(writer);
-        writer.write("\\node at (current page.center) {\\includegraphics[height=\\paperheight]{frontpage.png}};");
+        writer.write(
+            "\\node at (current page.center) {\\includegraphics[height=\\paperheight]{../pictures/frontpage.png}};"
+        );
         Main.newLine(writer);
         writer.write("\\end{tikzpicture}");
         Main.newLine(writer);

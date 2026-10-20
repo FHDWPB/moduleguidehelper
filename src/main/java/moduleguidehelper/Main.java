@@ -29,7 +29,7 @@ public class Main {
 
     public static final String SINGLE_PDFS = "singlepdfs";
 
-    private static final String VERSION = "4.6.1";
+    private static final String VERSION = "5.0.0";
 
     public static Process buildAndStartBiberProcess(final String fileName, final File directory) throws IOException {
         return new ProcessBuilder(
@@ -49,9 +49,9 @@ public class Main {
 
     public static void compileAllModules(final File root) throws IOException {
         Main.LOGGER.setLevel(Level.FINE);
-        final File singleModulesDirectory = root.toPath().resolve(Main.SINGLE_PDFS).toFile();
-        if (!singleModulesDirectory.exists()) {
-            singleModulesDirectory.mkdir();
+        final File texDirectory = root.toPath().resolve("tex").toFile();
+        if (!texDirectory.exists()) {
+            texDirectory.mkdir();
         }
         final File modules = root.toPath().resolve("modules").toFile();
         for (final File json : modules.listFiles()) {
@@ -59,7 +59,7 @@ public class Main {
                 continue;
             }
             final String id = json.getName().substring(0, json.getName().length() - 5);
-            final File moduleTeXFile = singleModulesDirectory.toPath().resolve(id + ".tex").toFile();
+            final File moduleTeXFile = texDirectory.toPath().resolve(id + ".tex").toFile();
             Main.compileSingleModule(id, json, Optional.empty(), modules, moduleTeXFile);
         }
     }
@@ -92,7 +92,7 @@ public class Main {
             throw new IOException(String.format("%s: %s", json.getAbsolutePath(), e.getMessage()), e);
         }
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(moduleTeXFile))) {
-            ModuleGuideLaTeXWriter.writeModule(id.toUpperCase(), module, optionalResponsible, 180, modules, writer);
+            ModuleGuideLaTeXWriter.writeModule(id.toUpperCase(), module, optionalResponsible, modules, writer);
         }
     }
 
@@ -238,6 +238,7 @@ public class Main {
     public static void prettyPrintJSONsAndBIBs(final File root) throws IOException {
         Main.LOGGER.setLevel(Level.FINE);
         final File modules = root.toPath().resolve("modules").toFile();
+        final File guides = root.toPath().resolve("guides").toFile();
         final File literature = root.toPath().resolve("literature.bib").toFile();
         final BibTeXDatabase db;
         try (final FileReader reader = new FileReader(literature)) {
@@ -260,10 +261,7 @@ public class Main {
             }
             Main.prettyPrint(json, module);
         }
-        for (final File json : root.listFiles()) {
-            if (!json.getName().endsWith(".json")) {
-                continue;
-            }
+        for (final File json : guides.listFiles()) {
             final ModuleGuide guide = Main.parseModuleGuide(json, modules);
             try (Writer writer = new BufferedWriter(new FileWriter(json))) {
                 ModuleGuidePrettyPrinter.prettyPrint(guide, writer);

@@ -53,7 +53,7 @@ public class BibTeXParser {
         return result;
     }
 
-    private static BibTeXTokenType getType(final char c, final BibTeXTokenType currentType) {
+    private static BibTeXTokenType getType(final char c) {
         if (Character.isWhitespace(c)) {
             return BibTeXTokenType.WHITESPACE;
         }
@@ -130,6 +130,7 @@ public class BibTeXParser {
         switch (open.type()) {
         case OPEN_BRACE:
             terminator = BibTeXTokenType.CLOSE_BRACE;
+            //$FALL-THROUGH$
         case OPEN_PARENTHESIS:
             break;
         default:
@@ -171,7 +172,7 @@ public class BibTeXParser {
                 return new BibTeXComment(BibTeXParser.toString(commentText, false));
             default:
             }
-            // fall through
+            //$FALL-THROUGH$
         case CONTENTTEXT:
             final BibTeXToken identifier = BibTeXParser.forwardWhiteSpace(iterator, "Entry");
             if (identifier.type() != BibTeXTokenType.IDENTIFIERTEXT) {
@@ -338,7 +339,7 @@ public class BibTeXParser {
         BibTeXTokenType currentType = null;
         Character c = buffer.getNext(text);
         while (c != null) {
-            final BibTeXTokenType type = BibTeXParser.getType(c, currentType);
+            final BibTeXTokenType type = BibTeXParser.getType(c);
             switch (type) {
             case CONTENTTEXT:
                 if (currentType == null) {
@@ -350,7 +351,7 @@ public class BibTeXParser {
                         tokens.add(new BibTeXToken(currentType, text.toString()));
                         text.setLength(0);
                         text.append(c.charValue());
-                        // fall through
+                        //$FALL-THROUGH$
                     default:
                         currentType = type;
                     }
@@ -368,7 +369,7 @@ public class BibTeXParser {
                         tokens.add(new BibTeXToken(currentType, text.toString()));
                         text = new StringBuilder();
                         text.append(c.charValue());
-                        // fall through
+                        //$FALL-THROUGH$
                     default:
                         currentType = type;
                     }
@@ -385,7 +386,7 @@ public class BibTeXParser {
                         tokens.add(new BibTeXToken(currentType, text.toString()));
                         text = new StringBuilder();
                         text.append(c.charValue());
-                        // fall through
+                        //$FALL-THROUGH$
                     default:
                         currentType = type;
                     }
@@ -403,7 +404,7 @@ public class BibTeXParser {
                     case WHITESPACE:
                         buffer.appendReadContent(text);
                         tokens.add(new BibTeXToken(currentType, text.toString()));
-                        // fall through
+                        //$FALL-THROUGH$
                     default:
                         text.setLength(0);
                         currentType = type;

@@ -69,7 +69,7 @@ public enum ExaminationType {
     }
 
     public String toString(final Internationalization internationalization) {
-        return String.valueOf(this.code);
+        return internationalization.examinationCode(this.code);
     }
 
 }

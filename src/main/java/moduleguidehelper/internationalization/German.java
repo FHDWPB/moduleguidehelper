@@ -27,6 +27,11 @@ public class German implements Internationalization {
     }
 
     @Override
+    public String examinationCode(final char code) {
+        return String.valueOf(code);
+    }
+
+    @Override
     public String internationalize(final InternationalizationKey key) {
         switch (key) {
         case CONTACT_HOURS:

@@ -104,7 +104,7 @@ public class MainFrame extends JFrame {
         content.add(
             new FileChooserPanel(
                 "Auswahl der Modulhandbücher:",
-                directory.listFiles(file -> file.getName().endsWith(".json")),
+                directory.toPath().resolve("guides").toFile().listFiles(file -> file.getName().endsWith(".json")),
                 Store.INSTANCE::setGuides
             ),
             constraints

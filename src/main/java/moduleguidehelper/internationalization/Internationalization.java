@@ -10,6 +10,8 @@ public interface Internationalization {
 
     String enumerate(int number);
 
+    String examinationCode(char code);
+
     String internationalize(InternationalizationKey key);
 
     String introduction(String degreeType, String subject, String year);

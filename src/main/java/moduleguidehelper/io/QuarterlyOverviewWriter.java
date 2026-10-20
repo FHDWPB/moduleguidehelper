@@ -14,14 +14,12 @@ public class QuarterlyOverviewWriter {
         final File outputFile
     ) throws IOException {
         final File modules = root.toPath().resolve("modules").toFile();
+        final File guides = root.toPath().resolve("guides").toFile();
         final Set<ModuleEntry> q1 = new TreeSet<ModuleEntry>();
         final Set<ModuleEntry> q2 = new TreeSet<ModuleEntry>();
         final Set<ModuleEntry> q3 = new TreeSet<ModuleEntry>();
         final Set<ModuleEntry> q4 = new TreeSet<ModuleEntry>();
-        for (final File json : root.listFiles()) {
-            if (!json.getName().endsWith(".json")) {
-                continue;
-            }
+        for (final File json : guides.listFiles()) {
             final ModuleGuide guide = Main.parseModuleGuide(json, modules);
             if (guide.mode() != CurriculumMode.DUAL) {
                 continue;

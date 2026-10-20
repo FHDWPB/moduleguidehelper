@@ -22,24 +22,30 @@ public class Store {
         final int total,
         final String fileName,
         final String texFile,
-        final File directory,
+        final File texDirectory,
+        final File pdfDirectory,
         final Consumer<Integer> progressListener
     ) throws IOException, InterruptedException {
         int current = initial;
-        Process pdfProcess = Main.buildAndStartPDFLaTeXProcess(texFile, directory);
+        Process pdfProcess = Main.buildAndStartPDFLaTeXProcess(texFile, texDirectory);
         pdfProcess.waitFor(60, TimeUnit.SECONDS);
         current++;
         progressListener.accept(current * 100 / total);
-        final Process biberProcess = Main.buildAndStartBiberProcess(fileName, directory);
+        final Process biberProcess = Main.buildAndStartBiberProcess(fileName, texDirectory);
         biberProcess.waitFor(60, TimeUnit.SECONDS);
         current++;
         progressListener.accept(current * 100 / total);
         for (int i = 0; i < 3; i++) {
-            pdfProcess = Main.buildAndStartPDFLaTeXProcess(texFile, directory);
+            pdfProcess = Main.buildAndStartPDFLaTeXProcess(texFile, texDirectory);
             pdfProcess.waitFor(60, TimeUnit.SECONDS);
             current++;
             progressListener.accept(current * 100 / total);
         }
+        final String pdfName = fileName + ".pdf";
+        final File pdf = texDirectory.toPath().resolve(pdfName).toFile();
+        final File oldPdf = pdfDirectory.toPath().resolve(pdfName).toFile();
+        oldPdf.delete();
+        pdf.renameTo(oldPdf);
         return current;
     }
 
@@ -55,10 +61,11 @@ public class Store {
         this.fileObservers = new LinkedList<FileSelectionObserver>();
     }
 
-    public void generatePDFs(final File directory, final Consumer<Integer> progressListener) throws Exception {
+    public void generatePDFs(final File rootDirectory, final Consumer<Integer> progressListener) throws Exception {
         final String texSuffix = ".tex";
-        final File modules = directory.toPath().resolve("modules").toFile();
-        final File singlePDFsDirectory = directory.toPath().resolve(Main.SINGLE_PDFS).toFile();
+        final File modules = rootDirectory.toPath().resolve("modules").toFile();
+        final File texDirectory = rootDirectory.toPath().resolve("tex").toFile();
+        final File singlePDFsDirectory = rootDirectory.toPath().resolve(Main.SINGLE_PDFS).toFile();
         final Set<File> files = this.getAllSelectedFiles();
         final int total = 5 * files.size();
         int current = 0;
@@ -66,8 +73,9 @@ public class Store {
         for (final File guide : this.guides) {
             final String fileName = guide.getName().substring(0, guide.getName().length() - 5);
             final String texFile = fileName + texSuffix;
-            Main.compileModuleGuide(guide, modules, directory.toPath().resolve(texFile).toFile());
-            current = Store.buildPDF(current, total, fileName, texFile, directory, progressListener);
+            Main.compileModuleGuide(guide, modules, texDirectory.toPath().resolve(texFile).toFile());
+            current =
+                Store.buildPDF(current, total, fileName, texFile, texDirectory, rootDirectory, progressListener);
         }
         for (final File module : this.modules) {
             if ("schema.json".equals(module.getName())) {
@@ -82,29 +90,30 @@ public class Store {
                 Main.LOGGER.log(Level.SEVERE, module.getAbsolutePath());
                 throw new IOException(String.format("%s: %s", module.getAbsolutePath(), e.getMessage()), e);
             }
-            final File moduleTeXFile = singlePDFsDirectory.toPath().resolve(texFile).toFile();
+            final File moduleTeXFile = texDirectory.toPath().resolve(texFile).toFile();
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(moduleTeXFile))) {
-                ModuleGuideLaTeXWriter.writeModule(fileName.toUpperCase(), raw, Optional.empty(), 180, modules, writer);
+                ModuleGuideLaTeXWriter.writeModule(fileName.toUpperCase(), raw, Optional.empty(), modules, writer);
             }
-            current = Store.buildPDF(current, total, fileName, texFile, singlePDFsDirectory, progressListener);
+            current =
+                Store.buildPDF(current, total, fileName, texFile, texDirectory, singlePDFsDirectory, progressListener);
         }
         Process process = new ProcessBuilder(
             "git",
             "add",
             "-A"
-        ).inheritIO().directory(directory).start();
+        ).inheritIO().directory(rootDirectory).start();
         process.waitFor(60, TimeUnit.SECONDS);
         process = new ProcessBuilder(
             "git",
             "commit",
             "-m",
             "update"
-        ).inheritIO().directory(directory).start();
+        ).inheritIO().directory(rootDirectory).start();
         process.waitFor(60, TimeUnit.SECONDS);
         process = new ProcessBuilder(
             "git",
             "push"
-        ).inheritIO().directory(directory).start();
+        ).inheritIO().directory(rootDirectory).start();
         process.waitFor(60, TimeUnit.SECONDS);
     }
 

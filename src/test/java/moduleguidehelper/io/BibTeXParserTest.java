@@ -95,7 +95,7 @@ public class BibTeXParserTest {
     }
 
     @Test(dataProvider="parseExceptionData")
-    public void parseExceptionTest(final String fileText) throws IOException {
+    public void parseExceptionTest(final String fileText) {
         Assert.assertThrows(IOException.class, () -> BibTeXParser.parse(new StringReader(fileText)));
     }
 
