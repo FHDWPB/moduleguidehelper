@@ -15,7 +15,9 @@ public enum ExecutionMode {
 
     SINGLE_MODULE("Compile a single module in isolation.", Set.of(Flag.INPUT, Flag.OUTPUT)),
 
-    SINGLE_MODULES("Compile all modules in isolation.", Set.of(Flag.ROOT));
+    SINGLE_MODULES("Compile all modules in isolation.", Set.of(Flag.ROOT)),
+
+    UNUSED_MODULES("List all unused modules.", Set.of(Flag.ROOT, Flag.OUTPUT));
 
     public static String descriptions() {
         return Arrays.stream(ExecutionMode.values()).map(mode -> mode.description).collect(Collectors.joining("\n\n"));

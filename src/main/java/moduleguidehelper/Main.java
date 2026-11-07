@@ -19,17 +19,25 @@ import moduleguidehelper.view.*;
 
 public class Main {
 
+    public static final String BIB_FILE = "literature.bib";
+
     public static final String ELECTIVE = "Wahlpflicht";
 
     public static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
+
+    public static final String GUIDES_FOLDER = "guides";
 
     public static String lineSeparator = "\n";
 
     public static final Logger LOGGER = Logger.getLogger("moduleguidehelper");
 
+    public static final String MODULES_FOLDER = "modules";
+
+    public static final String SCHEMA_FILE = "schema.json";
+
     public static final String SINGLE_PDFS = "singlepdfs";
 
-    private static final String VERSION = "5.0.0";
+    private static final String VERSION = "5.1.0";
 
     public static Process buildAndStartBiberProcess(final String fileName, final File directory) throws IOException {
         return new ProcessBuilder(
@@ -53,9 +61,9 @@ public class Main {
         if (!texDirectory.exists()) {
             texDirectory.mkdir();
         }
-        final File modules = root.toPath().resolve("modules").toFile();
+        final File modules = root.toPath().resolve(Main.MODULES_FOLDER).toFile();
         for (final File json : modules.listFiles()) {
-            if ("schema.json".equals(json.getName())) {
+            if (Main.SCHEMA_FILE.equals(json.getName())) {
                 continue;
             }
             final String id = json.getName().substring(0, json.getName().length() - 5);
@@ -172,6 +180,9 @@ public class Main {
         case SINGLE_MODULES:
             Main.compileAllModules(new File(options.get(Flag.ROOT)));
             break;
+        case UNUSED_MODULES:
+            new UnusedModules(new File(options.get(Flag.ROOT))).write(new File(options.get(Flag.OUTPUT)));
+            break;
         default:
             System.out.println(ExecutionMode.descriptions());
             break;
@@ -237,9 +248,9 @@ public class Main {
 
     public static void prettyPrintJSONsAndBIBs(final File root) throws IOException {
         Main.LOGGER.setLevel(Level.FINE);
-        final File modules = root.toPath().resolve("modules").toFile();
-        final File guides = root.toPath().resolve("guides").toFile();
-        final File literature = root.toPath().resolve("literature.bib").toFile();
+        final File modules = root.toPath().resolve(Main.MODULES_FOLDER).toFile();
+        final File guides = root.toPath().resolve(Main.GUIDES_FOLDER).toFile();
+        final File literature = root.toPath().resolve(Main.BIB_FILE).toFile();
         final BibTeXDatabase db;
         try (final FileReader reader = new FileReader(literature)) {
             db = BibTeXParser.parse(reader);

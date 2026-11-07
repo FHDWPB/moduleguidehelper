@@ -7,6 +7,7 @@ import java.util.function.*;
 
 import javax.swing.*;
 
+import moduleguidehelper.*;
 import moduleguidehelper.store.*;
 
 public class MainFrame extends JFrame {
@@ -104,7 +105,7 @@ public class MainFrame extends JFrame {
         content.add(
             new FileChooserPanel(
                 "Auswahl der Modulhandbücher:",
-                directory.toPath().resolve("guides").toFile().listFiles(file -> file.getName().endsWith(".json")),
+                directory.toPath().resolve(Main.GUIDES_FOLDER).toFile().listFiles(file -> file.getName().endsWith(".json")),
                 Store.INSTANCE::setGuides
             ),
             constraints
@@ -113,7 +114,7 @@ public class MainFrame extends JFrame {
         content.add(
             new FileChooserPanel(
                 "Auswahl einzelner Module:",
-                directory.toPath().resolve("modules").toFile().listFiles(file -> file.getName().endsWith(".json")),
+                directory.toPath().resolve(Main.MODULES_FOLDER).toFile().listFiles(file -> file.getName().endsWith(".json")),
                 Store.INSTANCE::setModules
             ),
             constraints

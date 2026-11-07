@@ -63,7 +63,7 @@ public class Store {
 
     public void generatePDFs(final File rootDirectory, final Consumer<Integer> progressListener) throws Exception {
         final String texSuffix = ".tex";
-        final File modules = rootDirectory.toPath().resolve("modules").toFile();
+        final File modules = rootDirectory.toPath().resolve(Main.MODULES_FOLDER).toFile();
         final File texDirectory = rootDirectory.toPath().resolve("tex").toFile();
         final File singlePDFsDirectory = rootDirectory.toPath().resolve(Main.SINGLE_PDFS).toFile();
         final Set<File> files = this.getAllSelectedFiles();
