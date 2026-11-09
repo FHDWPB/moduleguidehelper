@@ -70,6 +70,7 @@ public enum InternationalizationKey {
     SELF_STUDY_HEADER,
     SEMESTER,
     SEMESTER_HEADER,
+    SEMESTER_HEADLINE,
     SPECIALIZATION,
     SPECIALIZATION_AREAS_HEADER,
     SPECIALIZATION_MODULE_PATTERN,
@@ -82,6 +83,7 @@ public enum InternationalizationKey {
     THEORY_PHASE,
     THESIS_FORM,
     TRIMESTER,
+    TRIMESTER_HEADLINE,
     VOLUME
 
 }

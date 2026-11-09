@@ -182,6 +182,8 @@ public class German implements Internationalization {
             return "SELBST\\-STUDIUM";
         case SEMESTER:
             return "Semester";
+        case SEMESTER_HEADLINE:
+            return "Semester";
         case SEMESTER_HEADER:
             return "SEMES\\-TER";
         case SPECIALIZATION:
@@ -207,6 +209,8 @@ public class German implements Internationalization {
         case THESIS_FORM:
             return "Die Prüfung besteht aus einer wissenschaftlichen Arbeit (Thesis bzw. Praxisarbeit).";
         case TRIMESTER:
+            return "Trimester";
+        case TRIMESTER_HEADLINE:
             return "Trimester";
         case VOLUME:
             return "Ausgabe";

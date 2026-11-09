@@ -1297,7 +1297,7 @@ public class ModuleGuideLaTeXWriter extends ModuleGuideWriter {
                     writer.write("\\chapter{");
                     writer.write(internationalization.enumerate(semester));
                     writer.write(" ");
-                    writer.write(internationalization.internationalize(InternationalizationKey.SEMESTER));
+                    writer.write(internationalization.internationalize(InternationalizationKey.SEMESTER_HEADLINE));
                     writer.write("}");
                     Main.newLine(writer);
                     Main.newLine(writer);

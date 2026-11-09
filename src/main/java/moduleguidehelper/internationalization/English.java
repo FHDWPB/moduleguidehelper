@@ -90,7 +90,7 @@ public class English implements Internationalization {
         case EXAMINATION_HEADER:
             return "EXA\\-MINA\\-TION";
         case EXAMINATIONS:
-            return "Examination forms";
+            return "Examination Forms";
         case EXAMINATIONS_ANNOUNCEMENT:
             return "The chosen examination form is announced at the beginning of each module.";
         case EXAMINATIONS_HEADER1:
@@ -191,16 +191,18 @@ public class English implements Internationalization {
             return "SELF-STUDY";
         case SEMESTER:
             return "semester";
+        case SEMESTER_HEADLINE:
+            return "Semester";
         case SEMESTER_HEADER:
             return "SEMES\\-TER";
         case SPECIALIZATION:
             return "Specialization";
         case SPECIALIZATION_AREAS_HEADER:
-            return "Specialization areas with corresponding modules I to";
+            return "Specialization Areas with Corresponding Modules I to";
         case SPECIALIZATION_MODULE_PATTERN:
             return "Specialization module %s";
         case STUDY_PLAN:
-            return "study plan";
+            return "Study Plan";
         case STUDY_YEAR:
             return "year of study";
         case SUM:
@@ -217,6 +219,8 @@ public class English implements Internationalization {
             return "The examination is a scientific thesis.";
         case TRIMESTER:
             return "trimester";
+        case TRIMESTER_HEADLINE:
+            return "Trimester";
         case VOLUME:
             return "volume";
         default:
